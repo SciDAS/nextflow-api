@@ -182,4 +182,5 @@ if __name__ == "__main__":
   server = HTTPServer(app)
   server.bind(PORT)
   server.start()
+  print('The API is listening on http://0.0.0.0:%d'%PORT, flush=True)
   tornado.ioloop.IOLoop.instance().start()
