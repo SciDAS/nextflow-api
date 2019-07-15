@@ -16,6 +16,7 @@ from tornado.web import Application, RequestHandler, StaticFileHandler
 from tornado.httpserver import HTTPServer
 from tornado.escape import json_encode, json_decode
 
+VERSION = 0.1
 
 PORT = 8080
 WORK_DIR = '%s/work_dir'%Path.home()
@@ -230,6 +231,7 @@ class WorkflowDownloadHandler(StaticFileHandler):
 
 class GetVersionHandler(RequestHandler):
   def get(self):
+    self.set_status(200)
     self.write(json_encode({
       'version': VERSION
     }))
