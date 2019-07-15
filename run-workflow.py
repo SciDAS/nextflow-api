@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 import shlex
 
 from argparse import ArgumentParser 
@@ -40,24 +41,31 @@ def run_cmd(cmd, log_file=None):
       else:
         sys.stdout.write(out)
         sys.stdout.flush()
+  return p.returncode
 
-def clear_log(log_file):
-  if os.path.exists(log_file):
-    os.remove(log_file)
+
+def save_status(work_dir, rc, msg):
+  with open('%s/.status'%work_dir, 'w') as f:
+    json.dump(dict(rc=rc, message=msg), f)
+
+
+def clear_log(work_dir):
+  log_f = '%s/log'%work_dir
+  if os.path.exists(log_f):
+    os.remove(log_f)
+
 
 def load_data(uuid, log_file):
-  run_cmd('kube-load.sh %s %s/%s/input'%(VOL_NAME, WORK_DIR, uuid), 
-          log_file)
+  return run_cmd('kube-load.sh %s %s/%s/input'%(VOL_NAME, WORK_DIR, uuid), log_file)
 
 
 def run_workflow(image, work_dir, log_file):
   os.chdir(work_dir)
-  run_cmd('nextflow kuberun %s'%image, 
-          log_file)
+  return run_cmd('nextflow kuberun %s'%image, log_file)
+
 
 def save_data(uuid, log_file):
-  run_cmd('kube-save.sh %s %s/%s'%(VOL_NAME, WORK_DIR, uuid), 
-          log_file)
+  return run_cmd('kube-save.sh %s %s/%s'%(VOL_NAME, WORK_DIR, uuid), log_file)
 
 
 if __name__ == "__main__":
@@ -65,10 +73,20 @@ if __name__ == "__main__":
   uuid = args.uuid
   work_dir = '%s/%s'%(WORK_DIR, uuid)
   log_f = '%s/log'%work_dir
-  clear_log(log_f)
-  load_data(uuid, log_f)
-  run_workflow(args.image, work_dir, log_f)
-  save_data(uuid, log_f)
+  clear_log(work_dir)
+  rc = load_data(uuid, log_f)
+  if rc != 0:
+    save_status(work_dir, rc, 'Failed to load input data')
+    sys.exit(rc)
+  rc = run_workflow(args.image, work_dir, log_f)
+  if rc != 0:
+    save_status(work_dir, rc, 'Workflow failed')
+    sys.exit(rc)
+  rc = save_data(uuid, log_f)
+  if rc != 0:
+    save_status(work_dir, rc, 'Failed to save output data')
+    sys.exit(rc)
+  save_status(work_dir, 0, 'Workflow completed')
 
   
 
