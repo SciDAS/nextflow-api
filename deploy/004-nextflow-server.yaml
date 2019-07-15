@@ -47,3 +47,19 @@ spec:
     targetPort: 8080
   selector:
     app: nextflow-server
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nextflow-server
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: nextflow-server.nautilus.optiputer.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nextflow-server
+          servicePort: 8080
