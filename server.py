@@ -39,10 +39,10 @@ def get_process(pid_f):
 
 
 def message(code, msg):
-  return json_encode({
+  return {
     'status': code,
     'message': msg
-  })
+  }
 
 
 class WorkflowHandler(RequestHandler):
@@ -53,6 +53,7 @@ class WorkflowHandler(RequestHandler):
 
   def get(self):
     self.set_status(200)
+    self.set_header('Content-type', 'application/json')
     self.write(json_encode(os.listdir(WORK_DIR)))
 
   def post(self):
@@ -71,9 +72,9 @@ class WorkflowHandler(RequestHandler):
       with open('%s/config.json'%work_dir, 'w') as f:
         json.dump(data, f)
       self.set_status(201)
-      self.write(json_encode({
+      self.write({
         'uuid': wfid,
-      }))
+      })
     except json.JSONDecodeError:
       self.set_status(422)
       self.write(message(422, 'Ill-formatted JSON'))
@@ -182,9 +183,9 @@ class WorkflowLogHandler(RequestHandler):
       return 
     with open('%s/log'%work_dir) as f:
       self.set_status(200)
-      self.write(json_encode({
+      self.write({
         'log': '<pre>%s</pre>'%''.join(f.readlines()),
-      }))
+      })
 
 
 class WorkflowStatusHandler(RequestHandler):
@@ -217,10 +218,10 @@ class WorkflowStatusHandler(RequestHandler):
     elif os.path.exists(pid_f) and get_process(pid_f):
       status = 'running'
     self.set_status(200)
-    self.write(json_encode({
+    self.write({
       'status': status,
       'message': msg if msg else self.STATUSES[status]%wfid,
-    }))
+    })
 
 class WorkflowDownloadHandler(StaticFileHandler):
 
