@@ -60,9 +60,6 @@ class WorkflowCreateHandler(RequestHandler):
 
 class WorkflowDeleteHandler(RequestHandler):
   
-  def initialize(self, nfs_pod):
-    self.__nfs_pod = nfs_pod
-
   def delete(self, uuid):
     work_dir = '%s/%s'%(WORK_DIR, uuid)
     if not os.path.exists(work_dir):
@@ -70,15 +67,8 @@ class WorkflowDeleteHandler(RequestHandler):
       self.write(NOT_EXIST%uuid)
       return 
     shutil.rmtree(work_dir)
-    if self.__nfs_pod:
-      self._delete_on_nfs(uuid)
     self.set_status(200)
     self.write('Workflow "%s" has been deleted\n'%uuid)
-  
-  def _delete_on_nfs(self, uuid):
-    cmd = 'kubectl exec %s -- bash -c "rm -rf /exports/dc/%s"'%(self.__nfs_pod, uuid)
-    p = Popen(shlex.split(cmd))
-    p.wait(timeout=3)
 
 
 class WorkflowUploadHandler(RequestHandler):
@@ -158,21 +148,10 @@ class WorkflowDownloadHandler(StaticFileHandler):
     return os.path.join(WORK_DIR, uuid, 'output-%s.tar.gz'%uuid)
 
 
-def get_nfs_pod():
-  out, _ = Popen(shlex.split('kubectl get pods'), stdout=PIPE, stderr=PIPE).communicate()
-  if out:
-    for l in str(out, 'utf-8').split('\n'):
-      if 'nfs-server' not in l:
-        continue
-      return l.split()[0]
-  return None
-
-
 if __name__ == "__main__":
-  nfs_pod = get_nfs_pod()
   app = Application([
     (r'/workflow', WorkflowCreateHandler), 
-    (r'/workflow/([a-zA-Z0-9-]+)\/*', WorkflowDeleteHandler, dict(nfs_pod=nfs_pod)),
+    (r'/workflow/([a-zA-Z0-9-]+)\/*', WorkflowDeleteHandler),
     (r'/workflow/([a-zA-Z0-9-]+)/upload\/*', WorkflowUploadHandler),
     (r'/workflow/([a-zA-Z0-9-]+)/launch\/*', WorkflowLaunchHandler),
     (r'/workflow/([a-zA-Z0-9-]+)/log\/*', WorkflowLogHandler),
