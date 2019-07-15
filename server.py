@@ -233,9 +233,9 @@ class WorkflowDownloadHandler(StaticFileHandler):
 class GetVersionHandler(RequestHandler):
   def get(self):
     self.set_status(200)
-    self.write(json_encode({
+    self.write({
       'version': VERSION
-    }))
+    })
 
 def get_nfs_pod():
   out, _ = Popen(shlex.split('kubectl get pods'), stdout=PIPE, stderr=PIPE).communicate()
