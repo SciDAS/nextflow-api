@@ -18,11 +18,10 @@ Currently, it supports the following API endpoints.
 
 ### Lifecycle
 
-First of all, the user calls the API to create a workflow run. Along with the API call, the user needs to provide the **UUID of the workflow run** and the **container image for the workflow**. Note that the API **do not** generate UUID for any workflow runs. The payload of the API call is as below.
+First of all, the user calls the API to create a workflow run. Along with the API call, the user needs to provide the **container image for the workflow**. The payload of the API call is as below.
 
 ```json
 {
-  "uuid": "<uuid>",
   "image": "systemsgenetics/KINC-nf"
 } 
 ```
