@@ -7,11 +7,13 @@ Currently, it supports the following API endpoints.
 
 | Endpoint                   | Method | Description                               |
 |----------------------------|--------|-------------------------------------------|
-| /workflow                  | POST   | Create a workflow run                         |
-| /workflow/[wf-id]          | DELETE | Delete the workflow run                     |
+| /workflow                  | POST   | Create a workflow run                     |
+| /workflow/[wf-id]          | GET    | List all workflows                        |
+|                            | DELETE | Delete the workflow run                   |
 | /workflow/[wf-id]/upload   | POST   | Upload input/config files of the workflow |
 | /workflow/[wf-id]/launch   | POST   | Launch the workflow                       |
 | /workflow/[wf-id]/log      | GET    | Get the log of the workflow run           |
+| /workflow/[wf-id]/status   | GET    | Get the status of the workflow run        |
 | /workflow/[wf-id]/download | GET    | Download the output data as a `tar.gz` file                  |
 
 ### Lifecycle
@@ -52,11 +54,12 @@ The API also assumes that **there is an NFS service running in Kubernetes and sh
 To deploy the API on a Ubuntu 18.04 LTS node, use the commands below:
 
 ```console
-$ sudo apt update && sudo apt install -y git python3 python3-tornado \
+$ sudo apt update && sudo apt install -y git python3 python3-pip \
   && git clone https://github.com/SciDAS/nextflow-gke.git \
-  && chmod +x $(PWD)/nextflow-gke/kube-runner/*.sh \
-  && export PATH=$PATH:$(PWD)/nextflow-gke/kube-runner \
   && cd nextflow-gke \
+  && sudo pip3 install -r requirements.txt \
+  && chmod +x $(PWD)/kube-runner/*.sh $(PWD)/run-workflow.py \
+  && export PATH=$PATH:$(PWD)/kube-runner \
   && python3 server.py
 The API is listening on http://0.0.0.0:8080
 ```
