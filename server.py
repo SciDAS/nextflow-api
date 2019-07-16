@@ -7,6 +7,7 @@ import psutil
 import shlex
 import shutil
 import subprocess
+import sys
 import tornado
 import uuid
 
@@ -169,6 +170,8 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
       # copy nextflow.config from input directory to work directory
       src = "%s/%s" % (input_dir, NEXTFLOW_CONFIG)
       dst = "%s/%s" % (work_dir, NEXTFLOW_CONFIG)
+      if os.path.exists(dst):
+        os.remove(dst)
       if os.path.exists(src):
         shutil.copyfile(src, dst)
 
@@ -197,7 +200,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
       data = json.load(f)
       kube = "--kube" if args.kube else ""
       cmd = "./workflow.py --id %s --pipeline %s %s" % (id, data["pipeline"], kube)
-      p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+      p = subprocess.Popen(shlex.split(cmd), stdout=sys.stdout.fileno(), stderr=subprocess.STDOUT)
 
       with open("%s/.workflow.pid" % work_dir, "w") as pid_file:
         pid_file.write(str(p.pid))

@@ -14,11 +14,11 @@ WORKFLOWS_DIR = "/workspace/_workflows"
 
 
 
-os.environ["NXF_VER"] = "19.04.0-edge"
+os.environ["NXF_VER"] = "19.07.0-edge"
 
 
 
-def run_cmd(cmd, log_file=None):
+def run_cmd(cmd, log_file=None, debug=True):
   # run command as child process
   p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
@@ -33,13 +33,13 @@ def run_cmd(cmd, log_file=None):
 
     # write line to log file
     if line:
-      line = str(line, "utf-8")
       if log_file:
         with open(log_file, "a") as f:
-          f.write(line)
+          f.write(str(line, "utf-8"))
           f.flush()
-      else:
-        sys.stdout.write(line)
+
+      if log_file is None or debug:
+        sys.stdout.write(line.decode("ascii", "ignore"))
         sys.stdout.flush()
 
   return p.returncode
