@@ -13,7 +13,7 @@ RUN curl -s https://get.nextflow.io | bash \
 # install nextflow-gke server
 WORKDIR /opt
 
-RUN git clone -q https://github.com/bentsherman/nextflow-gke.git
+RUN git clone -q https://github.com/scidas/nextflow-gke.git
 
 # install python dependencies
 RUN pip3 install -r nextflow-gke/requirements.txt
