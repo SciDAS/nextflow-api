@@ -118,12 +118,12 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
     uploaded = []
     for f_list in files.values():
       for f_arg in f_list:
-        fn, body = f_arg["filename"], f_arg["body"]
+        filename, body = f_arg["filename"], f_arg["body"]
         input_dir = "%s/input" % work_dir
         os.makedirs(input_dir, exist_ok=True)
-        with open("%s/%s" % (input_dir, fn), "wb") as f:
+        with open("%s/%s" % (input_dir, filename), "wb") as f:
           f.write(body)
-        uploaded += fn,
+        uploaded += filename,
     self.set_status(200)
     self.write(message(200, "File %s has been uploaded for workflow \"%s\" successfully" % (uploaded, id)))
 
@@ -164,10 +164,11 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
     with open("%s/config.json" % work_dir) as f:
       data = json.load(f)
-      cmd = "./workflow.py --id %s --pipeline %s --kube %d" % (id, data["pipeline"], args.kube)
+      kube = "true" if args.kube else "false"
+      cmd = "./workflow.py --id %s --pipeline %s --kube %s" % (id, data["pipeline"], kube)
       p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       with open("%s/.workflow.pid" % work_dir, "w") as pid_file:
-        pid_file.write(str(p.workflow.pid))
+        pid_file.write(str(p.pid))
     self.set_status(200)
     self.write(message(200, "Workflow \"%s\" has been launched" % id))
 
@@ -229,8 +230,8 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 
   def parse_url_path(self, id):
-    self.set_header("Content-Disposition", "attachment; filename=\"output-%s.tar.gz\"" % id)
-    return os.path.join(WORKFLOWS_DIR, id, "output-%s.tar.gz" % id)
+    self.set_header("Content-Disposition", "attachment; filename=\"%s-output.tar.gz\"" % id)
+    return os.path.join(WORKFLOWS_DIR, id, "%s-output.tar.gz" % id)
 
 
 

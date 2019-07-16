@@ -43,19 +43,33 @@ def save_status(work_dir, rc, msg):
 
 
 
-def clear_log(work_dir):
-  log_file = "%s/.workflow.log" % work_dir
-  if os.path.exists(log_file):
-    os.remove(log_file)
-
-
-
 def run_workflow(pipeline, work_dir, log_file, kube=False):
+  # save current directory
+  prev_dir = os.getcwd()
+
+  # change to workflow directory
   os.chdir(work_dir)
+
+  # initialize log file
+  log_file = ".workflow.log"
+  with open(log_file, "w") as f:
+    f.write("")
+
+  # launch workflow, wait for completion
   if kube:
-    return run_cmd("nextflow kuberun -v %s %s" % (PVC_NAME, pipeline), log_file)
+    rc = run_cmd("nextflow kuberun -v %s %s" % (PVC_NAME, pipeline), log_file)
   else:
-    return run_cmd("nextflow run %s -with-docker" % (pipeline), log_file)
+    rc = run_cmd("nextflow run %s -with-docker" % (pipeline), log_file)
+
+  # return to original directory
+  os.chdir(prev_dir)
+
+  return rc
+
+
+
+def save_output(id, log_file):
+  return run_cmd("./save-output.sh %s %s/%s/output" % (id, WORKFLOWS_DIR, id), log_file)
 
 
 
@@ -68,16 +82,19 @@ if __name__ == "__main__":
 
   args = parser.parse_args()
 
-  # remove log file
+  # run workflow
   work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
   log_file = "%s/.workflow.log" % work_dir
 
-  clear_log(work_dir)
-
-  # run workflow
   rc = run_workflow(args.pipeline, work_dir, log_file, kube=args.kube)
   if rc != 0:
     save_status(work_dir, rc, "Workflow failed")
+    sys.exit(rc)
+
+  # save output data
+  rc = save_output(args.id, log_file)
+  if rc != 0:
+    save_status(work_dir, rc, "Failed to save output data")
     sys.exit(rc)
 
   # save final status

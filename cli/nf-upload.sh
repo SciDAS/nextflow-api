@@ -1,5 +1,5 @@
 #!/bin/bash
-# Upload data to a workflow instance on a nextflow server.
+# Upload input data for a workflow instance on a nextflow server.
 
 # parse command-line arguments
 if [[ $# != 3 ]]; then
@@ -10,8 +10,6 @@ fi
 URL="$1"
 ID="$2"
 FILENAME="$3"
-
-set -x
 
 # upload data to a workflow instance
 curl -s \
