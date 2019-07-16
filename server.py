@@ -6,6 +6,7 @@ import os
 import psutil
 import shlex
 import shutil
+import subprocess
 import tornado
 import uuid
 
@@ -22,7 +23,6 @@ WORK_DIR = "/workspace/_workflows"
 NEXTFLOW_CONFIG = "nextflow.config"
 
 NOT_EXIST = "Workflow \"%s\" does not exist"
-NOT_READY = "Workflow \"%s\" is not ready to launch, reason: %s"
 
 
 
@@ -56,24 +56,24 @@ class GetVersionHandler(tornado.web.RequestHandler):
 class WorkflowHandler(tornado.web.RequestHandler):
 
   REQUIRED = set([
-    "image"
+    "pipeline"
   ])
 
   def get(self):
     self.set_status(200)
     self.set_header("Content-type", "application/json")
-    self.write(tornado.json_encode(os.listdir(WORK_DIR)))
+    self.write(tornado.escape.json_encode(os.listdir(WORK_DIR)))
 
   def post(self):
     try:
-      data = tornado.json_decode(self.request.body)
+      data = tornado.escape.json_decode(self.request.body)
       missing = self.REQUIRED - data.keys()
       if missing:
         self.set_status(400)
         self.write(message(400, "Missing required field(s): %s\n" % list(missing)))
         return
-      wfid = uuid.uuid4().hex
-      work_dir = "%s/%s" % (WORK_DIR, wfid)
+      id = uuid.uuid4().hex
+      work_dir = "%s/%s" % (WORK_DIR, id)
       # create workspace
       os.makedirs(work_dir)
       # persist workflow config
@@ -81,7 +81,7 @@ class WorkflowHandler(tornado.web.RequestHandler):
         json.dump(data, f)
       self.set_status(201)
       self.write({
-        "uuid": wfid,
+        "id": id,
       })
     except json.JSONDecodeError:
       self.set_status(422)
@@ -91,25 +91,25 @@ class WorkflowHandler(tornado.web.RequestHandler):
 
 class WorkflowDeleteHandler(tornado.web.RequestHandler):
 
-  def delete(self, wfid):
-    work_dir = "%s/%s" % (WORK_DIR, wfid)
+  def delete(self, id):
+    work_dir = "%s/%s" % (WORK_DIR, id)
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST%wfid))
+      self.write(message(404, NOT_EXIST % id))
       return
     shutil.rmtree(work_dir)
     self.set_status(200)
-    self.write(message(200, "Workflow \"%s\" has been deleted" % wfid))
+    self.write(message(200, "Workflow \"%s\" has been deleted" % id))
 
 
 
 class WorkflowUploadHandler(tornado.web.RequestHandler):
 
-  def post(self, wfid):
-    work_dir = "%s/%s" % (WORK_DIR, wfid)
+  def post(self, id):
+    work_dir = "%s/%s" % (WORK_DIR, id)
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST%wfid))
+      self.write(message(404, NOT_EXIST % id))
       return
     files = self.request.files
     if not files:
@@ -126,19 +126,19 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
           f.write(body)
         uploaded += fn,
     self.set_status(200)
-    self.write(message(200, "File %s has been uploaded for workflow \"%s\" successfully" % (uploaded, wfid)))
+    self.write(message(200, "File %s has been uploaded for workflow \"%s\" successfully" % (uploaded, id)))
 
 
 
 class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
-  def post(self, wfid):
+  def post(self, id):
     # make sure workflow directory exists
-    work_dir = "%s/%s" % (WORK_DIR, wfid)
+    work_dir = "%s/%s" % (WORK_DIR, id)
 
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST%wfid))
+      self.write(message(404, NOT_EXIST % id))
       return
 
     # stage nextflow.config if it exists
@@ -157,7 +157,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
     if os.path.exists(pid_f):
       if get_process(pid_f):
         self.set_status(400)
-        self.write(message(400, "Workflow \"%s\" is running now and cannot be re-launched" % wfid))
+        self.write(message(400, "Workflow \"%s\" is running now and cannot be re-launched" % id))
         return
       os.remove(pid_f)
     if os.path.exists(status_f):
@@ -165,12 +165,12 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
     with open("%s/config.json" % work_dir) as f:
       data = json.load(f)
-      cmd = "./workflow.py --wfid %s --image %s --kube %d" % (wfid, data["image"], args.kube)
+      cmd = "./workflow.py --id %s --pipeline %s --kube %d" % (id, data["pipeline"], args.kube)
       p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       with open("%s/.pid" % work_dir, "w") as pid_f:
         pid_f.write(str(p.pid))
     self.set_status(200)
-    self.write(message(200, "Workflow \"%s\" has been launched\n" % wfid))
+    self.write(message(200, "Workflow \"%s\" has been launched\n" % id))
 
 
 
@@ -183,11 +183,11 @@ class WorkflowStatusHandler(tornado.web.RequestHandler):
     "completed": "Workflow \"%s\" has completed",
   }
 
-  def get(self, wfid):
-    work_dir = "%s/%s" % (WORK_DIR, wfid)
+  def get(self, id):
+    work_dir = "%s/%s" % (WORK_DIR, id)
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST%wfid))
+      self.write(message(404, NOT_EXIST % id))
       return
     status, msg = "nascent", None
 
@@ -206,20 +206,20 @@ class WorkflowStatusHandler(tornado.web.RequestHandler):
     self.set_status(200)
     self.write({
       "status": status,
-      "message": msg if msg else self.STATUSES[status]%wfid,
+      "message": msg if msg else self.STATUSES[status]%id,
     })
 
 
 
 class WorkflowLogHandler(tornado.web.RequestHandler):
 
-  def get(self, wfid):
-    work_dir = "%s/%s" % (WORK_DIR, wfid)
+  def get(self, id):
+    work_dir = "%s/%s" % (WORK_DIR, id)
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST%wfid))
+      self.write(message(404, NOT_EXIST % id))
       return
-    with open("%s/log" % work_dir) as f:
+    with open("%s/.log" % work_dir) as f:
       self.set_status(200)
       self.write({
         "log": "<pre>%s</pre>" % "".join(f.readlines()),
@@ -229,15 +229,15 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 
 class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 
-  def parse_url_path(self, wfid):
-    self.set_header("Content-Disposition", "attachment; filename="output-%s.tar.gz"" % wfid)
-    return os.path.join(WORK_DIR, wfid, "output-%s.tar.gz" % wfid)
+  def parse_url_path(self, id):
+    self.set_header("Content-Disposition", "attachment; filename=\"output-%s.tar.gz\"" % id)
+    return os.path.join(WORK_DIR, id, "output-%s.tar.gz" % id)
 
 
 
 if __name__ == "__main__":
   # parse command-line arguments
-  parser = ArgumentParser()
+  parser = argparse.ArgumentParser()
   parser.add_argument("--kube", type=bool, default=False, help="Whether to use kubernetes executor")
 
   args = parser.parse_args()

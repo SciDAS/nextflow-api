@@ -11,6 +11,6 @@ URL="$1"
 PIPELINE="$2"
 
 # create a workflow instance
-curl -s -X POST -d "{\"image\":\"${PIPELINE}\"}" ${URL}/workflow
+curl -s -X POST -d "{\"pipeline\":\"${PIPELINE}\"}" ${URL}/workflow
 
 echo
