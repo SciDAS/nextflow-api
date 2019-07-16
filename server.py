@@ -156,7 +156,7 @@ class WorkflowLaunchHandler(RequestHandler):
 
     with open('%s/config.json'%work_dir) as f:
       data = json.load(f)
-      cmd = './run-workflow.py --wfid %s --image %s --kube %d'%(wfid, data['image'], args.kube)
+      cmd = './workflow.py --wfid %s --image %s --kube %d'%(wfid, data['image'], args.kube)
       p = Popen(shlex.split(cmd), stdout=PIPE, stderr=PIPE)
       with open('%s/.pid'%work_dir, 'w') as pid_f:
         pid_f.write(str(p.pid))
