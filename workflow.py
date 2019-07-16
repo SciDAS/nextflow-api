@@ -9,8 +9,8 @@ import sys
 
 
 
-VOL_NAME = os.environ.get("VOL_NAME", "deepgtex-prp")
-WORK_DIR = "/workspace/_workflows"
+PVC_NAME = os.environ.get("PVC_NAME", "deepgtex-prp")
+WORKFLOWS_DIR = "/workspace/_workflows"
 
 
 
@@ -38,22 +38,22 @@ def run_cmd(cmd, log_file=None):
 
 
 def save_status(work_dir, rc, msg):
-  with open("%s/.status" % work_dir, "w") as f:
+  with open("%s/.workflow.status" % work_dir, "w") as f:
     json.dump(dict(rc=rc, message=msg), f)
 
 
 
 def clear_log(work_dir):
-  log_f = "%s/.log" % work_dir
-  if os.path.exists(log_f):
-    os.remove(log_f)
+  log_file = "%s/.workflow.log" % work_dir
+  if os.path.exists(log_file):
+    os.remove(log_file)
 
 
 
 def run_workflow(pipeline, work_dir, log_file, kube=False):
   os.chdir(work_dir)
   if kube:
-    return run_cmd("nextflow kuberun -v %s %s" % (VOL_NAME, pipeline), log_file)
+    return run_cmd("nextflow kuberun -v %s %s" % (PVC_NAME, pipeline), log_file)
   else:
     return run_cmd("nextflow run %s -with-docker" % (pipeline), log_file)
 
@@ -61,7 +61,7 @@ def run_workflow(pipeline, work_dir, log_file, kube=False):
 
 if __name__ == "__main__":
   # parse command-line arguments
-  parser = ArgumentParser(description="Script for running Nextflow workflow")
+  parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
   parser.add_argument("--id", required=True, help="Workflow instance ID")
   parser.add_argument("--pipeline", required=True, help="Name of nextflow pipeline")
   parser.add_argument("--kube", type=bool, default=False, help="Whether to use kubernetes executor")
@@ -69,13 +69,13 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   # remove log file
-  work_dir = "%s/%s" % (WORK_DIR, args.id)
-  log_f = "%s/.log" % work_dir
+  work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
+  log_file = "%s/.workflow.log" % work_dir
 
   clear_log(work_dir)
 
   # run workflow
-  rc = run_workflow(args.pipeline, work_dir, log_f, kube=args.kube)
+  rc = run_workflow(args.pipeline, work_dir, log_file, kube=args.kube)
   if rc != 0:
     save_status(work_dir, rc, "Workflow failed")
     sys.exit(rc)
