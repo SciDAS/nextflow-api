@@ -1,9 +1,9 @@
-#! /usr/bin/env python3 
+#! /usr/bin/env python3
 
 import os
 import json
 import uuid
-import shlex 
+import shlex
 import shutil
 import psutil
 import getpass
@@ -16,6 +16,7 @@ from tornado.web import Application, RequestHandler, StaticFileHandler
 from tornado.httpserver import HTTPServer
 from tornado.escape import json_encode, json_decode
 
+VERSION = 0.1
 
 PORT = 8080
 WORK_DIR = '%s/work_dir'%Path.home()
@@ -47,7 +48,7 @@ def message(code, msg):
 
 class WorkflowHandler(RequestHandler):
 
-  REQUIRED = set([ 
+  REQUIRED = set([
     'image'
   ])
 
@@ -78,10 +79,10 @@ class WorkflowHandler(RequestHandler):
     except json.JSONDecodeError:
       self.set_status(422)
       self.write(message(422, 'Ill-formatted JSON'))
-  
+
 
 class WorkflowDeleteHandler(RequestHandler):
-  
+
   def initialize(self, nfs_pod):
     self.__nfs_pod = nfs_pod
 
@@ -90,13 +91,13 @@ class WorkflowDeleteHandler(RequestHandler):
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     shutil.rmtree(work_dir)
     if self.__nfs_pod:
       self._delete_on_nfs(wfid)
     self.set_status(200)
     self.write(message(200, 'Workflow "%s" has been deleted'%wfid))
-  
+
   def _delete_on_nfs(self, wfid):
     cmd = 'kubectl exec %s -- bash -c "rm -rf /exports/dc/%s"'%(self.__nfs_pod, wfid)
     p = Popen(shlex.split(cmd), stdout=PIPE, stderr=PIPE)
@@ -104,13 +105,13 @@ class WorkflowDeleteHandler(RequestHandler):
 
 
 class WorkflowUploadHandler(RequestHandler):
-  
+
   def post(self, wfid):
     work_dir = '%s/%s'%(WORK_DIR, wfid)
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     files = self.request.files
     if not files:
       self.set_status(400)
@@ -136,7 +137,7 @@ class WorkflowLaunchHandler(RequestHandler):
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     input_dir = '%s/input'%work_dir
     if os.path.exists(input_dir):
       if not os.path.exists('%s/%s'%(input_dir, NEXTFLOW_CONFIG_FN)):
@@ -180,7 +181,7 @@ class WorkflowLogHandler(RequestHandler):
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     with open('%s/log'%work_dir) as f:
       self.set_status(200)
       self.write({
@@ -202,9 +203,9 @@ class WorkflowStatusHandler(RequestHandler):
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     status, msg = 'nascent', None
-    
+
     pid_f = '%s/.pid'%work_dir
     status_f = '%s/.status'%work_dir
     if os.path.exists(status_f):
@@ -229,6 +230,12 @@ class WorkflowDownloadHandler(StaticFileHandler):
     self.set_header('Content-Disposition', 'attachment; filename="output-%s.tar.gz"'%wfid)
     return os.path.join(WORK_DIR, wfid, 'output-%s.tar.gz'%wfid)
 
+class GetVersionHandler(RequestHandler):
+  def get(self):
+    self.set_status(200)
+    self.write({
+      'version': VERSION
+    })
 
 def get_nfs_pod():
   out, _ = Popen(shlex.split('kubectl get pods'), stdout=PIPE, stderr=PIPE).communicate()
@@ -243,7 +250,8 @@ def get_nfs_pod():
 if __name__ == "__main__":
   nfs_pod = get_nfs_pod()
   app = Application([
-    (r'/workflow', WorkflowHandler), 
+    (r'/version', GetVersionHandler),
+    (r'/workflow', WorkflowHandler),
     (r'/workflow/([a-zA-Z0-9-]+)\/*', WorkflowDeleteHandler, dict(nfs_pod=nfs_pod)),
     (r'/workflow/([a-zA-Z0-9-]+)/upload\/*', WorkflowUploadHandler),
     (r'/workflow/([a-zA-Z0-9-]+)/launch\/*', WorkflowLaunchHandler),
