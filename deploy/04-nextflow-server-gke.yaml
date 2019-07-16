@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: load-balancer-nextflow
+  name: nextflow-server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: load-balancer-nextflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: load-balancer-nextflow
+    spec:
+      containers:
+      - name: nextflow-server
+        image: cbmckni/scidas-submitter:gke
+        command: ["/bin/sh","-c"]
+        args: ["cat ${PROJECTKEY} && cat ${PROJECTKEY} >> /home/credential_key.json && gcloud auth activate-service-account --key-file=/home/credential_key.json && gcloud config set project ${PROJECTID} && gcloud container clusters get-credentials ${CLUSTERID} && cd /opt/nextflow-gke; python3 server.py --kube true"]
+        env:
+        # Define the environment variable
+        - name: PROJECTID
+          valueFrom:
+            configMapKeyRef:
+              # The ConfigMap 
+              name: nextflow-server-config
+              # Specify the key associated with the value
+              key: project.id
+        - name: PROJECTKEY
+          valueFrom:
+            configMapKeyRef:
+              # The ConfigMap 
+              name: nextflow-server-config
+              # Specify the key associated with the value
+              key: project.key
+        - name: CLUSTERID
+          valueFrom:
+            configMapKeyRef:
+              # The ConfigMap 
+              name: nextflow-server-config
+              # Specify the key associated with the value
+              key: project.cluster
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+        volumeMounts:
+        - name: vol-1
+          mountPath: /workspace
+        ports:
+        - containerPort: 8080
+      volumes:
+      - name: vol-1
+        persistentVolumeClaim:
+          # CHANGE TO CORRECT PVC
+          claimName: clemson-pvc
+
+        # RUN "kubectl expose deployment nextflow-server-deployment --type=LoadBalancer --name=nextflow-server-service" after deployment to expose
+
