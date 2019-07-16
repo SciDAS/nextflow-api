@@ -1,14 +1,15 @@
-#! /usr/bin/env python3 
+#! /usr/bin/env python3
 
 import os
 import json
 import uuid
-import shlex 
+import shlex
 import shutil
 import psutil
 import getpass
 import tornado
 
+from argparse import ArgumentParser
 from pathlib import Path
 from subprocess import Popen, PIPE
 
@@ -18,7 +19,7 @@ from tornado.escape import json_encode, json_decode
 
 
 PORT = 8080
-WORK_DIR = '%s/work_dir'%Path.home()
+WORK_DIR = '/workspace/_workflows'
 NEXTFLOW_CONFIG_FN = 'nextflow.config'
 
 NOT_EXIST = 'Workflow "%s" does not exist'
@@ -47,7 +48,7 @@ def message(code, msg):
 
 class WorkflowHandler(RequestHandler):
 
-  REQUIRED = set([ 
+  REQUIRED = set([
     'image'
   ])
 
@@ -77,29 +78,29 @@ class WorkflowHandler(RequestHandler):
     except json.JSONDecodeError:
       self.set_status(422)
       self.write(message(422, 'Ill-formatted JSON'))
-  
+
 
 class WorkflowDeleteHandler(RequestHandler):
-  
+
   def delete(self, wfid):
     work_dir = '%s/%s'%(WORK_DIR, wfid)
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     shutil.rmtree(work_dir)
     self.set_status(200)
     self.write(message(200, 'Workflow "%s" has been deleted'%wfid))
 
 
 class WorkflowUploadHandler(RequestHandler):
-  
+
   def post(self, wfid):
     work_dir = '%s/%s'%(WORK_DIR, wfid)
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     files = self.request.files
     if not files:
       self.set_status(400)
@@ -121,25 +122,24 @@ class WorkflowUploadHandler(RequestHandler):
 class WorkflowLaunchHandler(RequestHandler):
 
   def post(self, wfid):
+    # make sure workflow directory exists
     work_dir = '%s/%s'%(WORK_DIR, wfid)
+
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
-    input_dir = '%s/input'%work_dir
-    if os.path.exists(input_dir):
-      if not os.path.exists('%s/%s'%(input_dir, NEXTFLOW_CONFIG_FN)):
-        self.set_status(400)
-        self.write(message(400, NOT_READY%(wfid, 'Nextflow config is missing')))
-        return
-      src, dst = '%s/%s'%(input_dir, NEXTFLOW_CONFIG_FN), '%s/%s'%(work_dir, NEXTFLOW_CONFIG_FN)
-      shutil.copyfile(src, dst)
-      with open(dst, 'a') as f:
-        f.write('k8s {\n\tlaunchDir = "/workspace/%s/%s"\n}'%(getpass.getuser(), wfid))
-    else:
-      self.set_status(400)
-      self.write(message(400, NOT_READY%(wfid, 'Input data is missing')))
       return
+
+    # stage nextflow.config if it exists
+    input_dir = '%s/input'%work_dir
+
+    if os.path.exists(input_dir):
+      src = '%s/%s'%(input_dir, NEXTFLOW_CONFIG_FN)
+      dst = '%s/%s'%(work_dir, NEXTFLOW_CONFIG_FN)
+      if os.path.exists(src):
+        shutil.copyfile(src, dst)
+      with open(dst, 'a') as f:
+        f.write('k8s { launchDir = "%s" }'%(work_dir))
 
     # clear up status files
     pid_f, status_f = '%s/.pid'%work_dir, '%s/.status'%work_dir
@@ -154,7 +154,7 @@ class WorkflowLaunchHandler(RequestHandler):
 
     with open('%s/config.json'%work_dir) as f:
       data = json.load(f)
-      cmd = './run-workflow.py --wfid %s --image %s'%(wfid, data['image'])
+      cmd = './run-workflow.py --wfid %s --image %s --kube %d'%(wfid, data['image'], args.kube)
       p = Popen(shlex.split(cmd), stdout=PIPE, stderr=PIPE)
       with open('%s/.pid'%work_dir, 'w') as pid_f:
         pid_f.write(str(p.pid))
@@ -169,7 +169,7 @@ class WorkflowLogHandler(RequestHandler):
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     with open('%s/log'%work_dir) as f:
       self.set_status(200)
       self.write(json_encode({
@@ -191,9 +191,9 @@ class WorkflowStatusHandler(RequestHandler):
     if not os.path.exists(work_dir):
       self.set_status(404)
       self.write(message(404, NOT_EXIST%wfid))
-      return 
+      return
     status, msg = 'nascent', None
-    
+
     pid_f = '%s/.pid'%work_dir
     status_f = '%s/.status'%work_dir
     if os.path.exists(status_f):
@@ -220,8 +220,15 @@ class WorkflowDownloadHandler(StaticFileHandler):
 
 
 if __name__ == "__main__":
+  # parse command-line arguments
+  parser = ArgumentParser()
+  parser.add_argument('--kube', dest='kube', type=bool, default=False,
+                      help='Whether to use kubernetes executor')
+  args = parser.parse_args()
+
+  # initialize server
   app = Application([
-    (r'/workflow', WorkflowHandler), 
+    (r'/workflow', WorkflowHandler),
     (r'/workflow/([a-zA-Z0-9-]+)\/*', WorkflowDeleteHandler),
     (r'/workflow/([a-zA-Z0-9-]+)/upload\/*', WorkflowUploadHandler),
     (r'/workflow/([a-zA-Z0-9-]+)/launch\/*', WorkflowLaunchHandler),
