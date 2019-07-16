@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextflow-server
+  labels:
+    app: nextflow-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextflow-server
+  template:
+    metadata:
+      labels:
+        app: nextflow-server
+    spec:
+      containers:
+      - name: nextflow-server
+        image: bentsherman/nextflow-gke
+        command:
+        - /bin/bash
+        - -c
+        - cd /opt/nextflow-gke; python3 server.py --kube true
+        resources:
+          requests:
+            cpu: 1
+            memory: 4Gi
+        volumeMounts:
+        - name: vol-1
+          mountPath: /workspace
+        ports:
+        - containerPort: 8080
+      volumes:
+      - name: vol-1
+        persistentVolumeClaim:
+          claimName: deepgtex-prp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextflow-server
+  labels:
+    app: nextflow-server
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: nextflow-server
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nextflow-server
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: nextflow-server.nautilus.optiputer.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nextflow-server
+          servicePort: 8080
