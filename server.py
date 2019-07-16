@@ -1,34 +1,29 @@
 #! /usr/bin/env python3
 
-import os
+import argparse
 import json
-import uuid
+import os
+import psutil
 import shlex
 import shutil
-import psutil
-import getpass
 import tornado
-
-from argparse import ArgumentParser
-from pathlib import Path
-from subprocess import Popen, PIPE
+import uuid
 
 from tornado.web import Application, RequestHandler, StaticFileHandler
 from tornado.httpserver import HTTPServer
 from tornado.escape import json_encode, json_decode
 
+
+
 VERSION = 0.2
 
 PORT = 8080
 WORK_DIR = '/workspace/_workflows'
-NEXTFLOW_CONFIG_FN = 'nextflow.config'
+NEXTFLOW_CONFIG = 'nextflow.config'
 
 NOT_EXIST = 'Workflow "%s" does not exist'
 NOT_READY = 'Workflow "%s" is not ready to launch, reason: %s'
 
-
-def init():
-  os.makedirs(WORK_DIR, exist_ok=True)
 
 
 def get_process(pid_f):
@@ -40,11 +35,13 @@ def get_process(pid_f):
       return None
 
 
+
 def message(code, msg):
   return {
     'status': code,
     'message': msg
   }
+
 
 
 class WorkflowHandler(RequestHandler):
@@ -82,6 +79,7 @@ class WorkflowHandler(RequestHandler):
       self.write(message(422, 'Ill-formatted JSON'))
 
 
+
 class WorkflowDeleteHandler(RequestHandler):
 
   def delete(self, wfid):
@@ -93,6 +91,7 @@ class WorkflowDeleteHandler(RequestHandler):
     shutil.rmtree(work_dir)
     self.set_status(200)
     self.write(message(200, 'Workflow "%s" has been deleted'%wfid))
+
 
 
 class WorkflowUploadHandler(RequestHandler):
@@ -121,6 +120,7 @@ class WorkflowUploadHandler(RequestHandler):
     self.write(message(200, 'File %s has been uploaded for workflow "%s" successfully'%(uploaded, wfid)))
 
 
+
 class WorkflowLaunchHandler(RequestHandler):
 
   def post(self, wfid):
@@ -136,8 +136,8 @@ class WorkflowLaunchHandler(RequestHandler):
     input_dir = '%s/input'%work_dir
 
     if os.path.exists(input_dir):
-      src = '%s/%s'%(input_dir, NEXTFLOW_CONFIG_FN)
-      dst = '%s/%s'%(work_dir, NEXTFLOW_CONFIG_FN)
+      src = '%s/%s'%(input_dir, NEXTFLOW_CONFIG)
+      dst = '%s/%s'%(work_dir, NEXTFLOW_CONFIG)
       if os.path.exists(src):
         shutil.copyfile(src, dst)
       with open(dst, 'a') as f:
@@ -157,11 +157,12 @@ class WorkflowLaunchHandler(RequestHandler):
     with open('%s/config.json'%work_dir) as f:
       data = json.load(f)
       cmd = './workflow.py --wfid %s --image %s --kube %d'%(wfid, data['image'], args.kube)
-      p = Popen(shlex.split(cmd), stdout=PIPE, stderr=PIPE)
+      p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
       with open('%s/.pid'%work_dir, 'w') as pid_f:
         pid_f.write(str(p.pid))
     self.set_status(200)
     self.write(message(200, 'Workflow "%s" has been launched\n'%wfid))
+
 
 
 class WorkflowLogHandler(RequestHandler):
@@ -177,6 +178,7 @@ class WorkflowLogHandler(RequestHandler):
       self.write({
         'log': '<pre>%s</pre>'%''.join(f.readlines()),
       })
+
 
 
 class WorkflowStatusHandler(RequestHandler):
@@ -214,11 +216,15 @@ class WorkflowStatusHandler(RequestHandler):
       'message': msg if msg else self.STATUSES[status]%wfid,
     })
 
+
+
 class WorkflowDownloadHandler(StaticFileHandler):
 
   def parse_url_path(self, wfid):
     self.set_header('Content-Disposition', 'attachment; filename="output-%s.tar.gz"'%wfid)
     return os.path.join(WORK_DIR, wfid, 'output-%s.tar.gz'%wfid)
+
+
 
 class GetVersionHandler(RequestHandler):
   def get(self):
@@ -227,12 +233,17 @@ class GetVersionHandler(RequestHandler):
       'version': VERSION
     })
 
+
+
 if __name__ == "__main__":
   # parse command-line arguments
   parser = ArgumentParser()
   parser.add_argument('--kube', dest='kube', type=bool, default=False,
                       help='Whether to use kubernetes executor')
   args = parser.parse_args()
+
+  # initialize workflow directory
+  os.makedirs(WORK_DIR, exist_ok=True)
 
   # initialize server
   app = Application([
@@ -245,9 +256,9 @@ if __name__ == "__main__":
     (r'/workflow/([a-zA-Z0-9-]+)/status\/*', WorkflowStatusHandler),
     (r'/workflow/([a-zA-Z0-9-]+)/download\/*', WorkflowDownloadHandler, dict(path=WORK_DIR)),
   ])
-  init()
   server = HTTPServer(app)
   server.bind(PORT)
   server.start()
+
   print('The API is listening on http://0.0.0.0:%d'%PORT, flush=True)
   tornado.ioloop.IOLoop.instance().start()
