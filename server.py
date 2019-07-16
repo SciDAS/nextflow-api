@@ -17,6 +17,7 @@ from tornado.web import Application, RequestHandler, StaticFileHandler
 from tornado.httpserver import HTTPServer
 from tornado.escape import json_encode, json_decode
 
+VERSION = 0.2
 
 PORT = 8080
 WORK_DIR = '/workspace/_workflows'
@@ -40,10 +41,10 @@ def get_process(pid_f):
 
 
 def message(code, msg):
-  return json_encode({
+  return {
     'status': code,
     'message': msg
-  })
+  }
 
 
 class WorkflowHandler(RequestHandler):
@@ -54,6 +55,7 @@ class WorkflowHandler(RequestHandler):
 
   def get(self):
     self.set_status(200)
+    self.set_header('Content-type', 'application/json')
     self.write(json_encode(os.listdir(WORK_DIR)))
 
   def post(self):
@@ -72,9 +74,9 @@ class WorkflowHandler(RequestHandler):
       with open('%s/config.json'%work_dir, 'w') as f:
         json.dump(data, f)
       self.set_status(201)
-      self.write(json_encode({
+      self.write({
         'uuid': wfid,
-      }))
+      })
     except json.JSONDecodeError:
       self.set_status(422)
       self.write(message(422, 'Ill-formatted JSON'))
@@ -172,9 +174,9 @@ class WorkflowLogHandler(RequestHandler):
       return
     with open('%s/log'%work_dir) as f:
       self.set_status(200)
-      self.write(json_encode({
+      self.write({
         'log': '<pre>%s</pre>'%''.join(f.readlines()),
-      }))
+      })
 
 
 class WorkflowStatusHandler(RequestHandler):
@@ -207,10 +209,10 @@ class WorkflowStatusHandler(RequestHandler):
     elif os.path.exists(pid_f) and get_process(pid_f):
       status = 'running'
     self.set_status(200)
-    self.write(json_encode({
+    self.write({
       'status': status,
       'message': msg if msg else self.STATUSES[status]%wfid,
-    }))
+    })
 
 class WorkflowDownloadHandler(StaticFileHandler):
 
@@ -218,6 +220,12 @@ class WorkflowDownloadHandler(StaticFileHandler):
     self.set_header('Content-Disposition', 'attachment; filename="output-%s.tar.gz"'%wfid)
     return os.path.join(WORK_DIR, wfid, 'output-%s.tar.gz'%wfid)
 
+class GetVersionHandler(RequestHandler):
+  def get(self):
+    self.set_status(200)
+    self.write({
+      'version': VERSION
+    })
 
 if __name__ == "__main__":
   # parse command-line arguments
@@ -228,6 +236,7 @@ if __name__ == "__main__":
 
   # initialize server
   app = Application([
+    (r'/version', GetVersionHandler),
     (r'/workflow', WorkflowHandler),
     (r'/workflow/([a-zA-Z0-9-]+)\/*', WorkflowDeleteHandler),
     (r'/workflow/([a-zA-Z0-9-]+)/upload\/*', WorkflowUploadHandler),
