@@ -188,10 +188,6 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 
       json.dump(workflow, open(config_file, "w"))
 
-      # initialize input directory
-      input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
-      os.makedirs(input_dir, exist_ok=True)
-
       self.set_status(200)
       self.write(message(200, "Workflow successfully updated"))
     except json.JSONDecodeError:
@@ -233,6 +229,13 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
       self.set_status(400)
       self.write(message(400, "No files were uploaded"))
       return
+
+    # load workflow data from config.json
+    workflow = json.load(open("%s/config.json" % work_dir, "r"))
+
+    # initialize input directory
+    input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
+    os.makedirs(input_dir, exist_ok=True)
 
     # save uploaded files to input directory
     filenames = []
