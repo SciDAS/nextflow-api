@@ -15,6 +15,6 @@ FILENAME="$3"
 curl -s \
 	-F "filename=$(basename FILENAME)" \
 	-F "body=@${FILENAME}" \
-	${URL}/workflow/${ID}/upload
+	${URL}/api/workflows/${ID}/upload
 
 echo

@@ -11,6 +11,6 @@ URL="$1"
 ID="$2"
 
 # create a workflow instance
-curl -s -X POST ${URL}/workflow/${ID}/launch
+curl -s -X POST ${URL}/api/workflows/${ID}/launch
 
 echo

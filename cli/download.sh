@@ -11,6 +11,6 @@ URL="$1"
 ID="$2"
 
 # download output data for a workflow instance
-curl -s -o "${ID}-output.tar.gz" ${URL}/workflow/${ID}/download
+curl -s -o "${ID}-output.tar.gz" ${URL}/api/workflows/${ID}/download
 
 echo

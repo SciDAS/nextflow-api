@@ -11,6 +11,6 @@ URL="$1"
 ID="$2"
 
 # get the log of a workflow instance
-curl -s -X GET ${URL}/workflow/${ID}/log
+curl -s -X GET ${URL}/api/workflows/${ID}/log
 
 echo

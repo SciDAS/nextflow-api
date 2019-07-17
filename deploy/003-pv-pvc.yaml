@@ -10,7 +10,6 @@ spec:
   nfs:
     server: 10.55.247.179
     path: "/"
-
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1

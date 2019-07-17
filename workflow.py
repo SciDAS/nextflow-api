@@ -14,32 +14,41 @@ WORKFLOWS_DIR = "/workspace/_workflows"
 
 
 
-os.environ["NXF_VER"] = "19.04.0-edge"
+os.environ["NXF_VER"] = "19.07.0-edge"
 
 
 
-def run_cmd(cmd, log_file=None):
-  p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=sys.stdout.fileno())
+def run_cmd(cmd, log_file=None, debug=True):
+  # run command as child process
+  p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+  # wait for command to finish
   while True:
-    out = p.stdout.readline()
-    if not out and p.poll() is not None:
+    # read line from stdout
+    line = p.stdout.readline()
+
+    # break if process is done
+    if not line and p.poll() is not None:
       break
-    if out:
-      out = str(out, "utf-8")
+
+    # write line to log file
+    if line:
       if log_file:
         with open(log_file, "a") as f:
-          f.write(out)
+          f.write(str(line, "utf-8"))
           f.flush()
-      else:
-        sys.stdout.write(out)
+
+      if log_file is None or debug:
+        sys.stdout.write("%d: %s" % (p.pid, line.decode("ascii", "ignore")))
         sys.stdout.flush()
+
   return p.returncode
 
 
 
-def save_status(work_dir, rc, msg):
+def save_status(work_dir, rc, message):
   with open("%s/.workflow.status" % work_dir, "w") as f:
-    json.dump(dict(rc=rc, message=msg), f)
+    json.dump(dict(rc=rc, message=message), f)
 
 
 
@@ -68,8 +77,8 @@ def run_workflow(pipeline, work_dir, log_file, kube=False):
 
 
 
-def save_output(id, log_file):
-  return run_cmd("./save-output.sh %s %s/%s/output" % (id, WORKFLOWS_DIR, id), log_file)
+def save_output(id):
+  return run_cmd("./save-output.sh %s %s/%s/output" % (id, WORKFLOWS_DIR, id))
 
 
 
@@ -78,7 +87,7 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
   parser.add_argument("--id", required=True, help="Workflow instance ID")
   parser.add_argument("--pipeline", required=True, help="Name of nextflow pipeline")
-  parser.add_argument("--kube", type=bool, default=False, help="Whether to use kubernetes executor")
+  parser.add_argument("--kube", action="store_true", help="Whether to use kubernetes executor")
 
   args = parser.parse_args()
 
@@ -92,7 +101,7 @@ if __name__ == "__main__":
     sys.exit(rc)
 
   # save output data
-  rc = save_output(args.id, log_file)
+  rc = save_output(args.id)
   if rc != 0:
     save_status(work_dir, rc, "Failed to save output data")
     sys.exit(rc)
