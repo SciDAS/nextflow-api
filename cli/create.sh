@@ -13,7 +13,7 @@ PIPELINE="$2"
 # create a workflow instance
 curl -s \
 	-X POST \
-	-d "{\"pipeline\":\"${PIPELINE}\"}" \
+	-d "{\"pipeline\":\"${PIPELINE}\",\"input_dir\":\"input\",\"output_dir\":\"output\"}" \
 	${URL}/api/workflows/0
 
 echo

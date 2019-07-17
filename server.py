@@ -16,7 +16,7 @@ import tornado.web
 
 
 
-API_VERSION = 0.3
+API_VERSION = 0.4
 PORT = 8080
 NEXTFLOW_K8S = True if os.environ.get("NEXTFLOW_K8S") else False
 WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
