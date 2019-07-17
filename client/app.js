@@ -48,6 +48,10 @@ app.service("api", ["$http", function($http) {
 		return $http.post("/api/workflows/" + workflow.id, workflow);
 	};
 
+	this.Workflow.launch = function(id) {
+		return $http.post("/api/workflows/" + id + "/launch");
+	};
+
 	this.Workflow.remove = function(id) {
 		return $http.delete("/api/workflows/" + id);
 	};
@@ -58,7 +62,14 @@ app.service("api", ["$http", function($http) {
 app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, api) {
 	$scope.workflows = [];
 
-	$scope.deleteWorkflow = function(w) {
+	$scope.launch = function(w) {
+		api.Workflow.launch(w.id)
+			.then(function() {
+				$route.reload();
+			})
+	};
+
+	$scope.delete = function(w) {
 		if ( !confirm("Are you sure you want to delete \"" + w.id + "\"?") ) {
 			return;
 		}
