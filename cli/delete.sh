@@ -11,6 +11,6 @@ URL="$1"
 ID="$2"
 
 # delete a workflow instance
-curl -s -X DELETE ${URL}/workflow/${ID}
+curl -s -X DELETE ${URL}/api/workflows/${ID}
 
 echo

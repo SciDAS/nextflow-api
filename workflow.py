@@ -39,7 +39,7 @@ def run_cmd(cmd, log_file=None, debug=True):
           f.flush()
 
       if log_file is None or debug:
-        sys.stdout.write(line.decode("ascii", "ignore"))
+        sys.stdout.write("%d: %s" % (p.pid, line.decode("ascii", "ignore")))
         sys.stdout.flush()
 
   return p.returncode

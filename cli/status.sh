@@ -11,6 +11,6 @@ URL="$1"
 ID="$2"
 
 # get the status of a workflow instance
-curl -s -X GET ${URL}/workflow/${ID}/status
+curl -s -X GET ${URL}/api/workflows/${ID}/status
 
 echo

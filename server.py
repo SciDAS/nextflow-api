@@ -17,7 +17,7 @@ import tornado.web
 
 
 
-VERSION = 0.2
+API_VERSION = 0.3
 PORT = 8080
 WORKFLOWS_DIR = "/workspace/_workflows"
 NEXTFLOW_CONFIG = "nextflow.config"
@@ -48,7 +48,7 @@ class GetVersionHandler(tornado.web.RequestHandler):
   def get(self):
     self.set_status(200)
     self.write({
-      "version": VERSION
+      "version": API_VERSION
     })
 
 
@@ -293,14 +293,14 @@ if __name__ == "__main__":
 
   # initialize server
   app = tornado.web.Application([
-    (r"/version", GetVersionHandler),
-    (r"/workflow", WorkflowHandler),
-    (r"/workflow/([a-zA-Z0-9-]+)\/*", WorkflowDeleteHandler),
-    (r"/workflow/([a-zA-Z0-9-]+)/upload\/*", WorkflowUploadHandler),
-    (r"/workflow/([a-zA-Z0-9-]+)/launch\/*", WorkflowLaunchHandler),
-    (r"/workflow/([a-zA-Z0-9-]+)/status\/*", WorkflowStatusHandler),
-    (r"/workflow/([a-zA-Z0-9-]+)/log\/*", WorkflowLogHandler),
-    (r"/workflow/([a-zA-Z0-9-]+)/download\/*", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
+    (r"/api/version", GetVersionHandler),
+    (r"/api/workflows", WorkflowHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)\/*", WorkflowDeleteHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/upload\/*", WorkflowUploadHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/launch\/*", WorkflowLaunchHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/status\/*", WorkflowStatusHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/log\/*", WorkflowLogHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/download\/*", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
   ])
   server = tornado.httpserver.HTTPServer(app)
   server.bind(PORT)
