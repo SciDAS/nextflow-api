@@ -11,6 +11,9 @@ URL="$1"
 PIPELINE="$2"
 
 # create a workflow instance
-curl -s -X POST -d "{\"pipeline\":\"${PIPELINE}\"}" ${URL}/api/workflows
+curl -s \
+	-X POST \
+	-d "{\"pipeline\":\"${PIPELINE}\"}" \
+	${URL}/api/workflows/0
 
 echo
