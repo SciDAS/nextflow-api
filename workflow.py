@@ -97,7 +97,7 @@ if __name__ == "__main__":
   work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
   log_file = "%s/.workflow.log" % work_dir
 
-  save_status(work_dir, "status")
+  save_status(work_dir, "running")
 
   rc = run_workflow(args.pipeline, work_dir, log_file, kube=args.kube)
   if rc != 0:

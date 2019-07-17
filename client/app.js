@@ -1,7 +1,8 @@
 "use strict";
 
 var app = angular.module("app", [
-	"ngRoute"
+	"ngRoute",
+	"angularFileUpload"
 ]);
 
 
@@ -89,7 +90,11 @@ app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, 
 
 
 
-app.controller("WorkflowCtrl", ["$scope", "$location", "$q", "$routeParams", "api", function($scope, $location, $q, $routeParams, api) {
+app.controller("WorkflowCtrl", ["$scope", "$location", "$routeParams", "api", "FileUploader", function($scope, $location, $routeParams, api, FileUploader) {
+	$scope.uploader = new FileUploader({
+		 url: "/api/workflows/" + $routeParams.id + "/upload"
+	});
+
 	$scope.workflow = {};
 
 	$scope.save = function(workflow) {

@@ -125,8 +125,19 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
       self.write(message(404, "Workflow \"%s\" does not exist" % id))
       return
 
-    # return workflow data from config.json
+    # load workflow data from config.json
     workflow = json.load(open("%s/config.json" % work_dir, "r"))
+
+    # append list of input files
+    input_dir = "%s/input" % work_dir
+
+    if os.path.exists(input_dir):
+      workflow["input_data"] = os.listdir(input_dir)
+    else:
+      workflow["input_data"] = []
+
+    # append status of output data
+    workflow["output_data"] = os.path.exists("%s/%s-output.tar.gz" % (work_dir, id))
 
     # append log if it exists
     log_file = "%s/.workflow.log" % work_dir
@@ -284,7 +295,7 @@ class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 
   def parse_url_path(self, id):
     self.set_header("Content-Disposition", "attachment; filename=\"%s-output.tar.gz\"" % id)
-    return os.path.join(WORKFLOWS_DIR, id, "%s-output.tar.gz" % id)
+    return os.path.join(id, "%s-output.tar.gz" % id)
 
 
 
