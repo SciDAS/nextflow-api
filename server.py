@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 
 import argparse
 import json
@@ -20,9 +20,6 @@ import tornado.web
 API_VERSION = 0.3
 PORT = 8080
 WORKFLOWS_DIR = "/workspace/_workflows"
-NEXTFLOW_CONFIG = "nextflow.config"
-
-NOT_EXIST = "Workflow \"%s\" does not exist"
 
 
 
@@ -103,7 +100,7 @@ class WorkflowDeleteHandler(tornado.web.RequestHandler):
 
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST % id))
+      self.write(message(404, "Workflow \"%s\" does not exist" % id))
       return
 
     # delete workflow directory
@@ -122,7 +119,7 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
 
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST % id))
+      self.write(message(404, "Workflow \"%s\" does not exist" % id))
       return
 
     # make sure request body contains files
@@ -160,7 +157,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST % id))
+      self.write(message(404, "Workflow \"%s\" does not exist" % id))
       return
 
     # stage nextflow.config if it exists
@@ -168,8 +165,8 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
     if os.path.exists(input_dir):
       # copy nextflow.config from input directory to work directory
-      src = "%s/%s" % (input_dir, NEXTFLOW_CONFIG)
-      dst = "%s/%s" % (work_dir, NEXTFLOW_CONFIG)
+      src = "%s/%s" % (input_dir, "nextflow.config")
+      dst = "%s/%s" % (work_dir, "nextflow.config")
       if os.path.exists(dst):
         os.remove(dst)
       if os.path.exists(src):
@@ -225,7 +222,7 @@ class WorkflowStatusHandler(tornado.web.RequestHandler):
 
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST % id))
+      self.write(message(404, "Workflow \"%s\" does not exist" % id))
       return
 
     # determine workflow status from the pid file and status file
@@ -261,7 +258,7 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 
     if not os.path.exists(work_dir):
       self.set_status(404)
-      self.write(message(404, NOT_EXIST % id))
+      self.write(message(404, "Workflow \"%s\" does not exist" % id))
       return
 
     # read workflow log from file
@@ -292,6 +289,12 @@ if __name__ == "__main__":
   os.makedirs(WORKFLOWS_DIR, exist_ok=True)
 
   # initialize server
+  settings = {
+    "static_path": "./client",
+    "static_url_prefix": "/",
+    "static_handler_args": dict(default_filename="index.html")
+  }
+
   app = tornado.web.Application([
     (r"/api/version", GetVersionHandler),
     (r"/api/workflows", WorkflowHandler),
@@ -301,7 +304,7 @@ if __name__ == "__main__":
     (r"/api/workflows/([a-zA-Z0-9-]+)/status\/*", WorkflowStatusHandler),
     (r"/api/workflows/([a-zA-Z0-9-]+)/log\/*", WorkflowLogHandler),
     (r"/api/workflows/([a-zA-Z0-9-]+)/download\/*", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
-  ])
+  ], **settings)
   server = tornado.httpserver.HTTPServer(app)
   server.bind(PORT)
   server.start()
