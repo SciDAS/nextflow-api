@@ -1,0 +1,39 @@
+<div class="row">
+	<div class="col-sm-8 col-sm-offset-2">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Workflow</h3>
+			</div>
+
+			<form class="panel-body form-horizontal" name="form">
+				<div class="form-group" ng-show="workflow.id != '0'">
+					<label class="col-sm-3 control-label">ID</label>
+					<div class="col-sm-6">
+						<p class="form-control-static">{{workflow.id}}</p>
+					</div>
+				</div>
+
+				<div class="form-group" ng-show="workflow.status">
+					<label class="col-sm-3 control-label">Status</label>
+					<div class="col-sm-6">
+						<p class="form-control-static">{{workflow.status}}</p>
+					</div>
+				</div>
+
+				<div class="form-group" ng-class="{'has-error': form.pipeline.$touched && form.pipeline.$invalid}">
+					<label class="col-sm-3 control-label">Pipeline</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="pipeline" ng-model="workflow.pipeline" required/>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="text-center">
+					<button type="button" class="btn btn-default" ng-disabled="form.$invalid" ng-click="save(workflow)">Save</button>
+					<a href="/">Cancel</a>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>

@@ -33,9 +33,9 @@ def get_process(pid_file):
 
 
 
-def message(code, message):
+def message(status, message):
   return {
-    "status": code,
+    "status": status,
     "message": message
   }
 
@@ -50,7 +50,22 @@ class GetVersionHandler(tornado.web.RequestHandler):
 
 
 
-class WorkflowHandler(tornado.web.RequestHandler):
+class WorkflowQueryHandler(tornado.web.RequestHandler):
+
+  def get(self):
+    # get workflow ids
+    workflow_ids = os.listdir(WORKFLOWS_DIR)
+
+    # get workflow objects
+    workflows = [json.load(open("%s/%s/config.json" % (WORKFLOWS_DIR, id))) for id in workflow_ids]
+
+    self.set_status(200)
+    self.set_header("Content-type", "application/json")
+    self.write(tornado.escape.json_encode(workflows))
+
+
+
+class WorkflowCreateHandler(tornado.web.RequestHandler):
 
   REQUIRED_KEYS = set([
     "pipeline"
@@ -59,7 +74,7 @@ class WorkflowHandler(tornado.web.RequestHandler):
   def get(self):
     self.set_status(200)
     self.set_header("Content-type", "application/json")
-    self.write(tornado.escape.json_encode(os.listdir(WORKFLOWS_DIR)))
+    self.write(tornado.escape.json_encode({ "id": "0" }))
 
   def post(self):
     try:
@@ -79,12 +94,15 @@ class WorkflowHandler(tornado.web.RequestHandler):
       os.makedirs(work_dir)
 
       # initialize workflow config
+      data["id"] = id
+      data["status"] = "nascent"
+
       with open("%s/config.json" % work_dir, "w") as f:
         json.dump(data, f)
 
       self.set_status(201)
       self.write({
-        "id": id,
+        "id": id
       })
     except json.JSONDecodeError:
       self.set_status(422)
@@ -92,7 +110,59 @@ class WorkflowHandler(tornado.web.RequestHandler):
 
 
 
-class WorkflowDeleteHandler(tornado.web.RequestHandler):
+class WorkflowEditHandler(tornado.web.RequestHandler):
+
+  REQUIRED_KEYS = set([
+    "pipeline"
+  ])
+
+  def get(self, id):
+    # make sure workflow directory exists
+    work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+
+    if not os.path.exists(work_dir):
+      self.set_status(404)
+      self.write(message(404, "Workflow \"%s\" does not exist" % id))
+      return
+
+    # return workflow data from config.json
+    workflow = json.load(open("%s/config.json" % work_dir, "r"))
+
+    self.set_status(200)
+    self.set_header("Content-type", "application/json")
+    self.write(tornado.escape.json_encode(workflow))
+
+  def post(self, id):
+    # make sure workflow directory exists
+    work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+
+    if not os.path.exists(work_dir):
+      self.set_status(404)
+      self.write(message(404, "Workflow \"%s\" does not exist" % id))
+      return
+
+    try:
+      # make sure request body is valid
+      data = tornado.escape.json_decode(self.request.body)
+      missing_keys = self.REQUIRED_KEYS - data.keys()
+
+      if missing_keys:
+        self.set_status(400)
+        self.write(message(400, "Missing required field(s): %s" % list(missing_keys)))
+        return
+
+      # save workflow config
+      data["id"] = id
+      data["status"] = "nascent"
+
+      with open("%s/config.json" % work_dir, "w") as f:
+        json.dump(data, f)
+
+      self.set_status(200)
+      self.write(message(200, "Workflow successfully updated"))
+    except json.JSONDecodeError:
+      self.set_status(422)
+      self.write(message(422, "Ill-formatted JSON"))
 
   def delete(self, id):
     # make sure workflow directory exists
@@ -207,49 +277,6 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
 
 
-class WorkflowStatusHandler(tornado.web.RequestHandler):
-
-  STATUSES = {
-    "nascent": "Workflow \"%s\" is not yet launched",
-    "running": "Workflow \"%s\" is running",
-    "failed": "Workflow \"%s\" failed",
-    "completed": "Workflow \"%s\" has completed",
-  }
-
-  def get(self, id):
-    # make sure workflow directory exists
-    work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
-
-    if not os.path.exists(work_dir):
-      self.set_status(404)
-      self.write(message(404, "Workflow \"%s\" does not exist" % id))
-      return
-
-    # determine workflow status from the pid file and status file
-    status, message = "nascent", None
-
-    pid_file = "%s/.workflow.pid" % work_dir
-    status_file = "%s/.workflow.status" % work_dir
-
-    if os.path.exists(status_file):
-      with open(status_file) as f:
-        status = json.load(f)
-        rc, message = status["rc"], status["message"]
-        if rc == 0:
-          status = "completed"
-        else:
-          status = "failed"
-    elif os.path.exists(pid_file) and get_process(pid_file):
-      status = "running"
-
-    self.set_status(200)
-    self.write({
-      "status": status,
-      "message": message if message else self.STATUSES[status] % id,
-    })
-
-
-
 class WorkflowLogHandler(tornado.web.RequestHandler):
 
   def get(self, id):
@@ -289,22 +316,18 @@ if __name__ == "__main__":
   os.makedirs(WORKFLOWS_DIR, exist_ok=True)
 
   # initialize server
-  settings = {
-    "static_path": "./client",
-    "static_url_prefix": "/",
-    "static_handler_args": dict(default_filename="index.html")
-  }
-
   app = tornado.web.Application([
     (r"/api/version", GetVersionHandler),
-    (r"/api/workflows", WorkflowHandler),
-    (r"/api/workflows/([a-zA-Z0-9-]+)\/*", WorkflowDeleteHandler),
-    (r"/api/workflows/([a-zA-Z0-9-]+)/upload\/*", WorkflowUploadHandler),
-    (r"/api/workflows/([a-zA-Z0-9-]+)/launch\/*", WorkflowLaunchHandler),
-    (r"/api/workflows/([a-zA-Z0-9-]+)/status\/*", WorkflowStatusHandler),
-    (r"/api/workflows/([a-zA-Z0-9-]+)/log\/*", WorkflowLogHandler),
-    (r"/api/workflows/([a-zA-Z0-9-]+)/download\/*", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
-  ], **settings)
+    (r"/api/workflows", WorkflowQueryHandler),
+    (r"/api/workflows/0", WorkflowCreateHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)", WorkflowEditHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/upload", WorkflowUploadHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/launch", WorkflowLaunchHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/log", WorkflowLogHandler),
+    (r"/api/workflows/([a-zA-Z0-9-]+)/download", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
+    (r"/(.*)", tornado.web.StaticFileHandler, dict(path="./client", default_filename="index.html"))
+  ])
+
   server = tornado.httpserver.HTTPServer(app)
   server.bind(PORT)
   server.start()

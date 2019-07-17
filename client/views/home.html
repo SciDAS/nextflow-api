@@ -1,0 +1,31 @@
+<div class="row">
+	<div class="col-sm-8 col-sm-offset-2">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Workflows</h3>
+			</div>
+
+			<div class="panel-body">
+				<a href="#!/workflow/0">Create workflow</a>
+			</div>
+
+			<table class="table">
+				<th>ID</th>
+				<th>Pipeline</th>
+				<th>Status</th>
+				<th></th>
+
+				<tr ng-repeat="w in workflows">
+					<td>
+						<a ng-href="#!/workflow/{{w.id}}">{{w.id}}</a>
+					</td>
+					<td>{{w.pipeline}}</td>
+					<td>{{w.status}}</td>
+					<td class="text-center">
+						<span class="button-icon" ng-click="deleteWorkflow(w)">&times;</span>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>

@@ -46,9 +46,11 @@ def run_cmd(cmd, log_file=None, debug=True):
 
 
 
-def save_status(work_dir, rc, message):
-  with open("%s/.workflow.status" % work_dir, "w") as f:
-    json.dump(dict(rc=rc, message=message), f)
+def save_status(work_dir, status):
+  data = json.load(open("%s/config.json" % work_dir))
+  data["status"] = status
+
+  json.dump(data, open("%s/config.json" % work_dir, "w"))
 
 
 
@@ -95,16 +97,18 @@ if __name__ == "__main__":
   work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
   log_file = "%s/.workflow.log" % work_dir
 
+  save_status(work_dir, "status")
+
   rc = run_workflow(args.pipeline, work_dir, log_file, kube=args.kube)
   if rc != 0:
-    save_status(work_dir, rc, "Workflow failed")
+    save_status(work_dir, "failed")
     sys.exit(rc)
 
   # save output data
   rc = save_output(args.id)
   if rc != 0:
-    save_status(work_dir, rc, "Failed to save output data")
+    save_status(work_dir, "failed")
     sys.exit(rc)
 
   # save final status
-  save_status(work_dir, 0, "Workflow completed")
+  save_status(work_dir, "completed")
