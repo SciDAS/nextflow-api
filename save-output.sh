@@ -10,7 +10,6 @@ fi
 ID="$1"
 SRC_PATH="$2"
 DST_DIRNAME="$(dirname ${SRC_PATH})"
-DST_BASENAME="${ID}-$(basename ${SRC_PATH}).tar.gz"
 
 # replace any links with the original files
 for f in $(find ${SRC_PATH} -type l); do
@@ -20,4 +19,4 @@ done
 # create archive of output data
 cd ${DST_DIRNAME}
 
-tar -czf ${DST_BASENAME} $(basename ${SRC_PATH})/*
+tar -czf "${ID}-output.tar.gz" $(basename ${SRC_PATH})/*

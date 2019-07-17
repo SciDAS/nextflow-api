@@ -17,6 +17,9 @@ spec:
       containers:
       - name: nextflow-server
         image: bentsherman/nextflow-gke
+        env:
+        - name: NEXTFLOW_K8S
+          value: "true"
         command:
         - /bin/bash
         - -c

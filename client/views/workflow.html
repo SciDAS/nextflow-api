@@ -20,6 +20,20 @@
 					</div>
 				</div>
 
+				<div class="form-group" ng-class="{'has-error': form.input_dir.$touched && form.input_dir.$invalid}">
+					<label class="col-sm-3 control-label">Input Directory</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="input_dir" ng-model="workflow.input_dir" required/>
+					</div>
+				</div>
+
+				<div class="form-group" ng-class="{'has-error': form.output_dir.$touched && form.output_dir.$invalid}">
+					<label class="col-sm-3 control-label">Output Directory</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="output_dir" ng-model="workflow.output_dir" required/>
+					</div>
+				</div>
+
 				<div class="form-group" ng-show="workflow.status">
 					<label class="col-sm-3 control-label">Status</label>
 					<div class="col-sm-6">

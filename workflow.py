@@ -3,14 +3,14 @@
 import argparse
 import json
 import os
-import shlex
 import subprocess
 import sys
 
 
 
+NEXTFLOW_K8S = True if os.environ.get("NEXTFLOW_K8S") else False
 PVC_NAME = os.environ.get("PVC_NAME", "deepgtex-prp")
-WORKFLOWS_DIR = "/workspace/_workflows"
+WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
 
 
 
@@ -18,17 +18,17 @@ os.environ["NXF_VER"] = "19.07.0-edge"
 
 
 
-def run_cmd(cmd, log_file=None, debug=True):
+def run_cmd(args, log_file=None, debug=True):
   # run command as child process
-  p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
   # wait for command to finish
   while True:
     # read line from stdout
-    line = p.stdout.readline()
+    line = proc.stdout.readline()
 
     # break if process is done
-    if not line and p.poll() is not None:
+    if not line and proc.poll() is not None:
       break
 
     # write line to log file
@@ -39,10 +39,10 @@ def run_cmd(cmd, log_file=None, debug=True):
           f.flush()
 
       if log_file is None or debug:
-        sys.stdout.write("%d: %s" % (p.pid, line.decode("ascii", "ignore")))
+        sys.stdout.write("%d: %s" % (proc.pid, line.decode("ascii", "ignore")))
         sys.stdout.flush()
 
-  return p.returncode
+  return proc.returncode
 
 
 
@@ -54,7 +54,7 @@ def save_status(work_dir, status):
 
 
 
-def run_workflow(pipeline, work_dir, log_file, kube=False):
+def run_workflow(pipeline, work_dir, log_file):
   # save current directory
   prev_dir = os.getcwd()
 
@@ -67,10 +67,10 @@ def run_workflow(pipeline, work_dir, log_file, kube=False):
     f.write("")
 
   # launch workflow, wait for completion
-  if kube:
-    rc = run_cmd("nextflow kuberun -v %s %s" % (PVC_NAME, pipeline), log_file)
+  if NEXTFLOW_K8S:
+    rc = run_cmd(["nextflow", "kuberun", "-v", PVC_NAME, pipeline], log_file)
   else:
-    rc = run_cmd("nextflow run %s -with-docker" % (pipeline), log_file)
+    rc = run_cmd(["nextflow", "run", pipeline, "-with-docker"], log_file)
 
   # return to original directory
   os.chdir(prev_dir)
@@ -79,17 +79,17 @@ def run_workflow(pipeline, work_dir, log_file, kube=False):
 
 
 
-def save_output(id):
-  return run_cmd("./save-output.sh %s %s/%s/output" % (id, WORKFLOWS_DIR, id))
+def save_output(id, output_dir):
+  return run_cmd(["./save-output.sh", id, output_dir])
 
 
 
 if __name__ == "__main__":
   # parse command-line arguments
   parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
-  parser.add_argument("--id", required=True, help="Workflow instance ID")
-  parser.add_argument("--pipeline", required=True, help="Name of nextflow pipeline")
-  parser.add_argument("--kube", action="store_true", help="Whether to use kubernetes executor")
+  parser.add_argument("--id", help="Workflow instance ID", required=True)
+  parser.add_argument("--pipeline", help="Name of nextflow pipeline", required=True)
+  parser.add_argument("--output-dir", help="Output directory", default="output")
 
   args = parser.parse_args()
 
@@ -99,13 +99,15 @@ if __name__ == "__main__":
 
   save_status(work_dir, "running")
 
-  rc = run_workflow(args.pipeline, work_dir, log_file, kube=args.kube)
+  rc = run_workflow(args.pipeline, work_dir, log_file)
   if rc != 0:
     save_status(work_dir, "failed")
     sys.exit(rc)
 
   # save output data
-  rc = save_output(args.id)
+  output_dir = "%s/%s/%s" % (WORKFLOWS_DIR, args.id, args.output_dir)
+
+  rc = save_output(args.id, output_dir)
   if rc != 0:
     save_status(work_dir, "failed")
     sys.exit(rc)

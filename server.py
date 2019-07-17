@@ -4,7 +4,6 @@ import argparse
 import json
 import os
 import psutil
-import shlex
 import shutil
 import subprocess
 import sys
@@ -19,7 +18,8 @@ import tornado.web
 
 API_VERSION = 0.3
 PORT = 8080
-WORKFLOWS_DIR = "/workspace/_workflows"
+NEXTFLOW_K8S = True if os.environ.get("NEXTFLOW_K8S") else False
+WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
 
 
 
@@ -69,13 +69,21 @@ class WorkflowQueryHandler(tornado.web.RequestHandler):
 class WorkflowCreateHandler(tornado.web.RequestHandler):
 
   REQUIRED_KEYS = set([
-    "pipeline"
+    "pipeline",
+    "input_dir",
+    "output_dir"
   ])
 
   def get(self):
+    workflow = {
+      "id": "0",
+      "input_dir": "input",
+      "output_dir": "output"
+    }
+
     self.set_status(200)
     self.set_header("Content-type", "application/json")
-    self.write(tornado.escape.json_encode({ "id": "0" }))
+    self.write(tornado.escape.json_encode(workflow))
 
   def post(self):
     try:
@@ -113,7 +121,9 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 class WorkflowEditHandler(tornado.web.RequestHandler):
 
   REQUIRED_KEYS = set([
-    "pipeline"
+    "pipeline",
+    "input_dir",
+    "output_dir"
   ])
 
   def get(self, id):
@@ -129,7 +139,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
     workflow = json.load(open("%s/config.json" % work_dir, "r"))
 
     # append list of input files
-    input_dir = "%s/input" % work_dir
+    input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
 
     if os.path.exists(input_dir):
       workflow["input_data"] = os.listdir(input_dir)
@@ -178,6 +188,10 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 
       json.dump(workflow, open(config_file, "w"))
 
+      # initialize input directory
+      input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
+      os.makedirs(input_dir, exist_ok=True)
+
       self.set_status(200)
       self.write(message(200, "Workflow successfully updated"))
     except json.JSONDecodeError:
@@ -220,10 +234,6 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
       self.write(message(400, "No files were uploaded"))
       return
 
-    # initialize input directory
-    input_dir = "%s/input" % work_dir
-    os.makedirs(input_dir, exist_ok=True)
-
     # save uploaded files to input directory
     filenames = []
 
@@ -250,8 +260,11 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
       self.write(message(404, "Workflow \"%s\" does not exist" % id))
       return
 
+    # load workflow data from config.json
+    workflow = json.load(open("%s/config.json" % work_dir, "r"))
+
     # stage nextflow.config if it exists
-    input_dir = "%s/input" % work_dir
+    input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
 
     if os.path.exists(input_dir):
       # copy nextflow.config from input directory to work directory
@@ -277,14 +290,16 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
       os.remove(pid_file)
 
     # launch workflow as a child process
-    with open("%s/config.json" % work_dir) as f:
-      data = json.load(f)
-      kube = "--kube" if args.kube else ""
-      cmd = "./workflow.py --id %s --pipeline %s %s" % (id, data["pipeline"], kube)
-      p = subprocess.Popen(shlex.split(cmd), stdout=sys.stdout.fileno(), stderr=subprocess.STDOUT)
+    args = [
+        "./workflow.py",
+        "--id", id,
+        "--pipeline", workflow["pipeline"],
+        "--output-dir", workflow["output_dir"]
+    ]
+    proc = subprocess.Popen(args, stdout=sys.stdout.fileno(), stderr=subprocess.STDOUT)
 
-      with open("%s/.workflow.pid" % work_dir, "w") as pid_file:
-        pid_file.write(str(p.pid))
+    with open("%s/.workflow.pid" % work_dir, "w") as pid_file:
+      pid_file.write(str(proc.pid))
 
     self.set_status(200)
     self.write(message(200, "Workflow \"%s\" has been launched" % id))
@@ -300,12 +315,6 @@ class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 
 
 if __name__ == "__main__":
-  # parse command-line arguments
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--kube", action="store_true", help="Whether to use kubernetes executor")
-
-  args = parser.parse_args()
-
   # initialize workflow directory
   os.makedirs(WORKFLOWS_DIR, exist_ok=True)
 
