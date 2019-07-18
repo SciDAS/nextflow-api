@@ -3,7 +3,6 @@
 import argparse
 import json
 import os
-import psutil
 import shutil
 import subprocess
 import sys
@@ -23,13 +22,32 @@ WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
 
 
 
-def get_process(pid_file):
-	with open(pid_file) as f:
-		try:
-			pid = int(f.readline().strip())
-			return psutil.Process(pid)
-		except psutil.NoSuchProcess:
-			return None
+CHILD_PROCESSES = {}
+
+
+
+def launch_child_process(args):
+	proc = subprocess.Popen(args, stdout=sys.stdout.fileno(), stderr=subprocess.STDOUT)
+	CHILD_PROCESSES[proc.pid] = proc
+	return proc
+
+
+
+def is_process_running(pid_file):
+	# read pid from file
+	f = open(pid_file)
+	pid = int(f.readline().strip())
+
+	# retrieve process from child process list
+	try:
+		proc = CHILD_PROCESSES[pid]
+
+	# return false if process does not exist
+	except KeyError:
+		return False
+
+	# determine whether process finished
+	return proc.poll() == None
 
 
 
@@ -286,7 +304,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 		pid_file = "%s/.workflow.pid" % work_dir
 
 		if os.path.exists(pid_file):
-			if get_process(pid_file):
+			if is_process_running(pid_file):
 				self.set_status(400)
 				self.write(message(400, "Workflow \"%s\" is already running" % id))
 				return
@@ -299,10 +317,15 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			"--pipeline", workflow["pipeline"],
 			"--output-dir", workflow["output_dir"]
 		]
-		proc = subprocess.Popen(args, stdout=sys.stdout.fileno(), stderr=subprocess.STDOUT)
+		proc = launch_child_process(args)
 
-		with open("%s/.workflow.pid" % work_dir, "w") as pid_file:
-			pid_file.write(str(proc.pid))
+		with open(pid_file, "w") as f:
+			f.write(str(proc.pid))
+
+		# update workflow status
+		workflow["status"] = "running"
+
+		json.dump(workflow, open("%s/config.json" % work_dir, "w"))
 
 		self.set_status(200)
 		self.write(message(200, "Workflow \"%s\" has been launched" % id))

@@ -47,10 +47,10 @@ def run_cmd(args, log_file=None, debug=True):
 
 
 def save_status(work_dir, status):
-	data = json.load(open("%s/config.json" % work_dir))
-	data["status"] = status
+	workflow = json.load(open("%s/config.json" % work_dir))
+	workflow["status"] = status
 
-	json.dump(data, open("%s/config.json" % work_dir, "w"))
+	json.dump(workflow, open("%s/config.json" % work_dir, "w"))
 
 
 
