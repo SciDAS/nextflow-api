@@ -46,7 +46,10 @@ app.service("api", ["$http", function($http) {
 	};
 
 	this.Workflow.save = function(workflow) {
-		return $http.post("/api/workflows/" + workflow.id, workflow);
+		return $http.post("/api/workflows/" + workflow.id, workflow)
+			.then(function(res) {
+				return res.data;
+			});
 	};
 
 	this.Workflow.launch = function(id) {
@@ -90,22 +93,26 @@ app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, 
 
 
 
-app.controller("WorkflowCtrl", ["$scope", "$location", "$routeParams", "api", "FileUploader", function($scope, $location, $routeParams, api, FileUploader) {
+app.controller("WorkflowCtrl", ["$scope", "$route", "api", "FileUploader", function($scope, $route, api, FileUploader) {
 	$scope.uploader = new FileUploader({
-		 url: "/api/workflows/" + $routeParams.id + "/upload"
+		 url: "/api/workflows/" + $route.current.params.id + "/upload"
 	});
+
+	$scope.uploader.onCompleteAll = function() {
+		$route.reload();
+	};
 
 	$scope.workflow = {};
 
 	$scope.save = function(workflow) {
 		api.Workflow.save(workflow)
-			.then(function() {
-				$location.url("/");
+			.then(function(res) {
+				$route.updateParams({ id: res.id });
 			});
 	};
 
 	// initialize
-	api.Workflow.get($routeParams.id)
+	api.Workflow.get($route.current.params.id)
 		.then(function(workflow) {
 			$scope.workflow = workflow;
 		});

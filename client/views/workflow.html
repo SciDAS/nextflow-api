@@ -41,7 +41,7 @@
 					</div>
 				</div>
 
-				<div class="form-group">
+				<div class="form-group" ng-show="workflow.id != '0'">
 					<label class="col-sm-3 control-label">Input Data</label>
 					<div class="col-sm-6">
 						<p class="form-control-static" ng-show="workflow.input_data.length == 0">none</p>
@@ -67,7 +67,7 @@
 			</form>
 		</div>
 
-		<div class="panel panel-default">
+		<div class="panel panel-default" ng-show="workflow.id != '0'">
 			<div class="panel-heading">
 				<h3 class="panel-title">Input Data</h3>
 			</div>

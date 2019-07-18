@@ -108,10 +108,9 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 
       json.dump(data, open("%s/config.json" % work_dir, "w"))
 
-      self.set_status(201)
-      self.write({
-        "id": id
-      })
+      self.set_status(200)
+      self.set_header("Content-type", "application/json")
+      self.write(tornado.escape.json_encode({ "id": id }))
     except json.JSONDecodeError:
       self.set_status(422)
       self.write(message(422, "Ill-formatted JSON"))
@@ -189,7 +188,8 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
       json.dump(workflow, open(config_file, "w"))
 
       self.set_status(200)
-      self.write(message(200, "Workflow successfully updated"))
+      self.set_header("Content-type", "application/json")
+      self.write(tornado.escape.json_encode({ "id": id }))
     except json.JSONDecodeError:
       self.set_status(422)
       self.write(message(422, "Ill-formatted JSON"))

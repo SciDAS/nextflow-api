@@ -68,9 +68,21 @@ def run_workflow(pipeline, work_dir, log_file):
 
   # launch workflow, wait for completion
   if NEXTFLOW_K8S:
-    rc = run_cmd(["nextflow", "kuberun", "-v", PVC_NAME, pipeline], log_file)
+    rc = run_cmd([
+      "nextflow",
+      "kuberun",
+      "-ansi-log", "false",
+      "-volume-mount", PVC_NAME,
+      pipeline
+    ], log_file)
   else:
-    rc = run_cmd(["nextflow", "run", pipeline, "-with-docker"], log_file)
+    rc = run_cmd([
+      "nextflow",
+      "run",
+      "-ansi-log", "false",
+      "-with-docker",
+      pipeline
+    ], log_file)
 
   # return to original directory
   os.chdir(prev_dir)
