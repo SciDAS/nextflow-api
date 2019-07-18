@@ -71,17 +71,17 @@ def run_workflow(pipeline, work_dir, log_file):
 		rc = run_cmd([
 			"nextflow",
 			"kuberun",
+			pipeline,
 			"-ansi-log", "false",
-			"-volume-mount", PVC_NAME,
-			pipeline
+			"-volume-mount", PVC_NAME
 		], log_file)
 	else:
 		rc = run_cmd([
 			"nextflow",
 			"run",
+			pipeline,
 			"-ansi-log", "false",
-			"-with-docker",
-			pipeline
+			"-with-docker"
 		], log_file)
 
 	# return to original directory

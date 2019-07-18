@@ -294,10 +294,10 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
 		# launch workflow as a child process
 		args = [
-				"./workflow.py",
-				"--id", id,
-				"--pipeline", workflow["pipeline"],
-				"--output-dir", workflow["output_dir"]
+			"./workflow.py",
+			"--id", id,
+			"--pipeline", workflow["pipeline"],
+			"--output-dir", workflow["output_dir"]
 		]
 		proc = subprocess.Popen(args, stdout=sys.stdout.fileno(), stderr=subprocess.STDOUT)
 
