@@ -13,6 +13,20 @@
 					</div>
 				</div>
 
+				<div class="form-group" ng-show="workflow.id != '0'">
+					<label class="col-sm-3 control-label">Date Created</label>
+					<div class="col-sm-6">
+						<p class="form-control-static">{{workflow.date_created | date:'short'}}</p>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label class="col-sm-3 control-label">Name</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="name" ng-model="workflow.name"/>
+					</div>
+				</div>
+
 				<div class="form-group" ng-class="{'has-error': form.pipeline.$touched && form.pipeline.$invalid}">
 					<label class="col-sm-3 control-label">Pipeline</label>
 					<div class="col-sm-6">

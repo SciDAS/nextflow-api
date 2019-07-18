@@ -1,5 +1,5 @@
 <div class="row">
-	<div class="col-sm-8 col-sm-offset-2">
+	<div class="col-xs-12">
 		<div class="panel panel-default">
 			<div class="panel-heading">
 				<h3 class="panel-title">Workflows</h3>
@@ -11,6 +11,8 @@
 
 			<table class="table">
 				<th>ID</th>
+				<th>Date Created</th>
+				<th>Name</th>
 				<th>Pipeline</th>
 				<th>Status</th>
 				<th></th>
@@ -18,8 +20,10 @@
 
 				<tr ng-repeat="w in workflows">
 					<td>
-						<a ng-href="#!/workflow/{{w.id}}">{{w.id}}</a>
+						<a ng-href="#!/workflow/{{w.id}}">{{w.id.slice(0, 8)}}</a>
 					</td>
+					<td>{{w.date_created | date:'short'}}</td>
+					<td>{{w.name}}</td>
 					<td>{{w.pipeline}}</td>
 					<td>{{w.status}}</td>
 					<td class="text-center">

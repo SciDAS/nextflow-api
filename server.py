@@ -6,12 +6,12 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 import tornado
-import uuid
-
 import tornado.escape
 import tornado.httpserver
 import tornado.web
+import uuid
 
 
 
@@ -91,6 +91,7 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 	])
 
 	DEFAULTS = {
+		"name": "",
 		"revision": "master",
 		"input_dir": "input",
 		"output_dir": "output"
@@ -120,9 +121,13 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 
 			os.makedirs(work_dir)
 
-			# create workflow config
+			# create workflow
 			workflow = {**self.DEFAULTS, **data, **{ "id": id, "status": "nascent" }}
 
+			# append creation timestamp to workflow
+			workflow["date_created"] = int(time.time() * 1000)
+
+			# save workflow
 			json.dump(workflow, open("%s/config.json" % work_dir, "w"))
 
 			self.set_status(200)
@@ -141,6 +146,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 	])
 
 	DEFAULTS = {
+		"name": "",
 		"revision": "master",
 		"input_dir": "input",
 		"output_dir": "output"
