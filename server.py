@@ -292,21 +292,19 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 		# load workflow data from config.json
 		workflow = json.load(open("%s/config.json" % work_dir, "r"))
 
-		# stage nextflow.config if it exists
+		# copy nextflow.config from input directory if it exists
 		input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
+		src = "%s/%s" % (input_dir, "nextflow.config")
+		dst = "%s/%s" % (work_dir, "nextflow.config")
 
-		if os.path.exists(input_dir):
-			# copy nextflow.config from input directory to work directory
-			src = "%s/%s" % (input_dir, "nextflow.config")
-			dst = "%s/%s" % (work_dir, "nextflow.config")
-			if os.path.exists(dst):
-				os.remove(dst)
-			if os.path.exists(src):
-				shutil.copyfile(src, dst)
+		if os.path.exists(src):
+			shutil.copyfile(src, dst)
+		elif os.path.exists(dst):
+			os.remove(dst)
 
-			# append additional settings to nextflow.config
-			with open(dst, "a") as f:
-				f.write("k8s { launchDir = \"%s\" }" % (work_dir))
+		# append additional settings to nextflow.config
+		with open(dst, "a") as f:
+			f.write("k8s { launchDir = \"%s\" }" % (work_dir))
 
 		# initialize pid file
 		pid_file = "%s/.workflow.pid" % work_dir
