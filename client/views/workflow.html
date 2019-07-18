@@ -58,7 +58,9 @@
 				<div class="form-group" ng-show="workflow.status">
 					<label class="col-sm-3 control-label">Status</label>
 					<div class="col-sm-6">
-						<p class="form-control-static">{{workflow.status}}</p>
+						<p class="form-control-static text-{{STATUS_COLORS[workflow.status]}}">
+							<strong>{{workflow.status}}</strong>
+						</p>
 					</div>
 				</div>
 

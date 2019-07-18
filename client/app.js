@@ -1,6 +1,6 @@
 "use strict";
 
-var app = angular.module("app", [
+const app = angular.module("app", [
 	"ngRoute",
 	"angularFileUpload"
 ]);
@@ -63,7 +63,17 @@ app.service("api", ["$http", function($http) {
 
 
 
+const STATUS_COLORS = {
+	"nascent": "success",
+	"running": "warning",
+	"completed": "success",
+	"failed": "danger"
+};
+
+
+
 app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, api) {
+	$scope.STATUS_COLORS = STATUS_COLORS;
 	$scope.workflows = [];
 
 	$scope.launch = function(w) {
@@ -94,6 +104,9 @@ app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, 
 
 
 app.controller("WorkflowCtrl", ["$scope", "$route", "api", "FileUploader", function($scope, $route, api, FileUploader) {
+	$scope.STATUS_COLORS = STATUS_COLORS;
+	$scope.workflow = {};
+
 	$scope.uploader = new FileUploader({
 		 url: "/api/workflows/" + $route.current.params.id + "/upload"
 	});
@@ -101,8 +114,6 @@ app.controller("WorkflowCtrl", ["$scope", "$route", "api", "FileUploader", funct
 	$scope.uploader.onCompleteAll = function() {
 		$route.reload();
 	};
-
-	$scope.workflow = {};
 
 	$scope.save = function(workflow) {
 		api.Workflow.save(workflow)

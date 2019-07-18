@@ -25,7 +25,9 @@
 					<td>{{w.date_created | date:'short'}}</td>
 					<td>{{w.name}}</td>
 					<td>{{w.pipeline}}</td>
-					<td>{{w.status}}</td>
+					<td>
+						<strong class="text-{{STATUS_COLORS[w.status]}}">{{w.status}}</strong>
+					</td>
 					<td class="text-center">
 						<a href="" ng-click="launch(w)">Launch</a>
 					</td>
