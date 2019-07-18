@@ -87,17 +87,17 @@ class WorkflowQueryHandler(tornado.web.RequestHandler):
 class WorkflowCreateHandler(tornado.web.RequestHandler):
 
 	REQUIRED_KEYS = set([
-		"pipeline",
-		"input_dir",
-		"output_dir"
+		"pipeline"
 	])
 
+	DEFAULTS = {
+		"revision": "master",
+		"input_dir": "input",
+		"output_dir": "output"
+	}
+
 	def get(self):
-		workflow = {
-			"id": "0",
-			"input_dir": "input",
-			"output_dir": "output"
-		}
+		workflow = {**self.DEFAULTS, **{ "id": "0" }}
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")
@@ -121,10 +121,9 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 			os.makedirs(work_dir)
 
 			# create workflow config
-			data["id"] = id
-			data["status"] = "nascent"
+			workflow = {**self.DEFAULTS, **data, **{ "id": id, "status": "nascent" }}
 
-			json.dump(data, open("%s/config.json" % work_dir, "w"))
+			json.dump(workflow, open("%s/config.json" % work_dir, "w"))
 
 			self.set_status(200)
 			self.set_header("Content-type", "application/json")
@@ -138,10 +137,14 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 class WorkflowEditHandler(tornado.web.RequestHandler):
 
 	REQUIRED_KEYS = set([
-		"pipeline",
-		"input_dir",
-		"output_dir"
+		"pipeline"
 	])
+
+	DEFAULTS = {
+		"revision": "master",
+		"input_dir": "input",
+		"output_dir": "output"
+	}
 
 	def get(self, id):
 		# make sure workflow directory exists
@@ -200,8 +203,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 			config_file = "%s/config.json" % work_dir
 			workflow = json.load(open(config_file))
 
-			for key in self.REQUIRED_KEYS:
-				workflow[key] = data[key]
+			workflow = {**self.DEFAULTS, **workflow, **data}
 
 			json.dump(workflow, open(config_file, "w"))
 
@@ -315,6 +317,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			"./workflow.py",
 			"--id", id,
 			"--pipeline", workflow["pipeline"],
+			"--revision", workflow["revision"],
 			"--output-dir", workflow["output_dir"]
 		]
 		proc = launch_child_process(args)

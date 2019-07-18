@@ -54,7 +54,7 @@ def save_status(work_dir, status):
 
 
 
-def run_workflow(pipeline, work_dir, log_file):
+def run_workflow(pipeline, revision, work_dir, log_file):
 	# save current directory
 	prev_dir = os.getcwd()
 
@@ -73,6 +73,8 @@ def run_workflow(pipeline, work_dir, log_file):
 			"kuberun",
 			pipeline,
 			"-ansi-log", "false",
+			"-latest",
+			"-revision", revision,
 			"-volume-mount", PVC_NAME
 		], log_file)
 	else:
@@ -81,6 +83,8 @@ def run_workflow(pipeline, work_dir, log_file):
 			"run",
 			pipeline,
 			"-ansi-log", "false",
+			"-latest",
+			"-revision", revision,
 			"-with-docker"
 		], log_file)
 
@@ -101,6 +105,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
 	parser.add_argument("--id", help="Workflow instance ID", required=True)
 	parser.add_argument("--pipeline", help="Name of nextflow pipeline", required=True)
+	parser.add_argument("--revision", help="Project revision", default="master")
 	parser.add_argument("--output-dir", help="Output directory", default="output")
 
 	args = parser.parse_args()
@@ -109,9 +114,7 @@ if __name__ == "__main__":
 	work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
 	log_file = "%s/.workflow.log" % work_dir
 
-	save_status(work_dir, "running")
-
-	rc = run_workflow(args.pipeline, work_dir, log_file)
+	rc = run_workflow(args.pipeline, args.revision, work_dir, log_file)
 	if rc != 0:
 		save_status(work_dir, "failed")
 		sys.exit(rc)

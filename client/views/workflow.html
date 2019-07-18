@@ -20,6 +20,13 @@
 					</div>
 				</div>
 
+				<div class="form-group" ng-class="{'has-error': form.revision.$touched && form.revision.$invalid}">
+					<label class="col-sm-3 control-label">Revision</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="revision" ng-model="workflow.revision" required/>
+					</div>
+				</div>
+
 				<div class="form-group" ng-class="{'has-error': form.input_dir.$touched && form.input_dir.$invalid}">
 					<label class="col-sm-3 control-label">Input Directory</label>
 					<div class="col-sm-6">
