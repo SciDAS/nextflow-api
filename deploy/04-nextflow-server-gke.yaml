@@ -18,7 +18,7 @@ spec:
       - name: nextflow-server
         image: cbmckni/scidas-submitter:gke
         command: ["/bin/sh","-c"]
-        args: ["cat ${PROJECTKEY} && cat ${PROJECTKEY} >> /home/credential_key.json && gcloud auth activate-service-account --key-file=/home/credential_key.json && gcloud config set project ${PROJECTID} && gcloud container clusters get-credentials ${CLUSTERID} && cd /opt/nextflow-gke; python3 server.py --kube true"]
+        args: ["echo ${PROJECTKEY} > /home/credential_key.json && cat /home/credential_key.json && gcloud auth activate-service-account --key-file=/home/credential_key.json && gcloud config set project ${PROJECTID} && gcloud container clusters get-credentials ${CLUSTERID} && cd /opt/nextflow-gke; python3 server.py --kube true"]
         env:
         # Define the environment variable
         - name: PROJECTID
@@ -58,4 +58,32 @@ spec:
           claimName: clemson-pvc
 
         # RUN "kubectl expose deployment nextflow-server-deployment --type=LoadBalancer --name=nextflow-server-service" after deployment to expose
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2019-07-16T21:00:27Z"
+  labels:
+    app.kubernetes.io/name: load-balancer-nextflow
+  name: nextflow-server-service
+  namespace: default
+  resourceVersion: "364139"
+  selfLink: /api/v1/namespaces/default/services/nextflow-server-service
+  uid: bcb38592-a80c-11e9-abca-42010af001e9
+spec:
+  clusterIP: 10.126.1.58
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 31190
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: load-balancer-nextflow
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer:
+    ingress:
+    - ip: 35.243.213.224
 
