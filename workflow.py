@@ -50,7 +50,7 @@ def save_status(work_dir, status):
 
 
 
-def run_workflow(pipeline, revision, work_dir, log_file):
+def run_workflow(pipeline, resume, revision, work_dir, log_file):
 	# save current directory
 	prev_dir = os.getcwd()
 
@@ -64,7 +64,7 @@ def run_workflow(pipeline, revision, work_dir, log_file):
 
 	# launch workflow, wait for completion
 	if NEXTFLOW_K8S:
-		rc = run_cmd([
+		args = [
 			"nextflow",
 			"kuberun",
 			pipeline,
@@ -72,9 +72,9 @@ def run_workflow(pipeline, revision, work_dir, log_file):
 			"-latest",
 			"-revision", revision,
 			"-volume-mount", PVC_NAME
-		], log_file)
+		]
 	else:
-		rc = run_cmd([
+		args = [
 			"nextflow",
 			"run",
 			pipeline,
@@ -82,7 +82,12 @@ def run_workflow(pipeline, revision, work_dir, log_file):
 			"-latest",
 			"-revision", revision,
 			"-with-docker"
-		], log_file)
+		]
+
+	if resume:
+		args.append("-resume")
+
+	rc = run_cmd(args, log_file)
 
 	# return to original directory
 	os.chdir(prev_dir)
@@ -101,8 +106,9 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
 	parser.add_argument("--id", help="Workflow instance ID", required=True)
 	parser.add_argument("--pipeline", help="Name of nextflow pipeline", required=True)
-	parser.add_argument("--revision", help="Project revision", default="master")
 	parser.add_argument("--output-dir", help="Output directory", default="output")
+	parser.add_argument("--resume", help="Whether to to a resumed run", action="store_true")
+	parser.add_argument("--revision", help="Project revision", default="master")
 
 	args = parser.parse_args()
 
@@ -110,7 +116,7 @@ if __name__ == "__main__":
 	work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
 	log_file = "%s/.workflow.log" % work_dir
 
-	rc = run_workflow(args.pipeline, args.revision, work_dir, log_file)
+	rc = run_workflow(args.pipeline, args.resume, args.revision, work_dir, log_file)
 	if rc != 0:
 		save_status(work_dir, "failed")
 		sys.exit(rc)

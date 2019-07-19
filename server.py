@@ -273,6 +273,8 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
 
 class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
+	resume = False
+
 	def post(self, id):
 		# make sure workflow directory exists
 		work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
@@ -317,8 +319,13 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			"--revision", workflow["revision"],
 			"--output-dir", workflow["output_dir"]
 		]
+
+		if self.resume:
+			args.append("--resume")
+
 		proc = launch_child_process(args)
 
+		# save child process id to file
 		with open(pid_file, "w") as f:
 			f.write(str(proc.pid))
 
@@ -329,6 +336,12 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
 		self.set_status(200)
 		self.write(message(200, "Workflow \"%s\" has been launched" % id))
+
+
+
+class WorkflowResumeHandler(WorkflowLaunchHandler):
+
+	resume = True
 
 
 
@@ -381,6 +394,7 @@ if __name__ == "__main__":
 		(r"/api/workflows/([a-zA-Z0-9-]+)", WorkflowEditHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/upload", WorkflowUploadHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/launch", WorkflowLaunchHandler),
+		(r"/api/workflows/([a-zA-Z0-9-]+)/resume", WorkflowResumeHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/log", WorkflowLogHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/download", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
 		(r"/(.*)", tornado.web.StaticFileHandler, dict(path="./client", default_filename="index.html"))

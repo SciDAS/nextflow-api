@@ -56,6 +56,10 @@ app.service("api", ["$http", function($http) {
 		return $http.post("/api/workflows/" + id + "/launch");
 	};
 
+	this.Workflow.resume = function(id) {
+		return $http.post("/api/workflows/" + id + "/resume");
+	};
+
 	this.Workflow.log = function(id) {
 		return $http.get("/api/workflows/" + id + "/log")
 			.then(function(res) {
@@ -125,6 +129,12 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "api", "FileUpl
 
 	$scope.launch = async function(id) {
 		await api.Workflow.launch(id);
+
+		$route.reload();
+	};
+
+	$scope.resume = async function(id) {
+		await api.Workflow.resume(id);
 
 		$route.reload();
 	};
