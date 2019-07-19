@@ -83,12 +83,6 @@ app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, 
 	$scope.STATUS_COLORS = STATUS_COLORS;
 	$scope.workflows = [];
 
-	$scope.launch = async function(w) {
-		await api.Workflow.launch(w.id);
-
-		$route.reload();
-	};
-
 	$scope.delete = async function(w) {
 		if ( !confirm("Are you sure you want to delete \"" + w.id + "\"?") ) {
 			return;
@@ -127,6 +121,12 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "api", "FileUpl
 
 		$route.updateParams({ id: res.id });
 		$scope.$apply();
+	};
+
+	$scope.launch = async function(id) {
+		await api.Workflow.launch(id);
+
+		$route.reload();
 	};
 
 	// initialize

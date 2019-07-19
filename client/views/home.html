@@ -16,7 +16,6 @@
 				<th>Pipeline</th>
 				<th>Status</th>
 				<th></th>
-				<th></th>
 
 				<tr ng-repeat="w in workflows">
 					<td>
@@ -27,9 +26,6 @@
 					<td>{{w.pipeline}}</td>
 					<td>
 						<strong class="text-{{STATUS_COLORS[w.status]}}">{{w.status}}</strong>
-					</td>
-					<td class="text-center">
-						<a href="" ng-click="launch(w)">Launch</a>
 					</td>
 					<td class="text-center">
 						<span class="button-icon" ng-click="delete(w)">&times;</span>
