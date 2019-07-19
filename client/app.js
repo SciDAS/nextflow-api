@@ -139,22 +139,26 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "api", "FileUpl
 		$route.reload();
 	};
 
+	$scope.$on("$destroy", function() {
+		if ( angular.isDefined($scope.intervalPromise) ) {
+			$interval.cancel($scope.intervalPromise);
+		}
+	});
+
 	// initialize
 	const initialize = async function() {
 		$scope.workflow = await api.Workflow.get($route.current.params.id);
 
-		if ( $scope.workflow.status === "running" ) {
-			$scope.intervalPromise = $interval(async function() {
-				let res = await api.Workflow.log($scope.workflow.id);
+		$scope.intervalPromise = $interval(async function() {
+			let res = await api.Workflow.log($scope.workflow.id);
 
-				Object.assign($scope.workflow, res);
+			Object.assign($scope.workflow, res);
 
-				if ( res.status !== "running" ) {
-					$interval.cancel($scope.intervalPromise);
-				}
-				$scope.$apply();
-			}, 2000, -1);
-		}
+			if ( res.status !== "running" ) {
+				$interval.cancel($scope.intervalPromise);
+			}
+			$scope.$apply();
+		}, 2000, -1);
 
 		$scope.$apply();
 	};
