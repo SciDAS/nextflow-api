@@ -55,15 +55,6 @@
 					</div>
 				</div>
 
-				<div class="form-group" ng-show="workflow.status">
-					<label class="col-sm-3 control-label">Status</label>
-					<div class="col-sm-6">
-						<p class="form-control-static text-{{STATUS_COLORS[workflow.status]}}">
-							<strong>{{workflow.status}}</strong>
-						</p>
-					</div>
-				</div>
-
 				<div class="form-group" ng-show="workflow.id != '0'">
 					<label class="col-sm-3 control-label">Input Data</label>
 					<div class="col-sm-6">
@@ -112,12 +103,25 @@
 			</form>
 		</div>
 
-		<div class="panel panel-default" ng-show="workflow.log">
+		<div class="panel panel-default" ng-show="workflow.id != '0'">
 			<div class="panel-heading">
-				<h3 class="panel-title">Log</h3>
+				<h3 class="panel-title">Execution</h3>
 			</div>
 
-			<pre>{{workflow.log}}</pre>
+			<form class="panel-body form-horizontal" name="execution">
+				<div class="form-group" ng-show="workflow.status">
+					<label class="col-sm-3 control-label">Status</label>
+					<div class="col-sm-6">
+						<p class="form-control-static text-{{STATUS_COLORS[workflow.status]}}">
+							<strong>{{workflow.status}}</strong>
+						</p>
+					</div>
+				</div>
+
+				<hr>
+
+				<pre>{{workflow.log}}</pre>
+			</form>
 		</div>
 	</div>
 </div>

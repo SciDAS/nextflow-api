@@ -56,6 +56,13 @@ app.service("api", ["$http", function($http) {
 		return $http.post("/api/workflows/" + id + "/launch");
 	};
 
+	this.Workflow.log = function(id) {
+		return $http.get("/api/workflows/" + id + "/log")
+			.then(function(res) {
+				return res.data;
+			});
+	};
+
 	this.Workflow.remove = function(id) {
 		return $http.delete("/api/workflows/" + id);
 	};
@@ -76,34 +83,34 @@ app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, 
 	$scope.STATUS_COLORS = STATUS_COLORS;
 	$scope.workflows = [];
 
-	$scope.launch = function(w) {
-		api.Workflow.launch(w.id)
-			.then(function() {
-				$route.reload();
-			})
+	$scope.launch = async function(w) {
+		await api.Workflow.launch(w.id);
+
+		$route.reload();
 	};
 
-	$scope.delete = function(w) {
+	$scope.delete = async function(w) {
 		if ( !confirm("Are you sure you want to delete \"" + w.id + "\"?") ) {
 			return;
 		}
 
-		api.Workflow.remove(w.id)
-			.then(function() {
-				$route.reload();
-			})
+		await api.Workflow.remove(w.id);
+
+		$route.reload();
 	};
 
 	// initialize
-	api.Workflow.query()
-		.then(function(workflows) {
-			$scope.workflows = workflows;
-		});
+	const initialize = async function() {
+		$scope.workflows = await api.Workflow.query();
+		$scope.$apply();
+	}
+
+	initialize();
 }]);
 
 
 
-app.controller("WorkflowCtrl", ["$scope", "$route", "api", "FileUploader", function($scope, $route, api, FileUploader) {
+app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "api", "FileUploader", function($scope, $interval, $route, api, FileUploader) {
 	$scope.STATUS_COLORS = STATUS_COLORS;
 	$scope.workflow = {};
 
@@ -115,16 +122,32 @@ app.controller("WorkflowCtrl", ["$scope", "$route", "api", "FileUploader", funct
 		$route.reload();
 	};
 
-	$scope.save = function(workflow) {
-		api.Workflow.save(workflow)
-			.then(function(res) {
-				$route.updateParams({ id: res.id });
-			});
+	$scope.save = async function(workflow) {
+		let res = await api.Workflow.save(workflow);
+
+		$route.updateParams({ id: res.id });
+		$scope.$apply();
 	};
 
 	// initialize
-	api.Workflow.get($route.current.params.id)
-		.then(function(workflow) {
-			$scope.workflow = workflow;
-		});
+	const initialize = async function() {
+		$scope.workflow = await api.Workflow.get($route.current.params.id);
+
+		if ( $scope.workflow.status === "running" ) {
+			$scope.intervalPromise = $interval(async function() {
+				let res = await api.Workflow.log($scope.workflow.id);
+
+				Object.assign($scope.workflow, res);
+
+				if ( res.status !== "running" ) {
+					$interval.cancel($scope.intervalPromise);
+				}
+				$scope.$apply();
+			}, 2000, -1);
+		}
+
+		$scope.$apply();
+	};
+
+	initialize();
 }]);

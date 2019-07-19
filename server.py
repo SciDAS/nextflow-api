@@ -175,13 +175,6 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 		# append status of output data
 		workflow["output_data"] = os.path.exists("%s/%s-output.tar.gz" % (work_dir, id))
 
-		# append log if it exists
-		log_file = "%s/.workflow.log" % work_dir
-
-		if os.path.exists(log_file):
-			f = open(log_file)
-			workflow["log"] = "".join(f.readlines())
-
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")
 		self.write(tornado.escape.json_encode(workflow))
@@ -339,6 +332,35 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
 
 
+class WorkflowLogHandler(tornado.web.RequestHandler):
+
+	def get(self, id):
+		# make sure workflow directory exists
+		work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+
+		if not os.path.exists(work_dir):
+			self.set_status(404)
+			self.write(message(404, "Workflow \"%s\" does not exist" % id))
+			return
+
+		# load workflow data from config.json
+		workflow = json.load(open("%s/config.json" % work_dir, "r"))
+
+		# append log if it exists
+		log_file = "%s/.workflow.log" % work_dir
+
+		if os.path.exists(log_file):
+			f = open(log_file)
+			log = "".join(f.readlines())
+		else:
+			log = ""
+
+		self.set_status(200)
+		self.set_header("Content-type", "application/json")
+		self.write(tornado.escape.json_encode({ "id": id, "status": workflow["status"], "log": log }))
+
+
+
 class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 
 	def parse_url_path(self, id):
@@ -359,6 +381,7 @@ if __name__ == "__main__":
 		(r"/api/workflows/([a-zA-Z0-9-]+)", WorkflowEditHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/upload", WorkflowUploadHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/launch", WorkflowLaunchHandler),
+		(r"/api/workflows/([a-zA-Z0-9-]+)/log", WorkflowLogHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/download", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
 		(r"/(.*)", tornado.web.StaticFileHandler, dict(path="./client", default_filename="index.html"))
 	])
