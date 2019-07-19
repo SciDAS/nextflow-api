@@ -66,6 +66,7 @@ def run_workflow(pipeline, resume, revision, work_dir, log_file):
 	if NEXTFLOW_K8S:
 		args = [
 			"nextflow",
+			"-config", "nextflow.config",
 			"kuberun",
 			pipeline,
 			"-ansi-log", "false",
@@ -76,6 +77,7 @@ def run_workflow(pipeline, resume, revision, work_dir, log_file):
 	else:
 		args = [
 			"nextflow",
+			"-config", "nextflow.config",
 			"run",
 			pipeline,
 			"-ansi-log", "false",
