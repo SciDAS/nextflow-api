@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
 
+ENV NXF_VER="19.07.0-edge"
 EXPOSE 8080
 
 # install dependencies
@@ -8,7 +9,8 @@ RUN apt-get -qq update \
 
 # install nextflow
 RUN curl -s https://get.nextflow.io | bash \
-	&& mv nextflow /usr/local/bin
+	&& mv nextflow /usr/local/bin \
+	&& nextflow info
 
 # install nextflow-gke server
 WORKDIR /opt

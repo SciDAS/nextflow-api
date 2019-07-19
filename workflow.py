@@ -14,10 +14,6 @@ WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
 
 
 
-os.environ["NXF_VER"] = "19.07.0-edge"
-
-
-
 def run_cmd(args, log_file=None, debug=True):
 	# run command as child process
 	proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
