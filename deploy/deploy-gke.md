@@ -8,7 +8,10 @@ This guide assumes you have access to a GKE project, have created a K8s cluster,
 Make sure `gcloud` is [properly installed and authenticated](https://cloud.google.com/deployment-manager/docs/step-by-step-guide/installation-and-setup). Also make sure you have the role of **Kubernetes Engine Admin**, which can be added in [IAM & admin](https://cloud.google.com/kubernetes-engine/docs/how-to/iam) by your Cloud administrator. If certain types of resources (e.g. GPU) are required, make sure the corresponding [quota](https://cloud.google.com/compute/quotas) is requested and approved in advance. 
 
 You must create a Service Account for Nextflow to use. Follow the [instructions](https://cloud.google.com/iam/docs/creating-managing-service-accounts). Make sure the account has **Editor** permissions.
-After creating the account, **download a credential key for it**. It is a JSON formatted key. use a [JSON Formatter](https://jsonformatter.curiousconcept.com/) to flatten the text to a single line, using the **Compact** format. 
+
+After creating the account, **download a credential key for it**. It is a JSON formatted key. 
+
+Use a [JSON Formatter](https://jsonformatter.curiousconcept.com/) to flatten the text to a single line, using the **Compact** format. 
 
 Paste the formatted JSON back into the file. The file should be one line now.
 
@@ -26,7 +29,9 @@ It should return successful creation output.
 
 #### 1. Deploy Nextflow Servers
 
-You now have everything you need to deploy Nextflow servers to your K8s cluster. To start, you must edit [04-nextflow-server-gke.yaml](04-nextflow-server-gke.yaml).
+You now have everything you need to deploy Nextflow servers to your K8s cluster. 
+
+To start, you must edit [04-nextflow-server-gke.yaml](04-nextflow-server-gke.yaml).
 
 Edit the line ```claimName: <PVC>``` to be the name of the Persistent Volume Claim you created. It is at the bottom of the file. Edit resources/replicas as needed.
 
