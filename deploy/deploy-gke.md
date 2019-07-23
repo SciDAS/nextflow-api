@@ -1,7 +1,9 @@
 Deploy Nextflow Servers to GKE for Running Nextflow Workflows
 ===
 
-This guide assumes you have access to a GKE project, have created a K8s cluster, and set up a PVC. Refer to [these instructions](README.md). 
+This guide assumes you have access to a GKE project, have created a K8s cluster, and set up a PVC. 
+
+Refer to [these instructions](README.md). 
 
 #### 0. Create Service Account and ConfigMap
 
