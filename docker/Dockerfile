@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
 
+ENV NXF_VER="19.07.0-edge"
 EXPOSE 8080
 
 # install dependencies
@@ -15,12 +16,14 @@ RUN apt-get update -y && apt-get install -y google-cloud-sdk
 
 # install nextflow
 RUN curl -s https://get.nextflow.io | bash \
-	&& mv nextflow /usr/local/bin
+	&& mv nextflow /usr/local/bin \
+	&& nextflow info
 
 # install nextflow-gke server
 WORKDIR /opt
 
-RUN git clone https://github.com/SciDAS/nextflow-gke.git
+ADD https://api.github.com/repos/scidas/nextflow-gke/git/refs/heads/master version.json
+RUN git clone -q https://github.com/scidas/nextflow-gke.git
 
 # install python dependencies
 RUN pip3 install -r nextflow-gke/requirements.txt

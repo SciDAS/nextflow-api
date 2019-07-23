@@ -1,5 +1,5 @@
 #!/bin/bash
-# Delete a workflow instance on a nextflow server.
+# Get a workflow instance on a nextflow server.
 
 # parse command-line arguments
 if [[ $# != 2 ]]; then
@@ -10,7 +10,7 @@ fi
 URL="$1"
 ID="$2"
 
-# delete a workflow instance
-curl -s -X DELETE ${URL}/workflow/${ID}
+# get a workflow instance
+curl -s -X GET ${URL}/api/workflows/${ID}
 
 echo

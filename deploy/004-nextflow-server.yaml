@@ -17,10 +17,13 @@ spec:
       containers:
       - name: nextflow-server
         image: bentsherman/nextflow-gke
+        env:
+        - name: NEXTFLOW_K8S
+          value: "true"
         command:
         - /bin/bash
         - -c
-        - cd /opt/nextflow-gke; python3 server.py --kube true
+        - cd /opt/nextflow-gke; python3 server.py --kube
         resources:
           requests:
             cpu: 1

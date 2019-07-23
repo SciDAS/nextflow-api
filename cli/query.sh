@@ -10,6 +10,6 @@ fi
 URL="$1"
 
 # list all workflow instances
-curl -s -X GET ${URL}/workflow
+curl -s -X GET ${URL}/api/workflows
 
 echo

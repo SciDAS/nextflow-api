@@ -1,0 +1,37 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Workflows</h3>
+			</div>
+
+			<div class="panel-body">
+				<a href="#!/workflow/0">Create workflow</a>
+			</div>
+
+			<table class="table">
+				<th>ID</th>
+				<th>Date Created</th>
+				<th>Name</th>
+				<th>Pipeline</th>
+				<th>Status</th>
+				<th></th>
+
+				<tr ng-repeat="w in workflows">
+					<td>
+						<a ng-href="#!/workflow/{{w.id}}">{{w.id.slice(0, 8)}}</a>
+					</td>
+					<td>{{w.date_created | date:'short'}}</td>
+					<td>{{w.name}}</td>
+					<td>{{w.pipeline}}</td>
+					<td>
+						<strong class="text-{{STATUS_COLORS[w.status]}}">{{w.status}}</strong>
+					</td>
+					<td class="text-center">
+						<span class="button-icon" ng-click="delete(w)">&times;</span>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>

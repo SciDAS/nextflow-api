@@ -1,0 +1,132 @@
+<div class="row">
+	<div class="col-sm-8 col-sm-offset-2">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Workflow</h3>
+			</div>
+
+			<form class="panel-body form-horizontal" name="form">
+				<div class="form-group" ng-show="workflow.id != '0'">
+					<label class="col-sm-3 control-label">ID</label>
+					<div class="col-sm-6">
+						<p class="form-control-static">{{workflow.id}}</p>
+					</div>
+				</div>
+
+				<div class="form-group" ng-show="workflow.id != '0'">
+					<label class="col-sm-3 control-label">Date Created</label>
+					<div class="col-sm-6">
+						<p class="form-control-static">{{workflow.date_created | date:'short'}}</p>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label class="col-sm-3 control-label">Name</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="name" ng-model="workflow.name"/>
+					</div>
+				</div>
+
+				<div class="form-group" ng-class="{'has-error': form.pipeline.$touched && form.pipeline.$invalid}">
+					<label class="col-sm-3 control-label">Pipeline</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="pipeline" ng-model="workflow.pipeline" required/>
+					</div>
+				</div>
+
+				<div class="form-group" ng-class="{'has-error': form.revision.$touched && form.revision.$invalid}">
+					<label class="col-sm-3 control-label">Revision</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="revision" ng-model="workflow.revision" required/>
+					</div>
+				</div>
+
+				<div class="form-group" ng-class="{'has-error': form.input_dir.$touched && form.input_dir.$invalid}">
+					<label class="col-sm-3 control-label">Input Directory</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="input_dir" ng-model="workflow.input_dir" required/>
+					</div>
+				</div>
+
+				<div class="form-group" ng-class="{'has-error': form.output_dir.$touched && form.output_dir.$invalid}">
+					<label class="col-sm-3 control-label">Output Directory</label>
+					<div class="col-sm-6">
+						<input class="form-control" name="output_dir" ng-model="workflow.output_dir" required/>
+					</div>
+				</div>
+
+				<div class="form-group" ng-show="workflow.id != '0'">
+					<label class="col-sm-3 control-label">Input Data</label>
+					<div class="col-sm-6">
+						<p class="form-control-static" ng-show="workflow.input_data.length == 0">none</p>
+						<p class="form-control-static" ng-repeat="f in workflow.input_data">{{f}}</p>
+					</div>
+				</div>
+
+				<div class="form-group" ng-show="workflow.output_data">
+					<label class="col-sm-3 control-label">Output Data</label>
+					<div class="col-sm-6">
+						<p class="form-control-static">
+							<a ng-href="/api/workflows/{{workflow.id}}/download" download>Download</a>
+						</p>
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="text-center">
+					<button type="button" class="btn btn-default" ng-disabled="form.$invalid" ng-click="save(workflow)">Save</button>
+					<a href="/">Cancel</a>
+				</div>
+			</form>
+		</div>
+
+		<div class="panel panel-default" ng-show="workflow.id != '0'">
+			<div class="panel-heading">
+				<h3 class="panel-title">Input Data</h3>
+			</div>
+
+			<form class="panel-body form-horizontal" name="input_data">
+				<div class="form-group">
+					<label class="col-sm-3 control-label">Files</label>
+					<div class="col-sm-6">
+						<p class="form-control-static" ng-show="uploader.queue.length == 0">none</p>
+						<p class="form-control-static" ng-repeat="item in uploader.queue">{{item.file.name}}</p>
+
+						<input type="file" nv-file-select="" uploader="uploader" multiple/>
+					</div>
+				</div>
+
+				<div class="text-center">
+					<button type="button" class="btn btn-default" ng-click="uploader.uploadAll()">Upload</button>
+				</div>
+			</form>
+		</div>
+
+		<div class="panel panel-default" ng-show="workflow.id != '0'">
+			<div class="panel-heading">
+				<h3 class="panel-title">Execution</h3>
+			</div>
+
+			<form class="panel-body form-horizontal" name="execution">
+				<div class="form-group" ng-show="workflow.status">
+					<label class="col-sm-3 control-label">Status</label>
+					<div class="col-sm-6">
+						<p class="form-control-static text-{{STATUS_COLORS[workflow.status]}}">
+							<strong>{{workflow.status}}</strong>
+						</p>
+					</div>
+				</div>
+
+				<div class="text-center">
+					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && launch(workflow.id)">Launch</button>
+					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && resume(workflow.id)">Resume</button>
+				</div>
+
+				<hr>
+
+				<pre>{{workflow.log}}</pre>
+			</form>
+		</div>
+	</div>
+</div>
