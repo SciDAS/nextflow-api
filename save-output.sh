@@ -16,6 +16,9 @@ for f in $(find ${SRC_PATH} -type l); do
 	cp --remove-destination $(readlink $f) $f
 done
 
+# copy log file into output folder
+cp ${DST_DIRNAME}/.workflow.log ${SRC_PATH}/workflow.log
+
 # create archive of output data
 cd ${DST_DIRNAME}
 
