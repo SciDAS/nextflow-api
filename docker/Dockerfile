@@ -3,15 +3,17 @@ FROM ubuntu:18.04
 ENV NXF_VER="19.07.0-edge"
 EXPOSE 8080
 
-# install dependencies
-RUN apt-get -qq update \
-	&& apt-get -qq install -y curl default-jdk git python3 python3-pip
+# install package dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update -qq \
+	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl default-jdk git python3 python3-pip
 
 # install gcloud (required for GKE)
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
-	&& apt-get install -y apt-transport-https ca-certificates apt-utils \
-	&& curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-RUN apt-get update -y && apt-get install -y google-cloud-sdk
+	&& curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - \
+	&& apt-get update -qq \
+	&& apt-get install -qq -y google-cloud-sdk
 
 # install nextflow
 RUN curl -s https://get.nextflow.io | bash \
