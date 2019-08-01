@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-ENV NXF_VER="19.07.0-edge"
+ENV NXF_VER="19.07.0"
 EXPOSE 8080
 
 # install package dependencies
