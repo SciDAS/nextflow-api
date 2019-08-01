@@ -92,6 +92,7 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 
 	DEFAULTS = {
 		"name": "",
+		"profiles": "standard",
 		"revision": "master",
 		"input_dir": "input",
 		"output_dir": "output"
@@ -147,6 +148,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 
 	DEFAULTS = {
 		"name": "",
+		"profiles": "standard",
 		"revision": "master",
 		"input_dir": "input",
 		"output_dir": "output"
@@ -316,6 +318,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			"./workflow.py",
 			"--id", id,
 			"--pipeline", workflow["pipeline"],
+			"--profiles", workflow["profiles"],
 			"--revision", workflow["revision"],
 			"--output-dir", workflow["output_dir"]
 		]

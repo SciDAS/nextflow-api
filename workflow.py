@@ -50,7 +50,7 @@ def save_status(work_dir, status):
 
 
 
-def run_workflow(pipeline, resume, revision, work_dir, log_file):
+def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
 	# save current directory
 	prev_dir = os.getcwd()
 
@@ -71,6 +71,7 @@ def run_workflow(pipeline, resume, revision, work_dir, log_file):
 			pipeline,
 			"-ansi-log", "false",
 			"-latest",
+			"-profile", profiles,
 			"-revision", revision,
 			"-volume-mount", PVC_NAME
 		]
@@ -82,6 +83,7 @@ def run_workflow(pipeline, resume, revision, work_dir, log_file):
 			pipeline,
 			"-ansi-log", "false",
 			"-latest",
+			"-profile", profiles,
 			"-revision", revision,
 			"-with-docker"
 		]
@@ -107,8 +109,9 @@ if __name__ == "__main__":
 	# parse command-line arguments
 	parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
 	parser.add_argument("--id", help="Workflow instance ID", required=True)
-	parser.add_argument("--pipeline", help="Name of nextflow pipeline", required=True)
 	parser.add_argument("--output-dir", help="Output directory", default="output")
+	parser.add_argument("--pipeline", help="Name of nextflow pipeline", required=True)
+	parser.add_argument("--profiles", help="Comma-separated list of configuration profiles", default="standard")
 	parser.add_argument("--resume", help="Whether to to a resumed run", action="store_true")
 	parser.add_argument("--revision", help="Project revision", default="master")
 
@@ -118,7 +121,7 @@ if __name__ == "__main__":
 	work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
 	log_file = "%s/.workflow.log" % work_dir
 
-	rc = run_workflow(args.pipeline, args.resume, args.revision, work_dir, log_file)
+	rc = run_workflow(args.pipeline, args.profiles, args.resume, args.revision, work_dir, log_file)
 	if rc != 0:
 		save_status(work_dir, "failed")
 		sys.exit(rc)
