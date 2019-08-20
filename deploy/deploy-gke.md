@@ -25,7 +25,7 @@ You must then create a ConfigMap to pass sensetive credentials into the containe
 
 After collecting this information, run [this script](create-config-map.sh):
 
-'''./create-config-map.sh <gke-project-id> <path-to-key-file> <cluster-id> <zone>```
+'''./create-config-map.sh gke-project-id path-to-key-file cluster-id zone```
 
 It should return successful creation output.
 
