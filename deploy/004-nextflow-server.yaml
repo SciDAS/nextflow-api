@@ -23,7 +23,7 @@ spec:
         command:
         - /bin/bash
         - -c
-        - cd /opt/nextflow-gke; python3 server.py --kube
+        - cd /opt/nextflow-gke; python3 server.py
         resources:
           requests:
             cpu: 1

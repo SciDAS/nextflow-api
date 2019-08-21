@@ -9,10 +9,11 @@ This repository contains the code for a REST API which automates the execution o
 | /api/version                 | GET    | Get current API version                     |
 | /api/workflows               | GET    | List all workflow instances                 |
 | /api/workflows               | POST   | Create a workflow instance                  |
+| /api/workflows/{id}          | GET    | Get a workflow instance                     |
+| /api/workflows/{id}          | POST   | Update a workflow instance                  |
 | /api/workflows/{id}          | DELETE | Delete a workflow instance                  |
 | /api/workflows/{id}/upload   | POST   | Upload input files to a workflow instance   |
 | /api/workflows/{id}/launch   | POST   | Launch a workflow instance                  |
-| /api/workflows/{id}/status   | GET    | Get the status of a workflow instance       |
 | /api/workflows/{id}/log      | GET    | Get the log of a workflow instance          |
 | /api/workflows/{id}/download | GET    | Download the output data as a `tar.gz` file |
 

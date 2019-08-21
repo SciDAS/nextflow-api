@@ -1,11 +1,10 @@
 FROM ubuntu:18.04
 
+ENV DEBIAN_FRONTEND=noninteractive
 ENV NXF_VER="19.07.0"
 EXPOSE 8080
 
 # install package dependencies
-ENV DEBIAN_FRONTEND=noninteractive
-
 RUN apt-get update -qq \
 	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl default-jdk git python3 python3-pip
 
