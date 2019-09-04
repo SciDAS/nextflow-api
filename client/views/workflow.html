@@ -63,10 +63,20 @@
 				</div>
 
 				<div class="form-group" ng-show="workflow.id != '0'">
-					<label class="col-sm-3 control-label">Input Data</label>
+					<label class="col-sm-3 control-label">Input Files</label>
 					<div class="col-sm-6">
-						<p class="form-control-static" ng-show="workflow.input_data.length == 0">none</p>
-						<p class="form-control-static" ng-repeat="f in workflow.input_data">{{f}}</p>
+						<p class="form-control-static" ng-show="workflow.input_files.length == 0">none</p>
+						<p class="form-control-static" ng-repeat="f in workflow.input_files">{{f}}</p>
+					</div>
+				</div>
+
+				<div class="form-group" ng-show="workflow.id != '0'">
+					<label class="col-sm-3 control-label">Output Files</label>
+					<div class="col-sm-6">
+						<p class="form-control-static" ng-show="workflow.output_files.length == 0">none</p>
+						<p class="form-control-static" ng-repeat="f in workflow.output_files">
+							<a ng-href="/api/workflows/{{workflow.id}}/download?path={{f}}" download>{{f}}</a>
+						</p>
 					</div>
 				</div>
 
@@ -93,7 +103,7 @@
 				<h3 class="panel-title">Input Data</h3>
 			</div>
 
-			<form class="panel-body form-horizontal" name="input_data">
+			<form class="panel-body form-horizontal" name="input_files">
 				<div class="form-group">
 					<label class="col-sm-3 control-label">Files</label>
 					<div class="col-sm-6">
