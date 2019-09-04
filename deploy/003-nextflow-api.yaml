@@ -16,14 +16,14 @@ spec:
     spec:
       containers:
       - name: nextflow-api
-        image: bentsherman/nextflow-gke
+        image: bentsherman/nextflow-api
         env:
         - name: NEXTFLOW_K8S
           value: "true"
         command:
         - /bin/bash
         - -c
-        - cd /opt/nextflow-gke; python3 server.py
+        - cd /opt/nextflow-api; python3 server.py
         resources:
           requests:
             cpu: 1

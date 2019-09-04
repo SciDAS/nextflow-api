@@ -19,14 +19,14 @@ RUN curl -s https://get.nextflow.io | bash \
 	&& mv nextflow /usr/local/bin \
 	&& nextflow info
 
-# install nextflow-gke server
+# install nextflow-api
 WORKDIR /opt
 
-ADD https://api.github.com/repos/scidas/nextflow-gke/git/refs/heads/master version.json
-RUN git clone -q https://github.com/scidas/nextflow-gke.git
+ADD https://api.github.com/repos/scidas/nextflow-api/git/refs/heads/master version.json
+RUN git clone -q https://github.com/scidas/nextflow-api.git
 
 # install python dependencies
-RUN pip3 install -r nextflow-gke/requirements.txt
+RUN pip3 install -r nextflow-api/requirements.txt
 
-# move to nextflow-gke directory
-WORKDIR /opt/nextflow-gke
+# move to nextflow-api directory
+WORKDIR /opt/nextflow-api
