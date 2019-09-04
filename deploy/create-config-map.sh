@@ -11,4 +11,4 @@ KEYPATH="$2"
 CLUSTERID="$3"
 ZONE="$4"
 
-kubectl create configmap nextflow-server-config --from-literal=project.id=${PROJECTID} --from-file=project.key=${KEYPATH} --from-literal=project.cluster=${CLUSTERID} --from-literal=project.zone=${ZONE}
+kubectl create configmap nextflow-api-config --from-literal=project.id=${PROJECTID} --from-file=project.key=${KEYPATH} --from-literal=project.cluster=${CLUSTERID} --from-literal=project.zone=${ZONE}

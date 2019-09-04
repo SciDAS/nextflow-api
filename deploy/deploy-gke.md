@@ -33,11 +33,11 @@ It should return successful creation output.
 
 You now have everything you need to deploy Nextflow servers to your K8s cluster. 
 
-To start, you must edit [04-nextflow-server-gke.yaml](04-nextflow-server-gke.yaml).
+To start, you must edit [04-nextflow-api-gke.yaml](04-nextflow-api-gke.yaml).
 
 Edit the line ```claimName: <PVC>``` to be the name of the Persistent Volume Claim you created. It is at the bottom of the file. Edit resources/replicas as needed.
 
-Next, deploy the container(s) with ```kubectl create -f 04-nextflow-server-gke.yaml```.
+Next, deploy the container(s) with ```kubectl create -f 04-nextflow-api-gke.yaml```.
 
 Check that the pod(s) are running.
 
@@ -45,15 +45,15 @@ Check that the pod(s) are running.
 
 Now that you have a deployment, you must create a service to expose the deployment to the Internet.
 
-Run ```kubectl expose deployment nextflow-server-deployment --type=LoadBalancer --name=nextflow-server-service```.
+Run ```kubectl expose deployment nextflow-api-deployment --type=LoadBalancer --name=nextflow-api-service```.
 
 It should be successful.
 
-Next, Get the EXTERNAL IP of the service by running ```kubectl get services nextflow-server-service```
+Next, Get the EXTERNAL IP of the service by running ```kubectl get services nextflow-api-service```
 
 ```
 NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE
-nextflow-server-service   LoadBalancer   <CLUSTER_IP>    <EXT_IP>         8080:<NODE_PORT>/TCP   58m
+nextflow-api-service   LoadBalancer   <CLUSTER_IP>    <EXT_IP>         8080:<NODE_PORT>/TCP   58m
 ```
 Your Nextflow server(s) is/are accessible at http://<EXT_IP>:8080
 
@@ -73,10 +73,10 @@ Use this ID to launch, query, and delete your workflow. Documentation on this pr
 
 If you'd like to destroy
 
-Delete the deployment with ```kubectl delete -f 04-nextflow-server-gke.yaml```.
+Delete the deployment with ```kubectl delete -f 04-nextflow-api-gke.yaml```.
 
-Delete the load balancing service with ```kubectl delete service nextflow-server-service```.
+Delete the load balancing service with ```kubectl delete service nextflow-api-service```.
 
-Delete the ConfigMap with ```kubectl delete configmap nextflow-server-config```.
+Delete the ConfigMap with ```kubectl delete configmap nextflow-api-config```.
 
 All done!

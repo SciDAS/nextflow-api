@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nextflow-server
+  name: nextflow-api
   labels:
-    app: nextflow-server
+    app: nextflow-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nextflow-server
+      app: nextflow-api
   template:
     metadata:
       labels:
-        app: nextflow-server
+        app: nextflow-api
     spec:
       containers:
-      - name: nextflow-server
+      - name: nextflow-api
         image: bentsherman/nextflow-gke
         env:
         - name: NEXTFLOW_K8S
@@ -41,28 +41,28 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nextflow-server
+  name: nextflow-api
   labels:
-    app: nextflow-server
+    app: nextflow-api
 spec:
   ports:
   - port: 8080
     targetPort: 8080
   selector:
-    app: nextflow-server
+    app: nextflow-api
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: nextflow-server
+  name: nextflow-api
   annotations:
     kubernetes.io/ingress.class: traefik
 spec:
   rules:
-  - host: nextflow-server.nautilus.optiputer.net
+  - host: nextflow-api.nautilus.optiputer.net
     http:
       paths:
       - path: /
         backend:
-          serviceName: nextflow-server
+          serviceName: nextflow-api
           servicePort: 8080

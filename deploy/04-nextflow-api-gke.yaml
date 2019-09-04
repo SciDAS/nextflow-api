@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: load-balancer-nextflow
-  name: nextflow-server-deployment
+  name: nextflow-api-deployment
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
         app.kubernetes.io/name: load-balancer-nextflow
     spec:
       containers:
-      - name: nextflow-server
+      - name: nextflow-api
         image: cbmckni/scidas-submitter:gke
         command: ["/bin/sh","-c"]
         args: ['printf "%s" "${PROJECTKEY}" > "/home/credential-key.json" && gcloud auth activate-service-account --key-file /home/credential-key.json && gcloud config set project ${PROJECTID} && gcloud container clusters get-credentials ${CLUSTERID} --zone=${ZONE} --project=${PROJECTID} && cd /opt/nextflow-gke; python3 server.py --kube true']
@@ -23,22 +23,22 @@ spec:
         - name: PROJECTID
           valueFrom:
             configMapKeyRef:
-              name: nextflow-server-config
+              name: nextflow-api-config
               key: project.id
         - name: PROJECTKEY
           valueFrom:
             configMapKeyRef:
-              name: nextflow-server-config
+              name: nextflow-api-config
               key: project.key
         - name: CLUSTERID
           valueFrom:
             configMapKeyRef:
-              name: nextflow-server-config
+              name: nextflow-api-config
               key: project.cluster
         - name: ZONE
           valueFrom:
             configMapKeyRef:
-              name: nextflow-server-config
+              name: nextflow-api-config
               key: project.zone
         resources:
           requests:
@@ -55,5 +55,5 @@ spec:
           # CHANGE TO CORRECT PVC
           claimName: clemson-pvc
 
-        # RUN "kubectl expose deployment nextflow-server-deployment --type=LoadBalancer --name=nextflow-server-service" after deployment to expose
+        # RUN "kubectl expose deployment nextflow-api-deployment --type=LoadBalancer --name=nextflow-api-service" after deployment to expose
 
