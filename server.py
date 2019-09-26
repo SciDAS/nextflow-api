@@ -426,7 +426,7 @@ if __name__ == "__main__":
 		(r"/(.*)", tornado.web.StaticFileHandler, dict(path="./client", default_filename="index.html"))
 	])
 
-	server = tornado.httpserver.HTTPServer(app)
+	server = tornado.httpserver.HTTPServer(app, max_buffer_size=1024 ** 3)
 	server.bind(PORT)
 	server.start()
 
