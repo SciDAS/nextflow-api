@@ -51,6 +51,14 @@ def is_process_running(pid_file):
 
 
 
+def list_dir_recursive(path, relpath_start=""):
+	files = [os.path.join(dir, f) for (dir, subdirs, filenames) in os.walk(path) for f in filenames]
+	files = [os.path.relpath(f, start=relpath_start) for f in files]
+
+	return files
+
+
+
 def message(status, message):
 	return {
 		"status": status,
@@ -73,7 +81,7 @@ class WorkflowQueryHandler(tornado.web.RequestHandler):
 	def get(self):
 		# get workflow ids
 		workflow_ids = os.listdir(WORKFLOWS_DIR)
-		workflow_ids = [id for id in workflow_ids if os.path.isdir("%s/%s" % (WORKFLOWS_DIR, id))]
+		workflow_ids = [id for id in workflow_ids if os.path.isdir(os.path.join(WORKFLOWS_DIR, id))]
 
 		# get workflow objects
 		workflows = [json.load(open("%s/%s/config.json" % (WORKFLOWS_DIR, id))) for id in workflow_ids]
@@ -118,7 +126,7 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 
 			# create workflow directory
 			id = uuid.uuid4().hex
-			work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+			work_dir = os.path.join(WORKFLOWS_DIR, id)
 
 			os.makedirs(work_dir)
 
@@ -156,7 +164,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 
 	def get(self, id):
 		# make sure workflow directory exists
-		work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+		work_dir = os.path.join(WORKFLOWS_DIR, id)
 
 		if not os.path.exists(work_dir):
 			self.set_status(404)
@@ -167,12 +175,19 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 		workflow = json.load(open("%s/config.json" % work_dir, "r"))
 
 		# append list of input files
-		input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
+		input_dir = os.path.join(work_dir, workflow["input_dir"])
+		output_dir = os.path.join(work_dir, workflow["output_dir"])
 
 		if os.path.exists(input_dir):
-			workflow["input_data"] = os.listdir(input_dir)
+			workflow["input_files"] = list_dir_recursive(input_dir, relpath_start=work_dir)
 		else:
-			workflow["input_data"] = []
+			workflow["input_files"] = []
+
+		# append list of output files
+		if os.path.exists(output_dir):
+			workflow["output_files"] = list_dir_recursive(output_dir, relpath_start=work_dir)
+		else:
+			workflow["output_files"] = []
 
 		# append status of output data
 		workflow["output_data"] = os.path.exists("%s/%s-output.tar.gz" % (work_dir, id))
@@ -183,7 +198,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 
 	def post(self, id):
 		# make sure workflow directory exists
-		work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+		work_dir = os.path.join(WORKFLOWS_DIR, id)
 
 		if not os.path.exists(work_dir):
 			self.set_status(404)
@@ -217,7 +232,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 
 	def delete(self, id):
 		# make sure workflow directory exists
-		work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+		work_dir = os.path.join(WORKFLOWS_DIR, id)
 
 		if not os.path.exists(work_dir):
 			self.set_status(404)
@@ -236,7 +251,7 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
 
 	def post(self, id):
 		# make sure workflow directory exists
-		work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+		work_dir = os.path.join(WORKFLOWS_DIR, id)
 
 		if not os.path.exists(work_dir):
 			self.set_status(404)
@@ -255,7 +270,7 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
 		workflow = json.load(open("%s/config.json" % work_dir, "r"))
 
 		# initialize input directory
-		input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
+		input_dir = os.path.join(work_dir, workflow["input_dir"])
 		os.makedirs(input_dir, exist_ok=True)
 
 		# save uploaded files to input directory
@@ -264,7 +279,7 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
 		for f_list in files.values():
 			for f_arg in f_list:
 				filename, body = f_arg["filename"], f_arg["body"]
-				with open("%s/%s" % (input_dir, filename), "wb") as f:
+				with open(os.path.join(input_dir, filename), "wb") as f:
 					f.write(body)
 				filenames.append(filename)
 
@@ -279,7 +294,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
 	def post(self, id):
 		# make sure workflow directory exists
-		work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+		work_dir = os.path.join(WORKFLOWS_DIR, id)
 
 		if not os.path.exists(work_dir):
 			self.set_status(404)
@@ -290,9 +305,9 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 		workflow = json.load(open("%s/config.json" % work_dir, "r"))
 
 		# copy nextflow.config from input directory if it exists
-		input_dir = "%s/%s" % (work_dir, workflow["input_dir"])
-		src = "%s/%s" % (input_dir, "nextflow.config")
-		dst = "%s/%s" % (work_dir, "nextflow.config")
+		input_dir = os.path.join(work_dir, workflow["input_dir"])
+		src = os.path.join(input_dir, "nextflow.config")
+		dst = os.path.join(work_dir, "nextflow.config")
 
 		if os.path.exists(src):
 			shutil.copyfile(src, dst)
@@ -352,7 +367,7 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 
 	def get(self, id):
 		# make sure workflow directory exists
-		work_dir = "%s/%s" % (WORKFLOWS_DIR, id)
+		work_dir = os.path.join(WORKFLOWS_DIR, id)
 
 		if not os.path.exists(work_dir):
 			self.set_status(404)
@@ -380,8 +395,16 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 
 	def parse_url_path(self, id):
-		self.set_header("Content-Disposition", "attachment; filename=\"%s-output.tar.gz\"" % id)
-		return os.path.join(id, "%s-output.tar.gz" % id)
+		# provide output file if path is specified
+		try:
+			filename = self.get_query_argument("path")
+
+		# otherwise provide the output data archive
+		except tornado.web.MissingArgumentError:
+			filename = "%s-output.tar.gz" % id
+
+		self.set_header("Content-Disposition", "attachment; filename=\"%s\"" % filename)
+		return os.path.join(id, filename)
 
 
 
