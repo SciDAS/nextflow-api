@@ -2,7 +2,8 @@
 
 const app = angular.module("app", [
 	"ngRoute",
-	"angularFileUpload"
+	"angularFileUpload",
+	"ui.bootstrap"
 ]);
 
 
@@ -24,6 +25,57 @@ app.config(["$routeProvider", function($routeProvider) {
 			controller: "WorkflowCtrl"
 		})
 		.otherwise("/");
+}]);
+
+
+
+app.service("alert", ["$interval", function($interval) {
+	this.alerts = [];
+
+	const self = this;
+	let count = 0;
+
+	const addAlert = function(type, header, message) {
+		let id = count;
+		let promise = $interval(function() {
+			let index = self.alerts.findIndex(function(alert) {
+				return (alert.id === id);
+			});
+
+			self.alerts.splice(index, 1);
+		}, 10000, 1);
+
+		self.alerts.push({
+			id: id,
+			type: type,
+			header: header,
+			message: message,
+			promise: promise
+		});
+		count++;
+	};
+
+	this.success = function(message) {
+		addAlert("success", null, message);
+	};
+
+	this.info = function(message) {
+		addAlert("info", null, message);
+	};
+
+	this.warning = function(message) {
+		addAlert("warning", null, message);
+	};
+
+	this.error = function(message) {
+		addAlert("danger", "Error: ", message);
+	};
+
+	this.remove = function(index) {
+		$interval.cancel(self.alerts[index].promise);
+
+		self.alerts.splice(index, 1);
+	};
 }]);
 
 
@@ -74,6 +126,12 @@ app.service("api", ["$http", function($http) {
 
 
 
+app.controller("MainCtrl", ["$scope", "alert", function($scope, alert) {
+	$scope.alert = alert;
+}]);
+
+
+
 const STATUS_COLORS = {
 	"nascent": "success",
 	"running": "warning",
@@ -83,7 +141,7 @@ const STATUS_COLORS = {
 
 
 
-app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, api) {
+app.controller("HomeCtrl", ["$scope", "$route", "alert", "api", function($scope, $route, alert, api) {
 	$scope.STATUS_COLORS = STATUS_COLORS;
 	$scope.workflows = [];
 
@@ -92,15 +150,26 @@ app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, 
 			return;
 		}
 
-		await api.Workflow.remove(w.id);
+		try {
+			await api.Workflow.remove(w.id);
 
-		$route.reload();
+			alert.success("Workflow instance deleted.");
+			$route.reload();
+		}
+		catch ( error ) {
+			alert.error("Failed to delete workflow instance.");
+		}
 	};
 
 	// initialize
 	const initialize = async function() {
-		$scope.workflows = await api.Workflow.query();
-		$scope.$apply();
+		try {
+			$scope.workflows = await api.Workflow.query();
+			$scope.$apply();
+		}
+		catch ( error ) {
+			alert.error("Failed to query workflow instances.");
+		}
 	}
 
 	initialize();
@@ -108,7 +177,7 @@ app.controller("HomeCtrl", ["$scope", "$route", "api", function($scope, $route, 
 
 
 
-app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "api", "FileUploader", function($scope, $interval, $route, api, FileUploader) {
+app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api", "FileUploader", function($scope, $interval, $route, alert, api, FileUploader) {
 	$scope.STATUS_COLORS = STATUS_COLORS;
 	$scope.workflow = {};
 
@@ -117,26 +186,49 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "api", "FileUpl
 	});
 
 	$scope.uploader.onCompleteAll = function() {
+		alert.success("All input files uploaded.");
 		$route.reload();
+	};
+
+	$scope.uploader.onErrorItem = function() {
+		alert.error("Failed to upload input files.");
 	};
 
 	$scope.save = async function(workflow) {
-		let res = await api.Workflow.save(workflow);
+		try {
+			let res = await api.Workflow.save(workflow);
 
-		$route.updateParams({ id: res.id });
-		$scope.$apply();
+			alert.success("Workflow instance saved.");
+			$route.updateParams({ id: res.id });
+			$scope.$apply();
+		}
+		catch ( error ) {
+			alert.error("Failed to save workflow instance.");
+		}
 	};
 
 	$scope.launch = async function(id) {
-		await api.Workflow.launch(id);
+		try {
+			await api.Workflow.launch(id);
 
-		$route.reload();
+			alert.success("Workflow instance launched.");
+			$route.reload();
+		}
+		catch ( error ) {
+			alert.error("Failed to launch workflow instance.");
+		}
 	};
 
 	$scope.resume = async function(id) {
-		await api.Workflow.resume(id);
+		try {
+			await api.Workflow.resume(id);
 
-		$route.reload();
+			alert.success("Workflow instance resumed.");
+			$route.reload();
+		}
+		catch ( error ) {
+			alert.error("Failed to resume workflow instance.");
+		}
 	};
 
 	$scope.$on("$destroy", function() {
@@ -149,16 +241,18 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "api", "FileUpl
 	const initialize = async function() {
 		$scope.workflow = await api.Workflow.get($route.current.params.id);
 
-		$scope.intervalPromise = $interval(async function() {
-			let res = await api.Workflow.log($scope.workflow.id);
+		if ( $scope.workflow.id !== "0" ) {
+			$scope.intervalPromise = $interval(async function() {
+				let res = await api.Workflow.log($scope.workflow.id);
 
-			Object.assign($scope.workflow, res);
+				Object.assign($scope.workflow, res);
 
-			if ( res.status !== "running" ) {
-				$interval.cancel($scope.intervalPromise);
-			}
-			$scope.$apply();
-		}, 2000, -1);
+				if ( res.status !== "running" ) {
+					$interval.cancel($scope.intervalPromise);
+				}
+				$scope.$apply();
+			}, 2000, -1);
+		}
 
 		$scope.$apply();
 	};

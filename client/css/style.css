@@ -14,3 +14,12 @@ body {
 	cursor: pointer;
 	color: #303030;
 }
+
+/* rules for alerts */
+#alerts {
+	z-index: 2000;
+	position: fixed;
+	bottom: 0px;
+	left: 20px;
+	width: 300px;
+}
