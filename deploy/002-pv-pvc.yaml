@@ -1,24 +1,24 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: deepgtex-prp
+  name: scidas-cole-test-pvc
 spec:
   capacity:
     storage: 200Gi
   accessModes:
     - ReadWriteMany
   nfs:
-    server: 10.55.247.179
+    server: 10.43.248.101
     path: "/"
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: deepgtex-prp
+  name: scidas-cole-test-pvc
 spec:
   accessModes:
     - ReadWriteMany
   storageClassName: ""
   resources:
     requests:
-      storage: 200Gi
+      storage: 20Gi

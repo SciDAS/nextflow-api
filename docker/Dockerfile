@@ -8,11 +8,12 @@ EXPOSE 8080
 RUN apt-get update -qq \
 	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl default-jdk git python3 python3-pip
 
-# install gcloud (required for GKE)
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
-	&& curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - \
-	&& apt-get update -qq \
-	&& apt-get install -qq -y google-cloud-sdk
+# Kubectl
+RUN apt-get update && apt-get install -y apt-transport-https \
+    && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
+    && echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list \
+    && apt-get update \
+    && apt-get install -y kubectl
 
 # install nextflow
 RUN curl -s https://get.nextflow.io | bash \

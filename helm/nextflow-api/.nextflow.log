@@ -1,0 +1,4 @@
+Sep-25 11:24:58.059 [main] DEBUG nextflow.cli.Launcher - $> nextflow kuberun login -v scidas-cole-helm-pvc
+Sep-25 11:24:59.783 [main] DEBUG nextflow.k8s.K8sConfig - Kubernetes workDir=/workspace/cole/work; projectDir=/workspace/projects; volumeClaims=[scidas-cole-helm-pvc]
+Sep-25 11:25:02.945 [main] DEBUG nextflow.k8s.K8sDriverLauncher - Created K8s configMap with name: nf-config-d62f0395
+Sep-25 11:56:50.871 [main] DEBUG nextflow.k8s.K8sDriverLauncher - Wait for pod termination name=evil-church

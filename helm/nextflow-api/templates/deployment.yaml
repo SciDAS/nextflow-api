@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "nextflow-api.fullname" . }}
+  labels:
+    app: {{ template "nextflow-api.name" . }}
+    chart: {{ template "nextflow-api.chart" . }}
+    release: {{ .Release.Name }}
+    instance: {{ .Values.Instance }}
+spec:
+  replicas: {{ .Values.Replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "nextflow-api.name" . }}
+      instance: {{ .Values.Instance }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "nextflow-api.name" . }}
+        chart: {{ template "nextflow-api.chart" . }}
+        release: {{ .Release.Name }}
+        instance: {{ .Values.Instance }}
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: nextflow-server
+        image: cbmckni/nextflow-api
+        env:
+        - name: NEXTFLOW_K8S
+          value: "true"
+        {{ if .Values.Remote.Enabled }}
+        - name: PVC_NAME
+          value: {{ .Values.Remote.PVC }}
+        {{ else if .Values.NewLocalPVC.Enabled }}
+        - name: PVC_NAME
+          value: {{ .Values.NewLocalPVC.Name }}
+        {{ else if .Values.ExistingLocalPVC.Enabled }}
+        - name: PVC_NAME
+          value: {{ .Values.ExistingLocalPVC.Name }}
+        {{ end }}
+        command:
+        - /bin/bash
+        - -c
+        {{ if .Values.Remote.Enabled }}
+        - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 server.py
+        {{ else }}
+        - cd /opt/nextflow-api; python3 server.py
+        {{ end }}
+        resources:
+          requests:
+            cpu: {{ .Values.Resources.CPU }}
+            memory: {{ .Values.Resources.Memory }}
+        volumeMounts:
+        - name: vol-1
+          mountPath: /workspace
+        {{ if .Values.Remote.Enabled }}
+        - name: conf
+          mountPath: "/etc/.kube"
+        {{ end }}
+        ports:
+        - containerPort: 8080
+      volumes:
+      {{ if .Values.Remote.Enabled }}
+      - name: conf
+        secret:
+          secretName: kubeconfig
+          defaultMode: 256
+      {{ end }}
+      {{ if .Values.NewLocalPVC.Enabled }}
+      - name: vol-1
+        persistentVolumeClaim:
+          claimName: {{ .Values.NewLocalPVC.Name }}
+      {{ end }}
+      {{ if .Values.ExistingLocalPVC.Enabled }}
+      - name: vol-1
+        persistentVolumeClaim:
+          claimName: {{ .Values.ExistingLocalPVC.Name }}
+      {{ end }}
