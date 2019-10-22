@@ -5,7 +5,7 @@
 NewLocalPVC:
   # If true, create new PVC on local cluster.
   # (temp, future PVCs will be dynamically configurable)
-  Enabled: true
+  Enabled: false
   Name: nextflow-api-pvc
   Size: 20Gi
   StorageClass: nfs
@@ -13,7 +13,7 @@ NewLocalPVC:
 ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
   # (temp, future PVCs will be dynamically configurable)
-  Enabled: false
+  Enabled: true
   Name: deepgtex-prp
 
 # Remote cluster settings(temp, future will be dynamically configurable)
@@ -38,7 +38,7 @@ Ingress:
   # If true, use ingress control.
   # Otherwise, generic LoadBalancer networking will be used, 
   # and the other settings in this section will be ignored.
-  Enabled: false
+  Enabled: true
   # The subdomain to associate with this service.
   # This will result in a FQDN like {subdomain}.{cluster}.slateci.net
   Host: nextflow-api.nautilus.optiputer.net
