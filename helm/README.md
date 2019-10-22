@@ -89,7 +89,7 @@ Now the server is configured and ready for deployment!
 
 Navigate to `nextflow-api/helm`
 
-Deploy using `helm install nf nextflow-api`
+Deploy using `helm install nf .`
 
 #### 3. Use Nextflow Server
 

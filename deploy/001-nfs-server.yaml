@@ -30,7 +30,7 @@ spec:
       volumes:
         - name: mypvc
           gcePersistentDisk:
-            pdName: scidas-cole-test-pd
+            pdName: gce-nfs-disk
             fsType: ext4
 ---
 apiVersion: v1

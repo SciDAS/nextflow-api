@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: nextflow-api
-        image: bentsherman/nextflow-gke
+        image: bentsherman/nextflow-api
         env:
         - name: NEXTFLOW_K8S
           value: "true"
@@ -26,8 +26,8 @@ spec:
         - cd /opt/nextflow-api; python3 server.py
         resources:
           requests:
-            cpu: 250m
-            memory: 1Gi
+            cpu: 1
+            memory: 4Gi
         volumeMounts:
         - name: vol-1
           mountPath: /workspace
@@ -36,4 +36,33 @@ spec:
       volumes:
       - name: vol-1
         persistentVolumeClaim:
-          claimName: scidas-cole-test-pvc
+          claimName: deepgtex-prp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextflow-api
+  labels:
+    app: nextflow-api
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: nextflow-api
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nextflow-api
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: nextflow-api.nautilus.optiputer.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nextflow-api
+          servicePort: 8080
