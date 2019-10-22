@@ -1,7 +1,7 @@
 Deploy a Nextflow-API Server to Kubernetes Using Helm 
 ===
 
-This guide assumes you have access to a K8s cluster. 
+This guide assumes you have access to a K8s cluster, and either a valid PVC or storage class on that cluster.
 
 #### 0. Download Helm 3
 
