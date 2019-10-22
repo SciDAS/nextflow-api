@@ -1,5 +1,4 @@
-helm/nextflow-api/.helmignore
-helm/nextflow-api/.nextflow.log
-helm/nextflow-api/.sops.yaml
-helm/nextflow-api/templates/secret.yaml
-
+helm/.helmignore
+helm/.nextflow.log
+helm/.sops.yaml
+helm/templates/secret.yaml
