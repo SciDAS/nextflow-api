@@ -24,10 +24,14 @@ spec:
       serviceAccountName: default
       containers:
       - name: nextflow-server
-        image: cbmckni/nextflow-api
+        image: cbmckni/nextflow-api:remote-dev
         env:
         - name: NEXTFLOW_K8S
           value: "true"
+        {{ if .Values.Remote.Enabled }}
+        - name: REMOTE_RUN
+          value: "true"
+        {{ end }}
         {{ if .Values.Remote.Enabled }}
         - name: PVC_NAME
           value: {{ .Values.Remote.PVC }}
