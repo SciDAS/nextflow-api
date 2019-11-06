@@ -139,13 +139,13 @@ if __name__ == "__main__":
 
 
 
-        # Copy output data from external cluster
+	# Copy output data from external cluster
 	if $REMOTE_RUN is True:
 		run_cmd(["./kube-save.sh", PVC_NAME, args.output_dir, args.id])
 		cwd = os.getcwd()
 		source_dir = "%s/%s" % (cwd, args.output_dir)
 		shutil.move(source_dir, output_dir)
-                
+
 
 	rc = save_output(args.id, output_dir)
 	if rc != 0:
