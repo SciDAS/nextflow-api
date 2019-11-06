@@ -3,11 +3,32 @@ Deploy a Nextflow-API Server to Kubernetes Using Helm
 
 This guide assumes you have access to a K8s cluster, and either a valid PVC or storage class on that cluster.
 
-#### 0. Download Helm 3
+#### 0. Install Helm 3 
 
 Go to the [Helm Release Page](https://github.com/helm/helm/releases) and download the lastest release that begins with **Helm v3.x.x**. Follow the installation instructions.
 
 Helm 3 is used because it does not require installing anything on the K8s cluster, while Helm 2 requires the user to install Tiller. This chart should work with Helm 2 if needed. 
+
+#### 0.5 Create NFS Storage Class(optional) 
+
+Nextflow-API requires persisitant storage to hold workflow data. If you already have access to a persistent volume claim(PVC), then you can use that one.
+
+If not, you will need a valid storage class for the dynamic creation of a persistent volume claim(PVC).
+
+To create a NFS storage provisioner under the *nfs* storage class: 
+
+Update Helm's repositories: `helm repo update`
+
+Install the NFS provisioner. Replace `<size>`(ex. 10Gi) with the maximum amount of storage you wish to allocate:
+
+`helm install kf stable/nfs-server-provisioner \`
+
+`--set=persistence.enabled=true,persistence.storageClass=standard,persistence.size=<size>`
+
+Check that the `nfs` storage class exists:
+
+`kubectl get sc` 
+
 
 #### 1. Configure Nextflow-API Server
 

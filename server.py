@@ -18,6 +18,7 @@ import uuid
 API_VERSION = 0.4
 PORT = 8080
 NEXTFLOW_K8S = True if os.environ.get("NEXTFLOW_K8S") else False
+REMOTE_RUN = True if os.environ.get("REMOTE_RUN") else False
 WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
 
 
@@ -335,6 +336,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			"--pipeline", workflow["pipeline"],
 			"--profiles", workflow["profiles"],
 			"--revision", workflow["revision"],
+                        "--input-dir", input_dir,
 			"--output-dir", workflow["output_dir"]
 		]
 

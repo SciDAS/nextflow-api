@@ -5,12 +5,13 @@ import json
 import os
 import subprocess
 import sys
-
+import shutil
 
 
 NEXTFLOW_K8S = True if os.environ.get("NEXTFLOW_K8S") else False
 PVC_NAME = os.environ.get("PVC_NAME", "deepgtex-prp")
 WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
+REMOTE_RUN = True if os.environ.get("REMOTE_RUN") else False
 
 
 
@@ -109,6 +110,7 @@ if __name__ == "__main__":
 	# parse command-line arguments
 	parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
 	parser.add_argument("--id", help="Workflow instance ID", required=True)
+        parser.add_argument("--input-dir", help="Input directory", default="input")
 	parser.add_argument("--output-dir", help="Output directory", default="output")
 	parser.add_argument("--pipeline", help="Name of nextflow pipeline", required=True)
 	parser.add_argument("--profiles", help="Comma-separated list of configuration profiles", default="standard")
@@ -121,6 +123,12 @@ if __name__ == "__main__":
 	work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
 	log_file = "%s/.workflow.log" % work_dir
 
+        # Copy input data to external cluster
+        if $REMOTE_RUN is True:
+                run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id])
+
+
+
 	rc = run_workflow(args.pipeline, args.profiles, args.resume, args.revision, work_dir, log_file)
 	if rc != 0:
 		save_status(work_dir, "failed")
@@ -128,6 +136,16 @@ if __name__ == "__main__":
 
 	# save output data
 	output_dir = "%s/%s/%s" % (WORKFLOWS_DIR, args.id, args.output_dir)
+
+
+
+        # Copy output data from external cluster
+        if $REMOTE_RUN is True:
+                run_cmd(["./kube-save.sh", PVC_NAME, args.output_dir, args.id])
+                cwd = os.getcwd()
+                source_dir = "%s/%s" % (cwd, args.output_dir)
+                shutil.move(source_dir, output_dir)
+                
 
 	rc = save_output(args.id, output_dir)
 	if rc != 0:
