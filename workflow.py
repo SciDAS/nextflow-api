@@ -110,7 +110,7 @@ if __name__ == "__main__":
 	# parse command-line arguments
 	parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
 	parser.add_argument("--id", help="Workflow instance ID", required=True)
-        parser.add_argument("--input-dir", help="Input directory", default="input")
+	parser.add_argument("--input-dir", help="Input directory", default="input")
 	parser.add_argument("--output-dir", help="Output directory", default="output")
 	parser.add_argument("--pipeline", help="Name of nextflow pipeline", required=True)
 	parser.add_argument("--profiles", help="Comma-separated list of configuration profiles", default="standard")
@@ -123,9 +123,9 @@ if __name__ == "__main__":
 	work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
 	log_file = "%s/.workflow.log" % work_dir
 
-        # Copy input data to external cluster
-        if $REMOTE_RUN is True:
-                run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id])
+	# Copy input data to external cluster
+	if $REMOTE_RUN is True:
+		run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id])
 
 
 
@@ -140,11 +140,11 @@ if __name__ == "__main__":
 
 
         # Copy output data from external cluster
-        if $REMOTE_RUN is True:
-                run_cmd(["./kube-save.sh", PVC_NAME, args.output_dir, args.id])
-                cwd = os.getcwd()
-                source_dir = "%s/%s" % (cwd, args.output_dir)
-                shutil.move(source_dir, output_dir)
+	if $REMOTE_RUN is True:
+		run_cmd(["./kube-save.sh", PVC_NAME, args.output_dir, args.id])
+		cwd = os.getcwd()
+		source_dir = "%s/%s" % (cwd, args.output_dir)
+		shutil.move(source_dir, output_dir)
                 
 
 	rc = save_output(args.id, output_dir)

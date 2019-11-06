@@ -7,7 +7,7 @@ NewLocalPVC:
   # (temp, future PVCs will be dynamically configurable)
   Enabled: true
   Name: nextflow-api-pvc
-  Size: 20Gi
+  Size: 10Gi
   StorageClass: nfs
 
 ExistingLocalPVC:
