@@ -11,7 +11,7 @@ PVC_NAME="$1"
 PVC_PATH="/workspace/_workflows"
 WORKFLOW_ID="$3"
 POD_FILE="pod.yaml"
-POD_NAME="$USER-load-$(printf %04x $RANDOM)"
+POD_NAME="nf-api-load-$(printf %04x $RANDOM)"
 LOCAL_PATH="$(realpath $2)"
 
 # create pod config file
