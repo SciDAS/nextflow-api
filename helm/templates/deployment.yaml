@@ -25,6 +25,7 @@ spec:
       containers:
       - name: nextflow-server
         image: cbmckni/nextflow-api:dev
+        imagePullPolicy: Always
         env:
         - name: NEXTFLOW_K8S
           value: "true"
@@ -63,7 +64,6 @@ spec:
         {{ end }}
         ports:
         - containerPort: 8080
-      imagePullPolicy: Always
       volumes:
       {{ if .Values.Remote.Enabled }}
       - name: conf
