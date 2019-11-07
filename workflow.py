@@ -124,7 +124,7 @@ if __name__ == "__main__":
     log_file = "%s/.workflow.log" % work_dir
 
     # Copy input data to external cluster
-    if $REMOTE_RUN is True:
+    if REMOTE_RUN:
         run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id])
 
 
@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
 
     # Copy output data from external cluster
-    if $REMOTE_RUN is True:
+    if REMOTE_RUN:
         run_cmd(["./kube-save.sh", PVC_NAME, args.output_dir, args.id])
         cwd = os.getcwd()
         source_dir = "%s/%s" % (cwd, args.output_dir)
