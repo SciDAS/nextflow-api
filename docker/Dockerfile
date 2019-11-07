@@ -23,7 +23,7 @@ RUN curl -s https://get.nextflow.io | bash \
 # install nextflow-api
 WORKDIR /opt
 
-RUN pwd
+RUN ls
 ADD https://api.github.com/repos/scidas/nextflow-api/git/refs/heads/master version.json
 RUN git clone -q https://github.com/scidas/nextflow-api.git
 

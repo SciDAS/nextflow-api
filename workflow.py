@@ -24,20 +24,20 @@ def run_cmd(args, log_file=None, debug=True):
         # read line from stdout
         line = proc.stdout.readline()
 
-    # break if process is done
-    if not line and proc.poll() is not None:
-        break
+        # break if process is done
+        if not line and proc.poll() is not None:
+            break
 
-    # write line to log file
-    if line:
-        if log_file:
-        with open(log_file, "a") as f:
-            f.write(str(line, "utf-8"))
-            f.flush()
+        # write line to log file
+        if line:
+            if log_file:
+                with open(log_file, "a") as f:
+                    f.write(str(line, "utf-8"))
+                    f.flush()
 
-    if log_file is None or debug:
-        sys.stdout.write("%d: %s" % (proc.pid, line.decode("ascii", "ignore")))
-        sys.stdout.flush()
+            if log_file is None or debug:
+                sys.stdout.write("%d: %s" % (proc.pid, line.decode("ascii", "ignore")))
+                sys.stdout.flush()
 
     return proc.returncode
 
@@ -106,7 +106,7 @@ def save_output(id, output_dir):
 
 
 
-    if __name__ == "__main__":
+if __name__ == "__main__":
     # parse command-line arguments
     parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
     parser.add_argument("--id", help="Workflow instance ID", required=True)
