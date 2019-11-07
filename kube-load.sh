@@ -50,7 +50,7 @@ done
 # copy input data to pod
 echo "copying data..."
 
-kubectl exec $POD_NAME -- bash -c "mkdir -p $PVC_PATH/$USER"
+kubectl exec $POD_NAME -- bash -c "mkdir -p $PVC_PATH/$WORKFLOW_ID/$(basename $LOCAL_PATH)"
 kubectl cp "$LOCAL_PATH" "$POD_NAME:$PVC_PATH/$WORKFLOW_ID/$(basename $LOCAL_PATH)"
 
 # delete pod
