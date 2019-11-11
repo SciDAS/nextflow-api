@@ -60,7 +60,7 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
 
     # initialize log file
     log_file = ".workflow.log"
-    with open(log_file, "w") as f:
+    with open(log_file, "a") as f:
         f.write("")
 
     # launch workflow, wait for completion
@@ -119,19 +119,28 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # run workflow
+    # initialize paths
+    base_dir = os.getcwd()
     work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
     log_file = "%s/.workflow.log" % work_dir
 
+    # initialize log file
+    os.chdir(work_dir)
+    with open(log_file, "a") as f:
+        f.write("")
+    os.chdir(base_dir)
+
     # Copy input data to external cluster
     if REMOTE_RUN:
-        run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id])
-
+        run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id], log_file)
+        if rc != 0:
+            save_status(work_dir, "failed copy")
+            sys.exit(rc)
 
 
     rc = run_workflow(args.pipeline, args.profiles, args.resume, args.revision, work_dir, log_file)
     if rc != 0:
-        save_status(work_dir, "failed")
+        save_status(work_dir, "failed run")
         sys.exit(rc)
 
     # save output data
@@ -141,15 +150,18 @@ if __name__ == "__main__":
 
     # Copy output data from external cluster
     if REMOTE_RUN:
-        run_cmd(["./kube-save.sh", PVC_NAME, args.output_dir, args.id])
+        rc = run_cmd(["./kube-save.sh", PVC_NAME, args.output_dir, args.id], log_file)
+        if rc != 0:
+            save_status(work_dir, "failed save")
+            sys.exit(rc)
         cwd = os.getcwd()
         source_dir = "%s/%s" % (cwd, args.output_dir)
         shutil.move(source_dir, output_dir)
-
+        
 
     rc = save_output(args.id, output_dir)
     if rc != 0:
-        save_status(work_dir, "failed")
+        save_status(work_dir, "failed save")
         sys.exit(rc)
 
     # save final status
