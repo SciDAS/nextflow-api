@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     # Copy input data to external cluster
     if REMOTE_RUN:
-        run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id], log_file)
+        rc = run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id], log_file)
         if rc != 0:
             save_status(work_dir, "failed copy")
             sys.exit(rc)

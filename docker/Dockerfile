@@ -24,7 +24,7 @@ RUN curl -s https://get.nextflow.io | bash \
 WORKDIR /opt
 
 RUN ls .
-RUN git clone https://github.com/scidas/nextflow-api.git
+RUN git clone -q https://github.com/scidas/nextflow-api.git
 
 # install python dependencies
 RUN pip3 install -r nextflow-api/requirements.txt
