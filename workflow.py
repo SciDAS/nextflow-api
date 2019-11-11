@@ -54,6 +54,9 @@ def save_status(work_dir, status):
 def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
     # save current directory
     prev_dir = os.getcwd()
+    
+    # PVC mount dir
+    mount_path = PVC_NAME + ":" + work_dir
 
     # change to workflow directory
     os.chdir(work_dir)
@@ -74,7 +77,7 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
             "-latest",
             "-profile", profiles,
             "-revision", revision,
-            "-volume-mount", PVC_NAME
+            "-volume-mount", mount_path
         ]
     else:
         args = [
