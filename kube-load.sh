@@ -49,9 +49,9 @@ done
 
 # copy input data to pod
 echo "creating dir..."
-kubectl exec $POD_NAME -- bash -c "mkdir -p $PVC_PATH/$WORKFLOW_ID"
+kubectl exec $POD_NAME -- bash -c "mkdir -p /workspace/_workflows/$WORKFLOW_ID"
 echo "copying data..."
-kubectl cp "$LOCAL_PATH" "$POD_NAME:$PVC_PATH/$WORKFLOW_ID/$(basename $LOCAL_PATH)"
+kubectl cp "$LOCAL_PATH" "$POD_NAME:/workspace/_workflows/$WORKFLOW_ID"
 
 # delete pod
 kubectl delete -f $POD_FILE
