@@ -65,7 +65,6 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
     print work_dir
     mount_path = PVC_NAME + ":" + work_dir
     print mount_path
-
     # change to workflow directory
     os.chdir(work_dir)
 
@@ -80,7 +79,7 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
             "-latest",
             "-profile", profiles,
             "-revision", revision,
-            "-volume-mount", m
+            "-volume-mount", mount_path
         ]
     else:
         args = [
