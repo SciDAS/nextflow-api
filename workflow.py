@@ -52,19 +52,22 @@ def save_status(work_dir, status):
 
 
 def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
-    # save current directory
-    prev_dir = os.getcwd()
-    
-    # PVC mount dir
-    mount_path = PVC_NAME + ":" + work_dir
-
-    # change to workflow directory
-    os.chdir(work_dir)
-
+   
     # initialize log file
     log_file = ".workflow.log"
     with open(log_file, "a") as f:
         f.write("")
+
+    # save current directory
+    prev_dir = os.getcwd()
+    
+    # PVC mount dir
+    print work_dir
+    mount_path = PVC_NAME + ":" + work_dir
+    print mount_path
+
+    # change to workflow directory
+    os.chdir(work_dir)
 
     # launch workflow, wait for completion
     if NEXTFLOW_K8S:
@@ -77,7 +80,7 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
             "-latest",
             "-profile", profiles,
             "-revision", revision,
-            "-volume-mount", mount_path
+            "-volume-mount", m
         ]
     else:
         args = [

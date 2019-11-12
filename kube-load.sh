@@ -53,8 +53,8 @@ kubectl exec $POD_NAME -- bash -c "mkdir -p /workspace/_workflows/$WORKFLOW_ID"
 echo "copying data..."
 kubectl cp "$LOCAL_PATH" "$POD_NAME:/workspace/_workflows/$WORKFLOW_ID/$(basename $LOCAL_PATH)"
 # temporary workaround
-echo "moving to correct dir..."
-kubectl exec $POD_NAME -- bash -c "mv /workspace/$WORKFLOW_ID/$(basename $LOCAL_PATH) /workspace/_workflows/$WORKFLOW_ID/$(basename $LOCAL_PATH)  && rm -rf /workspace/$WORKFLOW_ID"
+#echo "moving to correct dir..."
+#kubectl exec $POD_NAME -- bash -c "mv /workspace/$WORKFLOW_ID/$(basename $LOCAL_PATH) /workspace/_workflows/$WORKFLOW_ID/$(basename $LOCAL_PATH)  && rm -rf /workspace/$WORKFLOW_ID"
 
 # delete pod
 kubectl delete -f $POD_FILE
