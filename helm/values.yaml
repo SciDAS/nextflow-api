@@ -22,8 +22,8 @@ Remote:
   # Otherwise, PVC/compute of local cluster will be used.
   # (temp, future will be dynamically configurable)
   Enabled: true
-  Context: nautilus
-  PVC: deepgtex-prp
+  Context: gke_stack-dev-237116_us-central1-a_standard-cluster-1
+  PVC: task-pv-claim
   
 # Resource request per container
 Resources:

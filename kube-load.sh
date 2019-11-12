@@ -8,7 +8,7 @@ if [[ $# != 3 ]]; then
 fi
 
 PVC_NAME="$1"
-PVC_PATH="/workspace/_workflows"
+PVC_PATH="/workspace"
 WORKFLOW_ID="$3"
 POD_FILE="pod.yaml"
 POD_NAME="nf-api-load-$(printf %04x $RANDOM)"
@@ -51,9 +51,10 @@ done
 echo "creating dir..."
 kubectl exec $POD_NAME -- bash -c "mkdir -p /workspace/_workflows/$WORKFLOW_ID"
 echo "copying data..."
-kubectl cp "$LOCAL_PATH" "$POD_NAME:/workspace/_workflows/$WORKFLOW_ID"
+kubectl cp "$LOCAL_PATH" "$POD_NAME:/workspace/_workflows/$WORKFLOW_ID/$(basename $LOCAL_PATH)"
 # temporary workaround
-kubectl exec $POD_NAME -- bash -c "mv /workspace/$WORKFLOW_ID/(basename $LOCAL_PATH) /workspace/_workflows/$WORKFLOW_ID/(basename $LOCAL_PATH)  && rm -rf /workspace/$WORKFLOW_ID"
+echo "moving to correct dir..."
+kubectl exec $POD_NAME -- bash -c "mv /workspace/$WORKFLOW_ID/$(basename $LOCAL_PATH) /workspace/_workflows/$WORKFLOW_ID/$(basename $LOCAL_PATH)  && rm -rf /workspace/$WORKFLOW_ID"
 
 # delete pod
 kubectl delete -f $POD_FILE
