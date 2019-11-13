@@ -62,9 +62,9 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
     prev_dir = os.getcwd()
     
     # PVC mount dir
-    print work_dir
+    print(work_dir)
     mount_path = PVC_NAME + ":" + work_dir
-    print mount_path
+    print(mount_path)
     # change to workflow directory
     os.chdir(work_dir)
 
@@ -139,13 +139,13 @@ if __name__ == "__main__":
     if REMOTE_RUN:
         rc = run_cmd(["./kube-load.sh", PVC_NAME, args.input_dir, args.id], log_file)
         if rc != 0:
-            save_status(work_dir, "failed copy")
+            save_status(work_dir, "failed")
             sys.exit(rc)
 
 
     rc = run_workflow(args.pipeline, args.profiles, args.resume, args.revision, work_dir, log_file)
     if rc != 0:
-        save_status(work_dir, "failed run")
+        save_status(work_dir, "failed")
         sys.exit(rc)
 
     # save output data
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     if REMOTE_RUN:
         rc = run_cmd(["./kube-save.sh", PVC_NAME, args.output_dir, args.id], log_file)
         if rc != 0:
-            save_status(work_dir, "failed save")
+            save_status(work_dir, "failed")
             sys.exit(rc)
         cwd = os.getcwd()
         source_dir = "%s/%s" % (cwd, args.output_dir)
@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
     rc = save_output(args.id, output_dir)
     if rc != 0:
-        save_status(work_dir, "failed save")
+        save_status(work_dir, "failed")
         sys.exit(rc)
 
     # save final status
