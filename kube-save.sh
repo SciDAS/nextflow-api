@@ -50,8 +50,8 @@ done
 # copy output data from pod
 echo "copying data..."
 
-kubectl exec $POD_NAME -- bash -c "for f in \$(find $PVC_PATH/$WORKFLOW_ID/$REMOTE_PATH -type l); do cp --remove-destination \$(readlink \$f) \$f; done"
-kubectl cp "$POD_NAME:$PVC_PATH/$WORKFLOW_ID/$REMOTE_PATH" "$(basename $REMOTE_PATH)"
+#kubectl exec $POD_NAME -- bash -c "for f in \$(find $PVC_PATH/$WORKFLOW_ID/$REMOTE_PATH -type l); do cp --remove-destination \$(readlink \$f) \$f; done"
+kubectl cp "$POD_NAME:/workspace/_workflows/$WORKFLOW_ID/$(basename $REMOTE_PATH)" "$(basename $REMOTE_PATH)"
 
 # delete pod
 kubectl delete -f $POD_FILE
