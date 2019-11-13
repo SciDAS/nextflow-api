@@ -79,7 +79,7 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
             "-latest",
             "-profile", profiles,
             "-revision", revision,
-            "-volume-mount", mount_path
+            "-volume-mount", PVC_NAME
         ]
     else:
         args = [
