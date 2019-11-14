@@ -6,7 +6,7 @@ NewLocalPVC:
   # If true, create new PVC on local cluster.
   # (temp, future PVCs will be dynamically configurable)
   Enabled: true
-  Name: nextflow-api-pvc
+  Name: nextflow-api-pvc-new
   Size: 10Gi
   StorageClass: nfs
 
@@ -21,7 +21,7 @@ Remote:
   # If true, use PVC/compute of remote cluster.
   # Otherwise, PVC/compute of local cluster will be used.
   # (temp, future will be dynamically configurable)
-  Enabled: true
+  Enabled: false
   Context: nautilus
   PVC: deepgtex-prp
   
