@@ -21,7 +21,7 @@ Remote:
   # If true, use PVC/compute of remote cluster.
   # Otherwise, PVC/compute of local cluster will be used.
   # (temp, future will be dynamically configurable)
-  Enabled: false
+  Enabled: true
   Context: nautilus
   PVC: deepgtex-prp
   
