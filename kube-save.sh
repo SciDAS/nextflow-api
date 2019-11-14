@@ -8,7 +8,7 @@ if [[ $# != 3 ]]; then
 fi
 
 PVC_NAME="$1"
-PVC_PATH="/workspace/_workflows"
+PVC_PATH="/workspace"
 WORKFLOW_ID="$3"
 POD_FILE="pod.yaml"
 POD_NAME="nf-api-save-$(printf %04x $RANDOM)"

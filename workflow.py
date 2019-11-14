@@ -61,10 +61,6 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
     # save current directory
     prev_dir = os.getcwd()
     
-    # PVC mount dir
-    print(work_dir)
-    mount_path = PVC_NAME + ":" + work_dir
-    print(mount_path)
     # change to workflow directory
     os.chdir(work_dir)
 
