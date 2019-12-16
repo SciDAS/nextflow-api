@@ -84,7 +84,10 @@ class WorkflowQueryHandler(tornado.web.RequestHandler):
 		workflow_ids = [id for id in workflow_ids if os.path.isdir(os.path.join(WORKFLOWS_DIR, id))]
 
 		# get workflow objects
-		workflows = [json.load(open("%s/%s/config.json" % (WORKFLOWS_DIR, id))) for id in workflow_ids]
+		config_files = ["%s/%s/config.json" % (WORKFLOWS_DIR, id) for id in workflow_ids]
+		config_files = [f for f in config_files if os.path.exists(f)]
+
+		workflows = [json.load(open(f)) for f in config_files]
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")

@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NXF_VER="19.07.0"
+ENV NXF_VER="19.10.0"
 EXPOSE 8080
 
 # install package dependencies
