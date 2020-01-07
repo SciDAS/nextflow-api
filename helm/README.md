@@ -150,9 +150,18 @@ Deploy using `helm install nf .`
 
 #### 3. Use Nextflow Server
 
-If you are using an Ingress, navigate to the host you specified.
+**If this is a new cluster:**
 
-##### LoadBalancer(default)
+Give Nextflow the necessary permissions to deploy jobs to your K8s cluster:
+
+```
+kubectl create rolebinding default-edit --clusterrole=edit --serviceaccount=default:default 
+kubectl create rolebinding default-view --clusterrole=view --serviceaccount=default:default
+```
+
+##### LoadBalancer(default) or Ingress
+
+Ingress: navigate to the host you specified.
 
 Run `kubectl get svc` to get the service that is exposing your server to the internet.
 
