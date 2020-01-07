@@ -1,3 +1,4 @@
+{{ if .Values.Ingress.Disabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -15,6 +16,7 @@ spec:
   selector:
     app: {{ template "nextflow-api.name" . }}
     instance: {{ .Values.Instance }}
+{{ end }}
 ---
 {{ if .Values.Ingress.Enabled }}
 apiVersion: v1
