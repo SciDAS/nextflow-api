@@ -60,16 +60,14 @@ def cancel_child_process(pid_file):
 	f = open(pid_file)
 	pid = int(f.readline().strip())
 
-	# retrieve process from child process list
+	# retrieve process from child process list and terminate it
 	try:
 		proc = CHILD_PROCESSES[pid]
+		proc.terminate()
 
-	# return false if process does not exist
+	# do nothing if process does not exist
 	except KeyError:
 		pass
-
-	# terminate process
-	proc.terminate()
 
 
 
@@ -396,7 +394,8 @@ class WorkflowCancelHandler(tornado.web.RequestHandler):
 		# terminate child process
 		pid_file = "%s/.workflow.pid" % work_dir
 
-		cancel_child_process(pid_file)
+		if os.path.exists(pid_file):
+			cancel_child_process(pid_file)
 
 		# update workflow status
 		workflow["status"] = "failed"
