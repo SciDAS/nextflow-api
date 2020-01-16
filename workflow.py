@@ -76,7 +76,10 @@ def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
 			PVC_NAME,
 			id,
 			pipeline,
-			"\"-ansi-log false -latest -profile %s -revision %s\"" % (profiles, revision)
+			"-ansi-log", "false",
+			"-latest",
+			"-profile", profiles,
+			"-revision", revision
 		]
 	elif NXF_EXECUTOR == "local":
 		args = [

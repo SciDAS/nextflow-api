@@ -2,18 +2,20 @@
 # Run a nextflow pipeline on a Kubernetes cluster.
 
 # parse command-line arguments
-if [[ $# != 4 ]]; then
-	echo "usage: $0 <pvc-name> <id> <pipeline> <options>"
+if [[ $# < 3 ]]; then
+	echo "usage: $0 <pvc-name> <id> <pipeline> [options]"
 	exit -1
 fi
 
 PVC_NAME="$1"
 ID="$2"
 PIPELINE="$3"
-OPTIONS="$4"
+
+shift 3
+OPTIONS="$*"
+
 POD_NAME="nextflow-api-${ID}"
 SPEC_FILE="${POD_NAME}.yaml"
-
 PVC_PATH="/workspace"
 
 # write pod spec to file
