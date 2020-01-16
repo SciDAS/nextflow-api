@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import motor.motor_tornado
 import os
 import shutil
 import subprocess
@@ -457,6 +458,10 @@ if __name__ == "__main__":
 	# initialize workflow directory
 	os.makedirs(WORKFLOWS_DIR, exist_ok=True)
 
+	# connect to database
+	client = motor.motor_tornado.MotorClient("mongodb://localhost:27017")
+	db = client["nextflow_api"]
+
 	# initialize server
 	app = tornado.web.Application([
 		(r"/api/workflows", WorkflowQueryHandler),
@@ -469,7 +474,7 @@ if __name__ == "__main__":
 		(r"/api/workflows/([a-zA-Z0-9-]+)/log", WorkflowLogHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/download", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
 		(r"/(.*)", tornado.web.StaticFileHandler, dict(path="./client", default_filename="index.html"))
-	])
+	], db=db)
 
 	server = tornado.httpserver.HTTPServer(app, max_buffer_size=1024 ** 3)
 	server.bind(8080)
