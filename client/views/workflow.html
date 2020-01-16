@@ -138,6 +138,7 @@
 				<div class="text-center">
 					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && launch(workflow.id)">Launch</button>
 					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && resume(workflow.id)">Resume</button>
+					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status == 'running' && cancel(workflow.id)">Cancel</button>
 				</div>
 
 				<hr>

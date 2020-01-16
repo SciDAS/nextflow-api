@@ -112,6 +112,10 @@ app.service("api", ["$http", function($http) {
 		return $http.post("/api/workflows/" + id + "/resume");
 	};
 
+	this.Workflow.cancel = function(id) {
+		return $http.post("/api/workflows/" + id + "/cancel");
+	};
+
 	this.Workflow.log = function(id) {
 		return $http.get("/api/workflows/" + id + "/log")
 			.then(function(res) {
@@ -228,6 +232,18 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 		}
 		catch ( error ) {
 			alert.error("Failed to resume workflow instance.");
+		}
+	};
+
+	$scope.cancel = async function(id) {
+		try {
+			await api.Workflow.cancel(id);
+
+			alert.success("Workflow instance canceled.");
+			$route.reload();
+		}
+		catch ( error ) {
+			alert.error("Failed to cancel workflow instance.");
 		}
 	};
 

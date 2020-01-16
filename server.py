@@ -51,6 +51,24 @@ def is_process_running(pid_file):
 
 
 
+def cancel_child_process(pid_file):
+	# read pid from file
+	f = open(pid_file)
+	pid = int(f.readline().strip())
+
+	# retrieve process from child process list
+	try:
+		proc = CHILD_PROCESSES[pid]
+
+	# return false if process does not exist
+	except KeyError:
+		pass
+
+	# terminate process
+	proc.terminate()
+
+
+
 def list_dir_recursive(path, relpath_start=""):
 	files = [os.path.join(dir, f) for (dir, subdirs, filenames) in os.walk(path) for f in filenames]
 	files = [os.path.relpath(f, start=relpath_start) for f in files]
@@ -366,6 +384,35 @@ class WorkflowResumeHandler(WorkflowLaunchHandler):
 
 
 
+class WorkflowCancelHandler(tornado.web.RequestHandler):
+
+	def post(self, id):
+		# make sure workflow directory exists
+		work_dir = os.path.join(WORKFLOWS_DIR, id)
+
+		if not os.path.exists(work_dir):
+			self.set_status(404)
+			self.write(message(404, "Workflow \"%s\" does not exist" % id))
+			return
+
+		# load workflow data from config.json
+		workflow = json.load(open("%s/config.json" % work_dir, "r"))
+
+		# terminate child process
+		pid_file = "%s/.workflow.pid" % work_dir
+
+		cancel_child_process(pid_file)
+
+		# update workflow status
+		workflow["status"] = "failed"
+
+		json.dump(workflow, open("%s/config.json" % work_dir, "w"))
+
+		self.set_status(200)
+		self.write(message(200, "Workflow \"%s\" has been canceled" % id))
+
+
+
 class WorkflowLogHandler(tornado.web.RequestHandler):
 
 	def get(self, id):
@@ -424,6 +471,7 @@ if __name__ == "__main__":
 		(r"/api/workflows/([a-zA-Z0-9-]+)/upload", WorkflowUploadHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/launch", WorkflowLaunchHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/resume", WorkflowResumeHandler),
+		(r"/api/workflows/([a-zA-Z0-9-]+)/cancel", WorkflowCancelHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/log", WorkflowLogHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/download", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
 		(r"/(.*)", tornado.web.StaticFileHandler, dict(path="./client", default_filename="index.html"))
