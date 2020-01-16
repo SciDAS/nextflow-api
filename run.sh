@@ -11,7 +11,7 @@ PVC_NAME="$1"
 ID="$2"
 PIPELINE="$3"
 OPTIONS="$4"
-POD_NAME="${USER}-$(echo ${PIPELINE} | tr /. - | tr [:upper:] [:lower:])-$(printf %04x ${RANDOM})"
+POD_NAME="nextflow-api-${ID}"
 SPEC_FILE="${POD_NAME}.yaml"
 
 PVC_PATH="/workspace"
