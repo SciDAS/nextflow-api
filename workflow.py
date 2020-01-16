@@ -108,8 +108,6 @@ def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
 	if resume:
 		args.append("-resume")
 
-	print(args)
-
 	rc = run_cmd(args, log_file)
 
 	# return to original directory

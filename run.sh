@@ -2,7 +2,7 @@
 # Run a nextflow pipeline on a Kubernetes cluster.
 
 # parse command-line arguments
-if [[ $# < 3 ]]; then
+if [[ $# -lt 3 ]]; then
 	echo "usage: $0 <pvc-name> <id> <pipeline> [options]"
 	exit -1
 fi
