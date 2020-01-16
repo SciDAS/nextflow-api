@@ -65,7 +65,7 @@ def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
 	# launch workflow, wait for completion
 	if NEXTFLOW_K8S:
 		args = [
-			"./run.sh",
+			"/opt/nextflow-api/run.sh",
 			PVC_NAME,
 			id,
 			pipeline,
