@@ -50,7 +50,7 @@ def save_status(work_dir, status):
 
 
 
-def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
+def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
 	# save current directory
 	prev_dir = os.getcwd()
 
@@ -65,15 +65,11 @@ def run_workflow(pipeline, profiles, resume, revision, work_dir, log_file):
 	# launch workflow, wait for completion
 	if NEXTFLOW_K8S:
 		args = [
-			"nextflow",
-			"-config", "nextflow.config",
-			"kuberun",
+			"./run.sh",
+			PVC_NAME,
+			id,
 			pipeline,
-			"-ansi-log", "false",
-			"-latest",
-			"-profile", profiles,
-			"-revision", revision,
-			"-volume-mount", PVC_NAME
+			"\"-ansi-log false -latest -profile %s -revision %s\"" % (profiles, revision)
 		]
 	else:
 		args = [
@@ -121,7 +117,7 @@ if __name__ == "__main__":
 	work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
 	log_file = "%s/.workflow.log" % work_dir
 
-	rc = run_workflow(args.pipeline, args.profiles, args.resume, args.revision, work_dir, log_file)
+	rc = run_workflow(args.id, args.pipeline, args.profiles, args.resume, args.revision, work_dir, log_file)
 	if rc != 0:
 		save_status(work_dir, "failed")
 		sys.exit(rc)
