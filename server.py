@@ -17,8 +17,14 @@ import uuid
 
 API_VERSION = 0.4
 PORT = 8080
-NEXTFLOW_K8S = True if os.environ.get("NEXTFLOW_K8S") else False
-WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
+WORKFLOWS_DIRS = {
+	"k8s": "/workspace/_workflows",
+	"local": "./_workflows"
+}
+
+NXF_EXECUTOR = os.environ.get("NXF_EXECUTOR")
+NXF_EXECUTOR = NXF_EXECUTOR if NXF_EXECUTOR else "local"
+WORKFLOWS_DIR = WORKFLOWS_DIRS[NXF_EXECUTOR]
 
 
 

@@ -18,8 +18,8 @@ spec:
       - name: nextflow-api
         image: bentsherman/nextflow-api
         env:
-        - name: NEXTFLOW_K8S
-          value: "true"
+        - name: NXF_EXECUTOR
+          value: "k8s"
         command:
         - /bin/bash
         - -c

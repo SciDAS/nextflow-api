@@ -20,8 +20,8 @@ spec:
         command: ["/bin/sh","-c"]
         args: ['printf "%s" "${PROJECTKEY}" > "/home/credential-key.json" && gcloud auth activate-service-account --key-file /home/credential-key.json && gcloud config set project ${PROJECTID} && gcloud container clusters get-credentials ${CLUSTERID} --zone=${ZONE} --project=${PROJECTID} && cd /opt/nextflow-api; python3 server.py']
         env:
-        - name: NEXTFLOW_K8S
-          value: "true"
+        - name: NXF_EXECUTOR
+          value: "k8s"
         - name: PROJECTID
           valueFrom:
             configMapKeyRef:

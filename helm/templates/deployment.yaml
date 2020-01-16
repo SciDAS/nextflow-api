@@ -26,8 +26,8 @@ spec:
       - name: nextflow-server
         image: cbmckni/nextflow-api
         env:
-        - name: NEXTFLOW_K8S
-          value: "true"
+        - name: NXF_EXECUTOR
+          value: "k8s"
         {{ if .Values.Remote.Enabled }}
         - name: PVC_NAME
           value: {{ .Values.Remote.PVC }}

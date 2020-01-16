@@ -8,9 +8,15 @@ import sys
 
 
 
-NEXTFLOW_K8S = True if os.environ.get("NEXTFLOW_K8S") else False
+WORKFLOWS_DIRS = {
+	"k8s": "/workspace/_workflows",
+	"local": "./_workflows"
+}
+
+NXF_EXECUTOR = os.environ.get("NXF_EXECUTOR")
+NXF_EXECUTOR = NXF_EXECUTOR if NXF_EXECUTOR else "local"
 PVC_NAME = os.environ.get("PVC_NAME", "deepgtex-prp")
-WORKFLOWS_DIR = "/workspace/_workflows" if NEXTFLOW_K8S else "./_workflows"
+WORKFLOWS_DIR = WORKFLOWS_DIRS[NXF_EXECUTOR]
 
 
 
@@ -63,7 +69,7 @@ def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
 		f.write("")
 
 	# launch workflow, wait for completion
-	if NEXTFLOW_K8S:
+	if NXF_EXECUTOR == "k8s":
 		args = [
 			"/opt/nextflow-api/run.sh",
 			PVC_NAME,
@@ -71,7 +77,7 @@ def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
 			pipeline,
 			"\"-ansi-log false -latest -profile %s -revision %s\"" % (profiles, revision)
 		]
-	else:
+	elif NXF_EXECUTOR == "local":
 		args = [
 			"nextflow",
 			"-config", "nextflow.config",
