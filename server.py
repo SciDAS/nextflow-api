@@ -15,8 +15,6 @@ import uuid
 
 
 
-API_VERSION = 0.4
-PORT = 8080
 WORKFLOWS_DIRS = {
 	"k8s": "/workspace/_workflows",
 	"local": "./_workflows"
@@ -88,15 +86,6 @@ def message(status, message):
 		"status": status,
 		"message": message
 	}
-
-
-
-class GetVersionHandler(tornado.web.RequestHandler):
-	def get(self):
-		self.set_status(200)
-		self.write({
-			"version": API_VERSION
-		})
 
 
 
@@ -470,7 +459,6 @@ if __name__ == "__main__":
 
 	# initialize server
 	app = tornado.web.Application([
-		(r"/api/version", GetVersionHandler),
 		(r"/api/workflows", WorkflowQueryHandler),
 		(r"/api/workflows/0", WorkflowCreateHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)", WorkflowEditHandler),
@@ -484,8 +472,8 @@ if __name__ == "__main__":
 	])
 
 	server = tornado.httpserver.HTTPServer(app, max_buffer_size=1024 ** 3)
-	server.bind(PORT)
+	server.bind(8080)
 	server.start()
 
-	print("The API is listening on http://0.0.0.0:%d" % PORT, flush=True)
+	print("The API is listening on http://0.0.0.0:8080", flush=True)
 	tornado.ioloop.IOLoop.instance().start()
