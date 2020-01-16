@@ -17,7 +17,8 @@ import uuid
 
 WORKFLOWS_DIRS = {
 	"k8s": "/workspace/_workflows",
-	"local": "./_workflows"
+	"local": "./_workflows",
+	"pbspro": "./_workflows"
 }
 
 NXF_EXECUTOR = os.environ.get("NXF_EXECUTOR")

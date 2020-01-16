@@ -10,7 +10,8 @@ import sys
 
 WORKFLOWS_DIRS = {
 	"k8s": "/workspace/_workflows",
-	"local": "./_workflows"
+	"local": "./_workflows",
+	"pbspro": "./_workflows"
 }
 
 NXF_EXECUTOR = os.environ.get("NXF_EXECUTOR")
@@ -88,6 +89,17 @@ def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
 			"-profile", profiles,
 			"-revision", revision,
 			"-with-docker"
+		]
+	elif NXF_EXECUTOR == "pbspro":
+		args = [
+			"nextflow",
+			"-config", "nextflow.config",
+			"run",
+			pipeline,
+			"-ansi-log", "false",
+			"-latest",
+			"-profile", profiles,
+			"-revision", revision
 		]
 
 	if resume:
