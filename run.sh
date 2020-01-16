@@ -43,7 +43,7 @@ spec:
         command:
         - /bin/bash
         - -c
-        - cd ${PVC_PATH}/_workflows/${ID}; nextflow run ${PIPELINE} ${OPTIONS}
+        - cd ${PVC_PATH}/_workflows/${ID}; nextflow -config nextflow.config run ${PIPELINE} ${OPTIONS}
         resources:
           requests:
             cpu: 1
