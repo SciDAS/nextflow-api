@@ -19,48 +19,58 @@ SPEC_FILE="${POD_NAME}.yaml"
 PVC_PATH="/workspace"
 
 # write pod spec to file
-cat > "${SPEC_FILE}" <<EOF
-apiVersion: batch/v1
-kind: Job
+cat > ${SPEC_FILE} <<EOF
+apiVersion: v1
+kind: Pod
 metadata:
   name: ${POD_NAME}
 spec:
-  backoffLimit: 1
-  completions: 1
-  ttlSecondsAfterFinished: 100
-  template:
-    spec:
-      containers:
-      - name: ${POD_NAME}
-        image: nextflow/nextflow:${NXF_VER}
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: NXF_WORK
-          value: ${PVC_PATH}/_workflows/${ID}/work
-        - name: NXF_ASSETS
-          value: ${PVC_PATH}/projects
-        - name: NXF_EXECUTOR
-          value: k8s
-        command:
-        - /bin/bash
-        - -c
-        - cd ${PVC_PATH}/_workflows/${ID}; nextflow -config nextflow.config run ${PIPELINE} ${OPTIONS}
-        resources:
-          requests:
-            cpu: 1
-            memory: 4Gi
-        volumeMounts:
-        - name: vol-1
-          mountPath: ${PVC_PATH}
-      restartPolicy: Never
-      volumes:
-      - name: vol-1
-        persistentVolumeClaim:
-          claimName: ${PVC_NAME}
+  containers:
+  - name: ${POD_NAME}
+    image: nextflow/nextflow:${NXF_VER}
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: NXF_WORK
+      value: ${PVC_PATH}/_workflows/${ID}/work
+    - name: NXF_ASSETS
+      value: ${PVC_PATH}/projects
+    - name: NXF_EXECUTOR
+      value: k8s
+    command:
+    - /bin/bash
+    - -c
+    - cd ${PVC_PATH}/_workflows/${ID}; nextflow -config nextflow.config run ${PIPELINE} ${OPTIONS}
+    resources:
+      requests:
+        cpu: 1
+        memory: 4Gi
+    volumeMounts:
+    - name: vol-1
+      mountPath: ${PVC_PATH}
+  restartPolicy: Never
+  volumes:
+  - name: vol-1
+    persistentVolumeClaim:
+      claimName: ${PVC_NAME}
 EOF
 
 # create pod
-kubectl create -f "${SPEC_FILE}"
+kubectl create -f ${SPEC_FILE}
+
+# wait for pod to initialize
+POD_STATUS=""
+
+while [[ ${POD_STATUS} != "Running" ]]; do
+	sleep 2
+	POD_STATUS="$(kubectl get pod --no-headers --output jsonpath={.status.phase} ${POD_NAME})"
+	# POD_STATUS="$(echo ${POD_STATUS})"
+done
+
+# stream output log
+kubectl logs -f ${POD_NAME}
+
+# delete pod
+kubectl delete -f ${SPEC_FILE}
 
 # cleanup
-rm -f "${SPEC_FILE}"
+rm -f ${SPEC_FILE}

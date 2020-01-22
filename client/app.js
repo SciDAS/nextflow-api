@@ -98,7 +98,7 @@ app.service("api", ["$http", function($http) {
 	};
 
 	this.Workflow.save = function(workflow) {
-		return $http.post("/api/workflows/" + workflow.id, workflow)
+		return $http.post("/api/workflows/" + workflow._id, workflow)
 			.then(function(res) {
 				return res.data;
 			});
@@ -149,34 +149,27 @@ app.controller("HomeCtrl", ["$scope", "$route", "alert", "api", function($scope,
 	$scope.STATUS_COLORS = STATUS_COLORS;
 	$scope.workflows = [];
 
-	$scope.delete = async function(w) {
-		if ( !confirm("Are you sure you want to delete \"" + w.id + "\"?") ) {
+	$scope.delete = function(w) {
+		if ( !confirm("Are you sure you want to delete \"" + w._id + "\"?") ) {
 			return;
 		}
 
-		try {
-			await api.Workflow.remove(w.id);
-
-			alert.success("Workflow instance deleted.");
-			$route.reload();
-		}
-		catch ( error ) {
-			alert.error("Failed to delete workflow instance.");
-		}
+		api.Workflow.remove(w._id)
+			.then(function() {
+				alert.success("Workflow instance deleted.");
+				$route.reload();
+			}, function() {
+				alert.error("Failed to delete workflow instance.");
+			});
 	};
 
 	// initialize
-	const initialize = async function() {
-		try {
-			$scope.workflows = await api.Workflow.query();
-			$scope.$apply();
-		}
-		catch ( error ) {
+	api.Workflow.query()
+		.then(function(workflows) {
+			$scope.workflows = workflows;
+		}, function() {
 			alert.error("Failed to query workflow instances.");
-		}
-	}
-
-	initialize();
+		});
 }]);
 
 
@@ -198,53 +191,64 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 		alert.error("Failed to upload input files.");
 	};
 
-	$scope.save = async function(workflow) {
-		try {
-			let res = await api.Workflow.save(workflow);
-
-			alert.success("Workflow instance saved.");
-			$route.updateParams({ id: res.id });
-			$scope.$apply();
-		}
-		catch ( error ) {
-			alert.error("Failed to save workflow instance.");
-		}
+	$scope.save = function(workflow) {
+		api.Workflow.save(workflow)
+			.then(function(res) {
+				alert.success("Workflow instance saved.");
+				$route.updateParams({ id: res._id });
+			}, function() {
+				alert.error("Failed to save workflow instance.");
+			});
 	};
 
-	$scope.launch = async function(id) {
-		try {
-			await api.Workflow.launch(id);
-
-			alert.success("Workflow instance launched.");
-			$route.reload();
-		}
-		catch ( error ) {
-			alert.error("Failed to launch workflow instance.");
-		}
+	$scope.launch = function(id) {
+		api.Workflow.launch(id)
+			.then(function() {
+				alert.success("Workflow instance launched.");
+				$scope.workflow.status = "";
+				$scope.workflow.log = "";
+			}, function() {
+				alert.error("Failed to launch workflow instance.");
+			});
 	};
 
-	$scope.resume = async function(id) {
-		try {
-			await api.Workflow.resume(id);
-
-			alert.success("Workflow instance resumed.");
-			$route.reload();
-		}
-		catch ( error ) {
-			alert.error("Failed to resume workflow instance.");
-		}
+	$scope.resume = function(id) {
+		api.Workflow.resume(id)
+			.then(function() {
+				alert.success("Workflow instance resumed.");
+				$scope.workflow.status = "";
+				$scope.workflow.log = "";
+			}, function() {
+				alert.error("Failed to resume workflow instance.");
+			});
 	};
 
-	$scope.cancel = async function(id) {
-		try {
-			await api.Workflow.cancel(id);
+	$scope.cancel = function(id) {
+		api.Workflow.cancel(id)
+			.then(function() {
+				alert.success("Workflow instance canceled.");
+				$route.reload();
+			}, function() {
+				alert.error("Failed to cancel workflow instance.");
+			});
+	};
 
-			alert.success("Workflow instance canceled.");
-			$route.reload();
+	$scope.fetchLog = function() {
+		if ( $scope.intervalPromise ) {
+			return;
 		}
-		catch ( error ) {
-			alert.error("Failed to cancel workflow instance.");
-		}
+
+		$scope.intervalPromise = $interval(function() {
+			api.Workflow.log($scope.workflow._id)
+				.then(function(res) {
+					Object.assign($scope.workflow, res);
+
+					if ( res.status !== "running" ) {
+						$interval.cancel($scope.intervalPromise);
+						$scope.intervalPromise = undefined;
+					}
+				});
+		}, 2000, -1);
 	};
 
 	$scope.$on("$destroy", function() {
@@ -254,24 +258,12 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 	});
 
 	// initialize
-	const initialize = async function() {
-		$scope.workflow = await api.Workflow.get($route.current.params.id);
+	api.Workflow.get($route.current.params.id)
+		.then(function(workflow) {
+			$scope.workflow = workflow;
 
-		if ( $scope.workflow.id !== "0" ) {
-			$scope.intervalPromise = $interval(async function() {
-				let res = await api.Workflow.log($scope.workflow.id);
-
-				Object.assign($scope.workflow, res);
-
-				if ( res.status !== "running" ) {
-					$interval.cancel($scope.intervalPromise);
-				}
-				$scope.$apply();
-			}, 2000, -1);
-		}
-
-		$scope.$apply();
-	};
-
-	initialize();
+			if ( $scope.workflow._id !== "0" ) {
+				$scope.fetchLog();
+			}
+		});
 }]);
