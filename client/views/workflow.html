@@ -6,14 +6,14 @@
 			</div>
 
 			<form class="panel-body form-horizontal" name="form">
-				<div class="form-group" ng-show="workflow.id != '0'">
+				<div class="form-group" ng-show="workflow._id != '0'">
 					<label class="col-sm-3 control-label">ID</label>
 					<div class="col-sm-6">
-						<p class="form-control-static">{{workflow.id}}</p>
+						<p class="form-control-static">{{workflow._id}}</p>
 					</div>
 				</div>
 
-				<div class="form-group" ng-show="workflow.id != '0'">
+				<div class="form-group" ng-show="workflow._id != '0'">
 					<label class="col-sm-3 control-label">Date Created</label>
 					<div class="col-sm-6">
 						<p class="form-control-static">{{workflow.date_created | date:'short'}}</p>
@@ -62,7 +62,7 @@
 					</div>
 				</div>
 
-				<div class="form-group" ng-show="workflow.id != '0'">
+				<div class="form-group" ng-show="workflow._id != '0'">
 					<label class="col-sm-3 control-label">Input Files</label>
 					<div class="col-sm-6">
 						<p class="form-control-static" ng-show="workflow.input_files.length == 0">none</p>
@@ -70,12 +70,12 @@
 					</div>
 				</div>
 
-				<div class="form-group" ng-show="workflow.id != '0'">
+				<div class="form-group" ng-show="workflow._id != '0'">
 					<label class="col-sm-3 control-label">Output Files</label>
 					<div class="col-sm-6">
 						<p class="form-control-static" ng-show="workflow.output_files.length == 0">none</p>
 						<p class="form-control-static" ng-repeat="f in workflow.output_files">
-							<a ng-href="/api/workflows/{{workflow.id}}/download?path={{f}}" download>{{f}}</a>
+							<a ng-href="/api/workflows/{{workflow._id}}/download?path={{f}}" download>{{f}}</a>
 						</p>
 					</div>
 				</div>
@@ -84,7 +84,7 @@
 					<label class="col-sm-3 control-label">Output Data</label>
 					<div class="col-sm-6">
 						<p class="form-control-static">
-							<a ng-href="/api/workflows/{{workflow.id}}/download" download>Download</a>
+							<a ng-href="/api/workflows/{{workflow._id}}/download" download>Download</a>
 						</p>
 					</div>
 				</div>
@@ -98,7 +98,7 @@
 			</form>
 		</div>
 
-		<div class="panel panel-default" ng-show="workflow.id != '0'">
+		<div class="panel panel-default" ng-show="workflow._id != '0'">
 			<div class="panel-heading">
 				<h3 class="panel-title">Input Data</h3>
 			</div>
@@ -120,7 +120,7 @@
 			</form>
 		</div>
 
-		<div class="panel panel-default" ng-show="workflow.id != '0'">
+		<div class="panel panel-default" ng-show="workflow._id != '0'">
 			<div class="panel-heading">
 				<h3 class="panel-title">Execution</h3>
 			</div>
@@ -136,9 +136,9 @@
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && launch(workflow.id)">Launch</button>
-					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && resume(workflow.id)">Resume</button>
-					<button type="button" class="btn btn-default" ng-disabled="workflow.status != 'running'" ng-click="workflow.status == 'running' && cancel(workflow.id)">Cancel</button>
+					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && launch(workflow._id)">Launch</button>
+					<button type="button" class="btn btn-default" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && resume(workflow._id)">Resume</button>
+					<button type="button" class="btn btn-default" ng-disabled="workflow.status != 'running'" ng-click="workflow.status == 'running' && cancel(workflow._id)">Cancel</button>
 				</div>
 
 				<hr>

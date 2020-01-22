@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import json
 import os
 import subprocess
@@ -21,76 +20,35 @@ WORKFLOWS_DIR = WORKFLOWS_DIRS[NXF_EXECUTOR]
 
 
 
-def run_cmd(args, log_file=None, debug=True):
-	# run command as child process
-	proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-	# wait for command to finish
-	while True:
-		# read line from stdout
-		line = proc.stdout.readline()
-
-		# break if process is done
-		if not line and proc.poll() is not None:
-			break
-
-		# write line to log file
-		if line:
-			if log_file:
-				with open(log_file, "a") as f:
-					f.write(str(line, "utf-8"))
-					f.flush()
-
-			if log_file is None or debug:
-				sys.stdout.write("%d: %s" % (proc.pid, line.decode("ascii", "ignore")))
-				sys.stdout.flush()
-
-	return proc.returncode
-
-
-
-def save_status(work_dir, status):
-	workflow = json.load(open("%s/config.json" % work_dir))
-	workflow["status"] = status
-
-	json.dump(workflow, open("%s/config.json" % work_dir, "w"))
-
-
-
-def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
+def run_workflow(workflow, work_dir, resume):
 	# save current directory
 	prev_dir = os.getcwd()
 
 	# change to workflow directory
 	os.chdir(work_dir)
 
-	# initialize log file
-	log_file = ".workflow.log"
-	with open(log_file, "w") as f:
-		f.write("")
-
 	# launch workflow, wait for completion
 	if NXF_EXECUTOR == "k8s":
 		args = [
 			"/opt/nextflow-api/run.sh",
 			PVC_NAME,
-			id,
-			pipeline,
+			workflow["_id"],
+			workflow["pipeline"],
 			"-ansi-log", "false",
 			"-latest",
-			"-profile", profiles,
-			"-revision", revision
+			"-profile", workflow["profiles"],
+			"-revision", workflow["revision"]
 		]
 	elif NXF_EXECUTOR == "local":
 		args = [
 			"nextflow",
 			"-config", "nextflow.config",
 			"run",
-			pipeline,
+			workflow["pipeline"],
 			"-ansi-log", "false",
 			"-latest",
-			"-profile", profiles,
-			"-revision", revision,
+			"-profile", workflow["profiles"],
+			"-revision", workflow["revision"],
 			"-with-docker"
 		]
 	elif NXF_EXECUTOR == "pbspro":
@@ -98,58 +56,60 @@ def run_workflow(id, pipeline, profiles, resume, revision, work_dir, log_file):
 			"nextflow",
 			"-config", "nextflow.config",
 			"run",
-			pipeline,
+			workflow["pipeline"],
 			"-ansi-log", "false",
 			"-latest",
-			"-profile", profiles,
-			"-revision", revision
+			"-profile", workflow["profiles"],
+			"-revision", workflow["revision"]
 		]
 
 	if resume:
 		args.append("-resume")
 
-	rc = run_cmd(args, log_file)
+	proc = subprocess.Popen(
+		args,
+		stdout=open(".workflow.log", "w"),
+		stderr=subprocess.STDOUT
+	)
 
 	# return to original directory
 	os.chdir(prev_dir)
 
-	return rc
+	return proc
 
 
 
-def save_output(id, output_dir):
-	return run_cmd(["./save-output.sh", id, output_dir])
+def save_output(workflow, output_dir):
+	return subprocess.Popen(["./save-output.sh", workflow["_id"], output_dir])
 
 
 
-if __name__ == "__main__":
-	# parse command-line arguments
-	parser = argparse.ArgumentParser(description="Script for running Nextflow workflow")
-	parser.add_argument("--id", help="Workflow instance ID", required=True)
-	parser.add_argument("--output-dir", help="Output directory", default="output")
-	parser.add_argument("--pipeline", help="Name of nextflow pipeline", required=True)
-	parser.add_argument("--profiles", help="Comma-separated list of configuration profiles", default="standard")
-	parser.add_argument("--resume", help="Whether to to a resumed run", action="store_true")
-	parser.add_argument("--revision", help="Project revision", default="master")
+async def set_property(db, workflow, key, value):
+	await db.workflows.update_one({ "_id": workflow["_id"] }, { "$set": { key: value } })
 
-	args = parser.parse_args()
 
-	# run workflow
-	work_dir = "%s/%s" % (WORKFLOWS_DIR, args.id)
-	log_file = "%s/.workflow.log" % work_dir
 
-	rc = run_workflow(args.id, args.pipeline, args.profiles, args.resume, args.revision, work_dir, log_file)
-	if rc != 0:
-		save_status(work_dir, "failed")
-		sys.exit(rc)
+async def launch(db, workflow, resume):
+	# start workflow
+	work_dir = os.path.join(WORKFLOWS_DIR, workflow["_id"])
+	proc = run_workflow(workflow, work_dir, resume)
+
+	# update workflow status
+	# await set_property(db, workflow, "status", "running")
+	await set_property(db, workflow, "pid", proc.pid)
+
+	# wait for workflow to complete
+	if proc.wait() != 0:
+		await set_property(db, workflow, "status", "failed")
+		return
 
 	# save output data
-	output_dir = "%s/%s/%s" % (WORKFLOWS_DIR, args.id, args.output_dir)
+	output_dir = os.path.join(WORKFLOWS_DIR, workflow["_id"], workflow["output_dir"])
+	proc = save_output(workflow, output_dir)
 
-	rc = save_output(args.id, output_dir)
-	if rc != 0:
-		save_status(work_dir, "failed")
-		sys.exit(rc)
+	if proc.wait() != 0:
+		await set_property(db, workflow, "status", "failed")
+		return
 
 	# save final status
-	save_status(work_dir, "completed")
+	await set_property(db, workflow, "status", "completed")

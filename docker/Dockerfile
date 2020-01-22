@@ -6,9 +6,9 @@ EXPOSE 8080
 
 # install package dependencies
 RUN apt-get update -qq \
-	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl default-jdk git python3 python3-pip
+	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl default-jdk git mongodb python3 python3-pip
 
-# Kubectl
+# install kubectl
 RUN apt-get update && apt-get install -y apt-transport-https \
     && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
     && echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list \
