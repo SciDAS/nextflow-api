@@ -295,10 +295,11 @@ class WorkflowCancelHandler(tornado.web.RequestHandler):
 		workflow = {**{ "pid": -1 }, **workflow}
 
 		# terminate child process
-		try:
-			os.kill(workflow["pid"], signal.SIGINT)
-		except ProcessLookupError:
-			pass
+		if workflow["pid"] != -1:
+			try:
+				os.kill(workflow["pid"], signal.SIGINT)
+			except ProcessLookupError:
+				pass
 
 		# update workflow
 		workflow["status"] = "failed"
