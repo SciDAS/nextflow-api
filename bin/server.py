@@ -304,10 +304,14 @@ class WorkflowCancelHandler(tornado.web.RequestHandler):
 		workflow["status"] = "failed"
 		workflow["pid"] = -1
 
-		await db.workflows.replace_one({ "_id": id }, workflow)
+		try:
+			await db.workflows.replace_one({ "_id": id }, workflow)
 
-		self.set_status(200)
-		self.write(message(200, "Workflow \"%s\" has been canceled" % id))
+			self.set_status(200)
+			self.write(message(200, "Workflow \"%s\" was canceled" % id))
+		except:
+			self.set_status(404)
+			self.write(message(404, "Failed to cancel workflow \"%s\"" % id))
 
 
 
