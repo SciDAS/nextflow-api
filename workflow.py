@@ -30,7 +30,7 @@ def run_workflow(workflow, work_dir, resume):
 	# launch workflow, wait for completion
 	if NXF_EXECUTOR == "k8s":
 		args = [
-			"/opt/nextflow-api/run.sh",
+			"/opt/nextflow-api/scripts/kube-run.sh",
 			PVC_NAME,
 			workflow["_id"],
 			workflow["pipeline"],
@@ -80,7 +80,7 @@ def run_workflow(workflow, work_dir, resume):
 
 
 def save_output(workflow, output_dir):
-	return subprocess.Popen(["./save-output.sh", workflow["_id"], output_dir])
+	return subprocess.Popen(["./scripts/kube-save.sh", workflow["_id"], output_dir])
 
 
 
