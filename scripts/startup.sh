@@ -10,7 +10,7 @@ BACKUPS="/workspace/_backups"
 mkdir -p ${BACKUPS}
 
 # restore database backup if present
-LATEST=$(ls ${BACKUPS}/* | tail)
+LATEST=$(ls ${BACKUPS} | tail)
 
 if [[ ! -z ${LATEST} ]]; then
 	./scripts/db-restore.sh "${BACKUPS}/${LATEST}"
