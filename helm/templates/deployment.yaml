@@ -42,9 +42,9 @@ spec:
         - /bin/bash
         - -c
         {{ if .Values.Remote.Enabled }}
-        - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 server.py
+        - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; scripts/startup.sh
         {{ else }}
-        - cd /opt/nextflow-api; python3 server.py
+        - cd /opt/nextflow-api; scripts/startup.sh
         {{ end }}
         resources:
           requests:

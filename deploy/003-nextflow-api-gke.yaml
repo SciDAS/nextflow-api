@@ -18,7 +18,7 @@ spec:
       - name: nextflow-api
         image: cbmckni/scidas-submitter:gke
         command: ["/bin/sh","-c"]
-        args: ['printf "%s" "${PROJECTKEY}" > "/home/credential-key.json" && gcloud auth activate-service-account --key-file /home/credential-key.json && gcloud config set project ${PROJECTID} && gcloud container clusters get-credentials ${CLUSTERID} --zone=${ZONE} --project=${PROJECTID} && cd /opt/nextflow-api; python3 server.py']
+        args: ['printf "%s" "${PROJECTKEY}" > "/home/credential-key.json" && gcloud auth activate-service-account --key-file /home/credential-key.json && gcloud config set project ${PROJECTID} && gcloud container clusters get-credentials ${CLUSTERID} --zone=${ZONE} --project=${PROJECTID} && cd /opt/nextflow-api; scripts/startup.sh']
         env:
         - name: NXF_EXECUTOR
           value: "k8s"

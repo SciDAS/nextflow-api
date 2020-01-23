@@ -17,4 +17,4 @@ if [[ ! -z ${LATEST} ]]; then
 fi
 
 # start web server
-python3 server.py
+python3 bin/server.py

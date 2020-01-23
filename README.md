@@ -42,11 +42,11 @@ The user can call the API to delete the workflow instance and purge its data onc
 To serve the API natively on a Ubuntu 18.04 LTS machine, use the commands below:
 
 ```console
-$ sudo apt update && sudo apt install -y git python3 python3-pip \
+$ sudo apt update && sudo apt install -y git mongodb python3 python3-pip \
   && git clone https://github.com/SciDAS/nextflow-api.git \
   && cd nextflow-api \
   && sudo pip3 install -r requirements.txt \
-  && python3 server.py
+  && python3 bin/server.py
 The API is listening on http://0.0.0.0:8080
 ```
 
