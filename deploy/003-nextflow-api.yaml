@@ -23,7 +23,7 @@ spec:
         command:
         - /bin/bash
         - -c
-        - service mongodb start; cd /opt/nextflow-api; python3 server.py
+        - cd /opt/nextflow-api; scripts/startup.sh
         resources:
           requests:
             cpu: 1
