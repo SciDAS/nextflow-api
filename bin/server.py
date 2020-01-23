@@ -192,14 +192,19 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 	async def delete(self, id):
 		db = self.settings["db"]
 
-		# delete workflow
-		await db.workflows.delete_one({ "_id": id })
+		try:
+			# delete workflow
+			await db.workflows.delete_one({ "_id": id })
 
-		# delete workflow directory
-		shutil.rmtree(os.path.join(WORKFLOWS_DIR, id), ignore_errors=True)
+			# delete workflow directory
+			shutil.rmtree(os.path.join(WORKFLOWS_DIR, id), ignore_errors=True)
 
-		self.set_status(200)
-		self.write(message(200, "Workflow \"%s\" has been deleted" % id))
+			self.set_status(200)
+			self.write(message(200, "Workflow \"%s\" was deleted" % id))
+		except:
+			self.set_status(404)
+			self.write(message(404, "Failed to delete workflow \"%s\"" % id))
+
 
 
 
@@ -234,7 +239,7 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
 				filenames.append(filename)
 
 		self.set_status(200)
-		self.write(message(200, "File %s has been uploaded for workflow \"%s\" successfully" % (filenames, id)))
+		self.write(message(200, "File \"%s\" was uploaded for workflow \"%s\" successfully" % (filenames, id)))
 
 
 
@@ -272,10 +277,15 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 		# launch workflow as a child process
 		tornado.ioloop.IOLoop.current().spawn_callback(Workflow.launch, db, workflow, self.resume)
 
-		await db.workflows.update_one({ "_id": workflow["_id"] }, { "$set": { "status": "running" } })
+		try:
+			# update workflow status
+			await db.workflows.update_one({ "_id": workflow["_id"] }, { "$set": { "status": "running" } })
 
-		self.set_status(200)
-		self.write(message(200, "Workflow \"%s\" has been launched" % id))
+			self.set_status(200)
+			self.write(message(200, "Workflow \"%s\" was launched" % id))
+		except:
+			self.set_status(404)
+			self.write(message(404, "Failed to launch workflow \"%s\"" % id))
 
 
 

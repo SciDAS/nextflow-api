@@ -94,8 +94,7 @@ async def launch(db, workflow, resume):
 	work_dir = os.path.join(WORKFLOWS_DIR, workflow["_id"])
 	proc = run_workflow(workflow, work_dir, resume)
 
-	# update workflow status
-	# await set_property(db, workflow, "status", "running")
+	# save workflow pid
 	await set_property(db, workflow, "pid", proc.pid)
 
 	# wait for workflow to complete
