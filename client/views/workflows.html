@@ -6,7 +6,7 @@
 			</div>
 
 			<div class="panel-body">
-				<a href="#!/workflow/0">Create workflow</a>
+				<a href="#!/workflows/0">Create workflow</a>
 			</div>
 
 			<table class="table">
@@ -19,7 +19,7 @@
 
 				<tr ng-repeat="w in workflows">
 					<td>
-						<a ng-href="#!/workflow/{{w._id}}">{{w._id.slice(0, 8)}}</a>
+						<a ng-href="#!/workflows/{{w._id}}">{{w._id.slice(0, 8)}}</a>
 					</td>
 					<td>{{w.date_created | date:'short'}}</td>
 					<td>{{w.name}}</td>

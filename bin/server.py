@@ -7,7 +7,7 @@ import motor.motor_tornado
 import os
 import shutil
 import signal
-import subprocess
+import socket
 import sys
 import time
 import tornado
@@ -272,7 +272,8 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
 		# append additional settings to nextflow.config
 		with open(dst, "a") as f:
-			f.write("k8s { launchDir = \"%s\" }" % (work_dir))
+			f.write("weblog { enabled = true\n url = \"http://%s:8080/api/tasks\" }\n" % (socket.gethostbyname(socket.gethostname())))
+			f.write("k8s { launchDir = \"%s\" }\n" % (work_dir))
 
 		# launch workflow as a child process
 		tornado.ioloop.IOLoop.current().spawn_callback(Workflow.launch, db, workflow, self.resume)
@@ -365,6 +366,51 @@ class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 
 
 
+class TaskQueryHandler(tornado.web.RequestHandler):
+
+	async def get(self):
+		db = self.settings["db"]
+		tasks = await db.tasks.find().to_list(length=None)
+
+		self.set_status(200)
+		self.set_header("Content-type", "application/json")
+		self.write(tornado.escape.json_encode(tasks))
+
+	async def post(self):
+		db = self.settings["db"]
+
+		# make sure request body is valid
+		try:
+			task = tornado.escape.json_decode(self.request.body)
+		except json.JSONDecodeError:
+			self.set_status(422)
+			self.write(message(422, "Ill-formatted JSON"))
+			return
+
+		# append id to task
+		task["_id"] = str(bson.ObjectId())
+
+		# save task
+		result = await db.tasks.insert_one(task)
+
+		self.set_status(200)
+		self.set_header("Content-type", "application/json")
+		self.write(tornado.escape.json_encode({ "_id": task["_id"] }))
+
+
+
+class TaskEditHandler(tornado.web.RequestHandler):
+
+	async def get(self, id):
+		db = self.settings["db"]
+		task = await db.tasks.find_one({ "_id": id })
+
+		self.set_status(200)
+		self.set_header("Content-type", "application/json")
+		self.write(tornado.escape.json_encode(task))
+
+
+
 if __name__ == "__main__":
 	# parse command-line options
 	tornado.options.define("np", default=0, help="number of server processes")
@@ -385,6 +431,8 @@ if __name__ == "__main__":
 		(r"/api/workflows/([a-zA-Z0-9-]+)/cancel", WorkflowCancelHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/log", WorkflowLogHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/download", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
+		(r"/api/tasks", TaskQueryHandler),
+		(r"/api/tasks/([a-zA-Z0-9-]+)", TaskEditHandler),
 		(r"/(.*)", tornado.web.StaticFileHandler, dict(path="./client", default_filename="index.html"))
 	])
 

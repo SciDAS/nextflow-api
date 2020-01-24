@@ -16,13 +16,22 @@ app.config(["$compileProvider", function($compileProvider) {
 
 app.config(["$routeProvider", function($routeProvider) {
 	$routeProvider
-		.when("/", {
-			templateUrl: "views/home.html",
-			controller: "HomeCtrl"
+		.when("/", { redirectTo: "/workflows" })
+		.when("/workflows", {
+			templateUrl: "views/workflows.html",
+			controller: "WorkflowsCtrl"
 		})
-		.when("/workflow/:id", {
+		.when("/workflows/:id", {
 			templateUrl: "views/workflow.html",
 			controller: "WorkflowCtrl"
+		})
+		.when("/tasks", {
+			templateUrl: "views/tasks.html",
+			controller: "TasksCtrl"
+		})
+		.when("/tasks/:id", {
+			templateUrl: "views/task.html",
+			controller: "TaskCtrl"
 		})
 		.otherwise("/");
 }]);
@@ -126,6 +135,22 @@ app.service("api", ["$http", function($http) {
 	this.Workflow.remove = function(id) {
 		return $http.delete("/api/workflows/" + id);
 	};
+
+	this.Task = {};
+
+	this.Task.query = function() {
+		return $http.get("/api/tasks")
+			.then(function(res) {
+				return res.data;
+			});
+	};
+
+	this.Task.get = function(id) {
+		return $http.get("/api/tasks/" + id)
+			.then(function(res) {
+				return res.data;
+			});
+	};
 }]);
 
 
@@ -145,7 +170,7 @@ const STATUS_COLORS = {
 
 
 
-app.controller("HomeCtrl", ["$scope", "$route", "alert", "api", function($scope, $route, alert, api) {
+app.controller("WorkflowsCtrl", ["$scope", "$route", "alert", "api", function($scope, $route, alert, api) {
 	$scope.STATUS_COLORS = STATUS_COLORS;
 	$scope.workflows = [];
 
@@ -265,5 +290,35 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 			if ( $scope.workflow._id !== "0" ) {
 				$scope.fetchLog();
 			}
+		}, function() {
+			alert.error("Failed to load workflow.");
+		});
+}]);
+
+
+
+app.controller("TasksCtrl", ["$scope", "alert", "api", function($scope, alert, api) {
+	$scope.tasks = [];
+
+	// initialize
+	api.Task.query()
+		.then(function(tasks) {
+			$scope.tasks = tasks;
+		}, function() {
+			alert.error("Failed to query tasks.");
+		});
+}]);
+
+
+
+app.controller("TaskCtrl", ["$scope", "$route", "alert", "api", function($scope, $route, alert, api) {
+	$scope.task = {};
+
+	// initialize
+	api.Task.get($route.current.params.id)
+		.then(function(task) {
+			$scope.task = task;
+		}, function() {
+			alert.error("Failed to load task.");
 		});
 }]);

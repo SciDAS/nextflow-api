@@ -1,0 +1,26 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Tasks</h3>
+			</div>
+
+			<table class="table">
+				<th>ID</th>
+				<th>Run Name</th>
+				<th>Time</th>
+				<th>Event</th>
+				<th></th>
+
+				<tr ng-repeat="t in tasks">
+					<td>
+						<a ng-href="#!/tasks/{{t._id}}">{{t._id.slice(0, 8)}}</a>
+					</td>
+					<td>{{t.runName}}</td>
+					<td>{{t.utcTime | date:'short'}}</td>
+					<td>{{t.event}}</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</div>
