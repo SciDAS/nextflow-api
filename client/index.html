@@ -10,7 +10,6 @@
 
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.8/angular.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.8/angular-route.min.js"></script>
-	<script src="https://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-2.5.0.min.js"></script>
 	<script src="https://nervgh.github.io/pages/angular-file-upload/dist/angular-file-upload.min.js"></script>
 	<script src="app.js"></script>
 </head>
@@ -24,9 +23,14 @@
 	</div>
 
 	<div id="alerts">
-		<div uib-alert ng-repeat="a in alert.alerts" ng-class="'alert-' + a.type" close="alert.remove($index)">
-			<strong>{{a.header}}</strong>
-			<span>{{a.message}}<span>
+		<div ng-repeat="a in alert.alerts" class="alert" ng-class="'alert-' + a.type">
+			<button type="button" class="close" ng-click="alert.remove($index)">
+				<span>&times;</span>
+			</button>
+			<div>
+				<strong>{{a.header}}</strong>
+				<span>{{a.message}}<span>
+			</div>
 		</div>
 	</div>
 </body>

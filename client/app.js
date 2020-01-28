@@ -2,8 +2,7 @@
 
 const app = angular.module("app", [
 	"ngRoute",
-	"angularFileUpload",
-	"ui.bootstrap"
+	"angularFileUpload"
 ]);
 
 

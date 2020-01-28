@@ -1,8 +1,6 @@
 #!/bin/bash
 # Startup script for kubernetes deployment.
 
-set -x
-
 # start mongodb service
 service mongodb start
 
