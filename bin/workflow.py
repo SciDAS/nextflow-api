@@ -1,22 +1,9 @@
 #!/usr/bin/env python3
 
-import json
 import os
 import subprocess
-import sys
 
-
-
-WORKFLOWS_DIRS = {
-	"k8s": "/workspace/_workflows",
-	"local": "./_workflows",
-	"pbspro": "./_workflows"
-}
-
-NXF_EXECUTOR = os.environ.get("NXF_EXECUTOR")
-NXF_EXECUTOR = NXF_EXECUTOR if NXF_EXECUTOR else "local"
-PVC_NAME = os.environ.get("PVC_NAME", "deepgtex-prp")
-WORKFLOWS_DIR = WORKFLOWS_DIRS[NXF_EXECUTOR]
+import env
 
 
 
@@ -28,7 +15,7 @@ def run_workflow(workflow, work_dir, resume):
 	os.chdir(work_dir)
 
 	# launch workflow, wait for completion
-	if NXF_EXECUTOR == "k8s":
+	if env.NXF_EXECUTOR == "k8s":
 		args = [
 			"nextflow",
 			"-config", "nextflow.config",
@@ -38,9 +25,9 @@ def run_workflow(workflow, work_dir, resume):
 			"-latest",
 			"-profile", workflow["profiles"],
 			"-revision", workflow["revision"],
-			"-volume-mount", PVC_NAME
+			"-volume-mount", env.PVC_NAME
 		]
-	elif NXF_EXECUTOR == "local":
+	elif env.NXF_EXECUTOR == "local":
 		args = [
 			"nextflow",
 			"-config", "nextflow.config",
@@ -52,7 +39,7 @@ def run_workflow(workflow, work_dir, resume):
 			"-revision", workflow["revision"],
 			"-with-docker"
 		]
-	elif NXF_EXECUTOR == "pbspro":
+	elif env.NXF_EXECUTOR == "pbspro":
 		args = [
 			"nextflow",
 			"-config", "nextflow.config",
@@ -92,7 +79,7 @@ async def set_property(db, workflow, key, value):
 
 async def launch(db, workflow, resume):
 	# start workflow
-	work_dir = os.path.join(WORKFLOWS_DIR, workflow["_id"])
+	work_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"])
 	proc = run_workflow(workflow, work_dir, resume)
 
 	# save workflow pid
@@ -104,7 +91,7 @@ async def launch(db, workflow, resume):
 		return
 
 	# save output data
-	output_dir = os.path.join(WORKFLOWS_DIR, workflow["_id"], workflow["output_dir"])
+	output_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"], workflow["output_dir"])
 	proc = save_output(workflow, output_dir)
 
 	if proc.wait() != 0:

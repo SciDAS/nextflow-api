@@ -8,7 +8,6 @@ import os
 import shutil
 import signal
 import socket
-import sys
 import time
 import tornado
 import tornado.escape
@@ -17,19 +16,8 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 
+import env
 import workflow as Workflow
-
-
-
-WORKFLOWS_DIRS = {
-	"k8s": "/workspace/_workflows",
-	"local": "./_workflows",
-	"pbspro": "./_workflows"
-}
-
-NXF_EXECUTOR = os.environ.get("NXF_EXECUTOR")
-NXF_EXECUTOR = NXF_EXECUTOR if NXF_EXECUTOR else "local"
-WORKFLOWS_DIR = WORKFLOWS_DIRS[NXF_EXECUTOR]
 
 
 
@@ -110,7 +98,7 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 		result = await db.workflows.insert_one(workflow)
 
 		# create workflow directory
-		work_dir = os.path.join(WORKFLOWS_DIR, workflow["_id"])
+		work_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"])
 		os.makedirs(work_dir)
 
 		self.set_status(200)
@@ -141,7 +129,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 		workflow = await db.workflows.find_one({ "_id": id })
 
 		# append list of input files
-		work_dir = os.path.join(WORKFLOWS_DIR, id)
+		work_dir = os.path.join(env.WORKFLOWS_DIR, id)
 		input_dir = os.path.join(work_dir, workflow["input_dir"])
 		output_dir = os.path.join(work_dir, workflow["output_dir"])
 
@@ -197,7 +185,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 			await db.workflows.delete_one({ "_id": id })
 
 			# delete workflow directory
-			shutil.rmtree(os.path.join(WORKFLOWS_DIR, id), ignore_errors=True)
+			shutil.rmtree(os.path.join(env.WORKFLOWS_DIR, id), ignore_errors=True)
 
 			self.set_status(200)
 			self.write(message(200, "Workflow \"%s\" was deleted" % id))
@@ -225,7 +213,7 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
 		workflow = await db.workflows.find_one({ "_id": id })
 
 		# initialize input directory
-		input_dir = os.path.join(WORKFLOWS_DIR, id, workflow["input_dir"])
+		input_dir = os.path.join(env.WORKFLOWS_DIR, id, workflow["input_dir"])
 		os.makedirs(input_dir, exist_ok=True)
 
 		# save uploaded files to input directory
@@ -260,7 +248,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			return
 
 		# copy nextflow.config from input directory if it exists
-		work_dir = os.path.join(WORKFLOWS_DIR, id)
+		work_dir = os.path.join(env.WORKFLOWS_DIR, id)
 		input_dir = os.path.join(work_dir, workflow["input_dir"])
 		src = os.path.join(input_dir, "nextflow.config")
 		dst = os.path.join(work_dir, "nextflow.config")
@@ -336,7 +324,7 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 		workflow = await db.workflows.find_one({ "_id": id })
 
 		# append log if it exists
-		log_file = os.path.join(WORKFLOWS_DIR, id, ".workflow.log")
+		log_file = os.path.join(env.WORKFLOWS_DIR, id, ".workflow.log")
 
 		if os.path.exists(log_file):
 			f = open(log_file)
@@ -418,7 +406,7 @@ if __name__ == "__main__":
 	tornado.options.parse_command_line()
 
 	# initialize workflow directory
-	os.makedirs(WORKFLOWS_DIR, exist_ok=True)
+	os.makedirs(env.WORKFLOWS_DIR, exist_ok=True)
 
 	# initialize api endpoints
 	app = tornado.web.Application([
@@ -430,7 +418,7 @@ if __name__ == "__main__":
 		(r"/api/workflows/([a-zA-Z0-9-]+)/resume", WorkflowResumeHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/cancel", WorkflowCancelHandler),
 		(r"/api/workflows/([a-zA-Z0-9-]+)/log", WorkflowLogHandler),
-		(r"/api/workflows/([a-zA-Z0-9-]+)/download", WorkflowDownloadHandler, dict(path=WORKFLOWS_DIR)),
+		(r"/api/workflows/([a-zA-Z0-9-]+)/download", WorkflowDownloadHandler, dict(path=env.WORKFLOWS_DIR)),
 		(r"/api/tasks", TaskQueryHandler),
 		(r"/api/tasks/([a-zA-Z0-9-]+)", TaskEditHandler),
 		(r"/(.*)", tornado.web.StaticFileHandler, dict(path="./client", default_filename="index.html"))
