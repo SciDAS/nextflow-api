@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en" ng-app="app" ng-strict-di>
 <head>
-	<title>Nextflow Workflow Manager</title>
+	<title>Nextflow API</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 	<link rel="stylesheet" href="css/style.css">
 
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.8/angular.min.js"></script>
@@ -14,16 +14,23 @@
 	<script src="app.js"></script>
 </head>
 <body ng-controller="MainCtrl">
-	<div class="container-fluid">
-		<div class="page-header text-center">
-			<h1>Nextflow Workflow Manager</h1>
-		</div>
+	<nav class="navbar navbar-expand navbar-dark bg-dark mb-5">
+		<a class="navbar-brand" href="/">Nextflow API</a>
 
+		<div class="collapse navbar-collapse justify-content-end">
+			<div class="navbar-nav">
+				<a class="nav-item nav-link" href="/#!/workflows">Workflows</a>
+				<a class="nav-item nav-link" href="/#!/tasks">Tasks</a>
+			</div>
+		</div>
+	</nav>
+
+	<div class="container-fluid">
 		<ng-view></ng-view>
 	</div>
 
 	<div id="alerts">
-		<div ng-repeat="a in alert.alerts" class="alert" ng-class="'alert-' + a.type">
+		<div ng-repeat="a in alert.alerts" class="alert alert-{{a.type}}">
 			<button type="button" class="close" ng-click="alert.remove($index)">
 				<span>&times;</span>
 			</button>

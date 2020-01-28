@@ -1,16 +1,14 @@
 <div class="row">
-	<div class="col-xs-12">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">Tasks</h3>
-			</div>
+	<div class="col">
+		<div class="card">
+			<h6 class="card-header">Tasks</h6>
 
-			<table class="table">
-				<th>ID</th>
-				<th>Run Name</th>
-				<th>Time</th>
-				<th>Event</th>
-				<th></th>
+			<table class="table mb-0">
+				<th scope="col">ID</th>
+				<th scope="col">Run Name</th>
+				<th scope="col">Time</th>
+				<th scope="col">Event</th>
+				<th scope="col"></th>
 
 				<tr ng-repeat="t in tasks">
 					<td>

@@ -1,21 +1,19 @@
 <div class="row">
-	<div class="col-xs-12">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">Workflows</h3>
-			</div>
+	<div class="col">
+		<div class="card">
+			<h6 class="card-header">Workflows</h6>
 
-			<div class="panel-body">
+			<div class="card-body">
 				<a href="#!/workflows/0">Create workflow</a>
 			</div>
 
-			<table class="table">
-				<th>ID</th>
-				<th>Date Created</th>
-				<th>Name</th>
-				<th>Pipeline</th>
-				<th>Status</th>
-				<th></th>
+			<table class="table mb-0">
+				<th scope="col">ID</th>
+				<th scope="col">Date Created</th>
+				<th scope="col">Name</th>
+				<th scope="col">Pipeline</th>
+				<th scope="col">Status</th>
+				<th scope="col"></th>
 
 				<tr ng-repeat="w in workflows">
 					<td>
