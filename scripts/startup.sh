@@ -1,6 +1,8 @@
 #!/bin/bash
 # Startup script for kubernetes deployment.
 
+set -x
+
 # start mongodb service
 service mongodb start
 
@@ -10,7 +12,7 @@ BACKUPS="/workspace/_backups"
 mkdir -p ${BACKUPS}
 
 # restore database backup if present
-LATEST=$(ls ${BACKUPS} | tail)
+LATEST=$(ls ${BACKUPS} | tail -n 1)
 
 if [[ ! -z ${LATEST} ]]; then
 	./scripts/db-restore.sh "${BACKUPS}/${LATEST}"

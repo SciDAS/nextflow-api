@@ -33,6 +33,13 @@ spec:
           mountPath: /workspace
         ports:
         - containerPort: 8080
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - cd /opt/nextflow-api; scripts/db-backup.sh daily
       volumes:
       - name: vol-1
         persistentVolumeClaim:
