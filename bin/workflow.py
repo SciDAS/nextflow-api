@@ -30,14 +30,15 @@ def run_workflow(workflow, work_dir, resume):
 	# launch workflow, wait for completion
 	if NXF_EXECUTOR == "k8s":
 		args = [
-			"/opt/nextflow-api/scripts/kube-run.sh",
-			PVC_NAME,
-			workflow["_id"],
+			"nextflow",
+			"-config", "nextflow.config",
+			"kuberun",
 			workflow["pipeline"],
 			"-ansi-log", "false",
 			"-latest",
 			"-profile", workflow["profiles"],
-			"-revision", workflow["revision"]
+			"-revision", workflow["revision"],
+			"-volume-mount", PVC_NAME
 		]
 	elif NXF_EXECUTOR == "local":
 		args = [

@@ -23,6 +23,8 @@ cat > ${SPEC_FILE} <<EOF
 apiVersion: v1
 kind: Pod
 metadata:
+  labels:
+    app: nextflow
   name: ${POD_NAME}
 spec:
   containers:
@@ -36,6 +38,8 @@ spec:
       value: ${PVC_PATH}/projects
     - name: NXF_EXECUTOR
       value: k8s
+    - name: NXF_ANSI_LOG
+      value: "false"
     command:
     - /bin/bash
     - -c
@@ -63,7 +67,6 @@ POD_STATUS=""
 while [[ ${POD_STATUS} != "Running" ]]; do
 	sleep 2
 	POD_STATUS="$(kubectl get pod --no-headers --output jsonpath={.status.phase} ${POD_NAME})"
-	# POD_STATUS="$(echo ${POD_STATUS})"
 done
 
 # stream output log
