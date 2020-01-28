@@ -164,9 +164,20 @@
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && launch(workflow._id)">Launch</button>
-					<button type="button" class="btn btn-outline-dark" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && resume(workflow._id)">Resume</button>
-					<button type="button" class="btn btn-outline-dark" ng-disabled="workflow.status != 'running'" ng-click="workflow.status == 'running' && cancel(workflow._id)">Cancel</button>
+					<button type="button" class="btn btn-outline-dark" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && launch(workflow._id)">
+						<span ng-show="launching" class="spinner-border spinner-border-sm"></span>
+						<span ng-show="!launching">Launch</span>
+					</button>
+
+					<button type="button" class="btn btn-outline-dark" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && resume(workflow._id)">
+						<span ng-show="resuming" class="spinner-border spinner-border-sm"></span>
+						<span ng-show="!resuming">Resume</span>
+					</button>
+
+					<button type="button" class="btn btn-outline-dark" ng-disabled="workflow.status != 'running'" ng-click="workflow.status == 'running' && cancel(workflow._id)">
+						<span ng-show="cancelling" class="spinner-border spinner-border-sm"></span>
+						<span ng-show="!cancelling">Cancel</span>
+					</button>
 				</div>
 
 				<hr>

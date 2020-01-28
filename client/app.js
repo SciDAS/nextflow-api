@@ -226,34 +226,46 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 	};
 
 	$scope.launch = function(id) {
+		$scope.launching = true;
+
 		api.Workflow.launch(id)
 			.then(function() {
 				alert.success("Workflow instance launched.");
 				$scope.workflow.status = "";
 				$scope.workflow.log = "";
+				$scope.launching = false;
 			}, function() {
 				alert.error("Failed to launch workflow instance.");
+				$scope.launching = false;
 			});
 	};
 
 	$scope.resume = function(id) {
+		$scope.resuming = true;
+
 		api.Workflow.resume(id)
 			.then(function() {
 				alert.success("Workflow instance resumed.");
 				$scope.workflow.status = "";
 				$scope.workflow.log = "";
+				$scope.resuming = false;
 			}, function() {
 				alert.error("Failed to resume workflow instance.");
+				$scope.resuming = false;
 			});
 	};
 
 	$scope.cancel = function(id) {
+		$scope.cancelling = true;
+
 		api.Workflow.cancel(id)
 			.then(function() {
 				alert.success("Workflow instance canceled.");
+				$scope.cancelling = false;
 				$route.reload();
 			}, function() {
 				alert.error("Failed to cancel workflow instance.");
+				$scope.cancelling = false;
 			});
 	};
 
