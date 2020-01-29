@@ -24,6 +24,7 @@ import workflow as Workflow
 def list_dir_recursive(path, relpath_start=""):
 	files = [os.path.join(dir, f) for (dir, subdirs, filenames) in os.walk(path) for f in filenames]
 	files = [os.path.relpath(f, start=relpath_start) for f in files]
+	files.sort()
 
 	return files
 
