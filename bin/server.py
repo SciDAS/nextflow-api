@@ -5,6 +5,7 @@ import bson
 import json
 import motor.motor_tornado
 import os
+import pymongo
 import shutil
 import signal
 import socket
@@ -41,8 +42,14 @@ def message(status, message):
 class WorkflowQueryHandler(tornado.web.RequestHandler):
 
 	async def get(self):
+		page = int(self.get_query_argument("page", 0))
+		page_size = int(self.get_query_argument("page_size", 100))
+
 		db = self.settings["db"]
-		workflows = await db.workflows.find().to_list(length=None)
+		workflows = await db.workflows.find() \
+			.sort("date_created", pymongo.DESCENDING) \
+			.skip(page * page_size) \
+			.to_list(length=page_size)
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")
@@ -358,8 +365,14 @@ class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 class TaskQueryHandler(tornado.web.RequestHandler):
 
 	async def get(self):
+		page = int(self.get_query_argument("page", 0))
+		page_size = int(self.get_query_argument("page_size", 100))
+
 		db = self.settings["db"]
-		tasks = await db.tasks.find().to_list(length=None)
+		tasks = await db.tasks.find() \
+			.sort("utcTime", pymongo.DESCENDING) \
+			.skip(page * page_size) \
+			.to_list(length=page_size)
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")

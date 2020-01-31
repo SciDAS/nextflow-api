@@ -3,6 +3,13 @@
 		<div class="card">
 			<h6 class="card-header">Tasks</h6>
 
+			<div class="card-body">
+				<div class="button-group">
+					<button class="btn btn-light" ng-disabled="page == 0" ng-click="page > 0 && query(page - 1)">newer</button>
+					<button class="btn btn-light" ng-click="query(page + 1)">older</button>
+				</div>
+			</div>
+
 			<table class="table mb-0">
 				<th scope="col">ID</th>
 				<th scope="col">Run Name</th>

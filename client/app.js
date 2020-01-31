@@ -91,8 +91,8 @@ app.service("alert", ["$interval", function($interval) {
 app.service("api", ["$http", function($http) {
 	this.Workflow = {};
 
-	this.Workflow.query = function() {
-		return $http.get("/api/workflows")
+	this.Workflow.query = function(page) {
+		return $http.get("/api/workflows", { params: { page: page } })
 			.then(function(res) {
 				return res.data;
 			});
@@ -137,8 +137,8 @@ app.service("api", ["$http", function($http) {
 
 	this.Task = {};
 
-	this.Task.query = function() {
-		return $http.get("/api/tasks")
+	this.Task.query = function(page) {
+		return $http.get("/api/tasks", { params: { page: page } })
 			.then(function(res) {
 				return res.data;
 			});
@@ -171,7 +171,18 @@ const STATUS_COLORS = {
 
 app.controller("WorkflowsCtrl", ["$scope", "$route", "alert", "api", function($scope, $route, alert, api) {
 	$scope.STATUS_COLORS = STATUS_COLORS;
+	$scope.page = 0;
 	$scope.workflows = [];
+
+	$scope.query = function(page) {
+		api.Workflow.query(page)
+			.then(function(workflows) {
+				$scope.page = page;
+				$scope.workflows = workflows;
+			}, function() {
+				alert.error("Failed to query workflow instances.");
+			});
+	};
 
 	$scope.delete = function(w) {
 		if ( !confirm("Are you sure you want to delete \"" + w._id + "\"?") ) {
@@ -188,12 +199,7 @@ app.controller("WorkflowsCtrl", ["$scope", "$route", "alert", "api", function($s
 	};
 
 	// initialize
-	api.Workflow.query()
-		.then(function(workflows) {
-			$scope.workflows = workflows;
-		}, function() {
-			alert.error("Failed to query workflow instances.");
-		});
+	$scope.query(0);
 }]);
 
 
@@ -309,15 +315,21 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 
 
 app.controller("TasksCtrl", ["$scope", "alert", "api", function($scope, alert, api) {
+	$scope.page = 0;
 	$scope.tasks = [];
 
+	$scope.query = function(page) {
+		api.Task.query(page)
+			.then(function(tasks) {
+				$scope.page = page;
+				$scope.tasks = tasks;
+			}, function() {
+				alert.error("Failed to query tasks.");
+			});
+	};
+
 	// initialize
-	api.Task.query()
-		.then(function(tasks) {
-			$scope.tasks = tasks;
-		}, function() {
-			alert.error("Failed to query tasks.");
-		});
+	$scope.query(0);
 }]);
 
 
