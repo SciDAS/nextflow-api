@@ -46,7 +46,8 @@ class WorkflowQueryHandler(tornado.web.RequestHandler):
 		page_size = int(self.get_query_argument("page_size", 100))
 
 		db = self.settings["db"]
-		workflows = await db.workflows.find() \
+		workflows = await db.workflows \
+			.find() \
 			.sort("date_created", pymongo.DESCENDING) \
 			.skip(page * page_size) \
 			.to_list(length=page_size)
@@ -369,7 +370,8 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 		page_size = int(self.get_query_argument("page_size", 100))
 
 		db = self.settings["db"]
-		tasks = await db.tasks.find() \
+		tasks = await db.tasks \
+			.find({}, { "_id": 1, "runName": 1, "utcTime": 1, "event": 1 }) \
 			.sort("utcTime", pymongo.DESCENDING) \
 			.skip(page * page_size) \
 			.to_list(length=page_size)
