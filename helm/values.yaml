@@ -14,7 +14,7 @@ ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
   # (temp, future PVCs will be dynamically configurable)
   Enabled: true
-  Name: scidas-dev
+  Name: teach-compbio
 
 # Remote cluster settings(temp, future will be dynamically configurable)
 Remote:
@@ -28,11 +28,11 @@ Remote:
 # Resource requests and limits per container
 Resources:
   Requests:
-    CPU: 250m
-    Memory: 1Gi
+    CPU: 1
+    Memory: 4Gi
   Limits:
-    CPU: 500m
-    Memory: 2Gi
+    CPU: 1
+    Memory: 4Gi
 
 # Number of containers
 Replicas: 1
@@ -45,7 +45,7 @@ Ingress:
   Enabled: true
   # The subdomain to associate with this service.
   # This will result in a FQDN like {subdomain}.{cluster}.slateci.net
-  Host: nf-api-scidas-dev.nautilus.optiputer.net
+  Host: nf-api-teach-compbio.nautilus.optiputer.net
   # The class of the ingress controller to use. 
   # For SLATE this should be 'slate'. 
   Class: traefik
