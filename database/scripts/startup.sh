@@ -19,5 +19,5 @@ if [[ ! -z ${LATEST} ]]; then
 /scripts/db-restore.sh "${BACKUPS}/${LATEST}"
 fi
 
-#keeps for a little over a day
-sleep 100000
+#keeps for around 150 days
+sleep 10000000
