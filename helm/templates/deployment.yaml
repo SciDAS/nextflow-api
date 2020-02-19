@@ -24,7 +24,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: nextflow-server
-        image: cbmckni/nextflow-api
+        image: bentsherman/nextflow-api
         env:
         - name: NXF_EXECUTOR
           value: "k8s"
@@ -48,8 +48,11 @@ spec:
         {{ end }}
         resources:
           requests:
-            cpu: {{ .Values.Resources.CPU }}
-            memory: {{ .Values.Resources.Memory }}
+            cpu: {{ .Values.Resources.Requests.CPU }}
+            memory: {{ .Values.Resources.Requests.Memory }}
+          limits:
+            cpu: {{ .Values.Resources.Limits.CPU }}
+            memory: {{ .Values.Resources.Limits.Memory }}
         volumeMounts:
         - name: vol-1
           mountPath: /workspace

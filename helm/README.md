@@ -5,7 +5,7 @@ This guide assumes you have access to a K8s cluster, and either a valid PVC or s
 
 #### 0. Download Helm 3
 
-Go to the [Helm Release Page](https://github.com/helm/helm/releases) and download the lastest release that begins with **Helm v3.x.x**. Follow the installation instructions.
+Go to the [Helm Release Page](https://github.com/helm/helm/releases) and download the lastest release that begins with **Helm v3.x.x**. Follow the [installation instructions](https://helm.sh/docs/intro/install).
 
 Helm 3 is used because it does not require installing anything on the K8s cluster, while Helm 2 requires the user to install Tiller. This chart should work with Helm 2 if needed. 
 
@@ -51,14 +51,18 @@ If you want to use an existing PVC:
 ```
 # Resource request per container
 Resources:
-  CPU: 250m
-  Memory: 1Gi
+  Requests:
+    CPU: 250m
+    Memory: 1Gi
+  Limits:
+    CPU: 500m
+    Memory: 2Gi
 
 # Number of containers
 Replicas: 1
 ```
 
-You may change the resource requests to your liking. Leave the number of replicas alone for now.
+You may change the resource requests/limits to your liking. Leave the number of replicas alone for now.
 
 ##### Ingress 
 
@@ -80,7 +84,7 @@ Ingress:
 Nextflow-API uses a LoadBalancer by default. To use an Ingress:
 
 1. Change Enabled to "True"
-2. Change the Host to "nextflow-api" + a valid DNS address.
+2. Change the Host to "nextflow-api" + a valid DNS address. (ex. nextflow-api.scigateway.net)
 3. Change the Class if needed.
 
 Now the server is configured and ready for deployment!
