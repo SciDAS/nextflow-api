@@ -7,7 +7,7 @@ if [[ $# != 1 ]]; then
 	exit 1
 fi
 
-DATABASE="wmongo"
+DATABASE="nextflow_api"
 DUMP="dump"
 BACKUPS="/workspace/_backups"
 TYPE="$1"

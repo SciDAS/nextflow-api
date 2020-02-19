@@ -9,7 +9,7 @@ fi
 
 ARCHIVE="$1"
 DUMP="dump"
-DATABASE="wmongo"
+DATABASE="nextflow_api"
 
 # remove existing dump directory
 rm -rf ${DUMP}
