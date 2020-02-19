@@ -277,7 +277,12 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
 		try:
 			# update workflow status
-			await db.workflows.update_one({ "_id": workflow["_id"] }, { "$set": { "status": "running" } })
+			await db.workflows.update_one({ "_id": workflow["_id"] }, {
+				"$set": {
+					"status": "running",
+					"date_submitted": int(time.time() * 1000)
+				}
+			})
 
 			self.set_status(200)
 			self.write(message(200, "Workflow \"%s\" was launched" % id))
