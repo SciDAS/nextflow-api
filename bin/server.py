@@ -447,7 +447,7 @@ if __name__ == "__main__":
 		server.start(tornado.options.options.np)
 
 		# connect to database
-		client = motor.motor_tornado.MotorClient("mongodb://localhost:27017")
+		client = motor.motor_tornado.MotorClient("mongodb://10.110.201.248:27017")
 		db = client["nextflow_api"]
 		app.settings["db"] = db
 

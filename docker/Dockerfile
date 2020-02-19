@@ -6,7 +6,7 @@ EXPOSE 8080
 
 # install package dependencies
 RUN apt-get update -qq \
-	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl git mongodb openjdk-8-jre python3 python3-pip
+	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl git openjdk-8-jre python3 python3-pip
 
 # install kubectl
 RUN apt-get update && apt-get install -y apt-transport-https \
