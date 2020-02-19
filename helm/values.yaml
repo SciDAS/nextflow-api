@@ -7,14 +7,14 @@ NewLocalPVC:
   # (temp, future PVCs will be dynamically configurable)
   Enabled: false
   Name: nextflow-api-pvc
-  Size: 20Gi
   StorageClass: nfs
+  Size: 20Gi
 
 ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
   # (temp, future PVCs will be dynamically configurable)
   Enabled: true
-  Name: teach-compbio
+  Name: deepgtex-prp
 
 # Remote cluster settings(temp, future will be dynamically configurable)
 Remote:
@@ -24,7 +24,7 @@ Remote:
   Enabled: false
   Context: nautilus
   PVC: deepgtex-prp
-  
+
 # Resource requests and limits per container
 Resources:
   Requests:
@@ -39,15 +39,12 @@ Replicas: 1
 
 # Ingress control settings
 Ingress:
-  # If true, use ingress control.
-  # Otherwise, generic LoadBalancer networking will be used, 
+  # If true, use Ingress control.
+  # Otherwise, generic LoadBalancer networking will be used,
   # and the other settings in this section will be ignored.
   Enabled: true
   # The subdomain to associate with this service.
-  # This will result in a FQDN like {subdomain}.{cluster}.slateci.net
-  Host: nf-api-teach-compbio.nautilus.optiputer.net
-  # The class of the ingress controller to use. 
-  # For SLATE this should be 'slate'. 
+  Host: nextflow-api.nautilus.optiputer.net
+  # The class of the ingress controller to use.
+  # For SLATE this should be 'slate'.
   Class: traefik
-
-
