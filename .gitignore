@@ -3,5 +3,7 @@ helm/.nextflow.log
 helm/.sops.yaml
 helm/templates/secret.yaml
 
+database/dock.sh
+
 .nextflow*
 *.pyc
