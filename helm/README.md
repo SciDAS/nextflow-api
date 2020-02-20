@@ -2,9 +2,9 @@
 
 This guide assumes you have access to a K8s cluster, and either a valid PVC or storage class on that cluster.
 
-## Download Helm 3
+## Install Helm
 
-Follow the [installation instructions](https://helm.sh/docs/intro/install) from the Helm documentation to install __Helm v3.x.x__.
+Follow the [installation instructions](https://helm.sh/docs/intro/install) from the Helm documentation to install Helm. The Helm chart for Nextflow-API is confirmed to work on [Helm v3.0.0-beta3](https://github.com/helm/helm/releases/tag/v3.0.0-beta.3), but it is failing on many newer versions of Helm, so if you have issues deploying Nextflow-API then try using that exact version.
 
 Helm 3 is used because it does not require installing anything on the K8s cluster, while Helm 2 requires the user to install Tiller. This chart should work with Helm 2 if needed.
 
