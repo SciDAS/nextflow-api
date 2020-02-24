@@ -95,6 +95,15 @@ Deploy using `helm install nextflow-api .`
 
 ## Use Nextflow-API
 
+#### Give Nextflow the necessary permissions to deploy jobs to your K8s cluster.
+````
+kubectl create rolebinding default-edit --clusterrole=edit --serviceaccount=default:default 
+kubectl create rolebinding default-view --clusterrole=view --serviceaccount=default:default
+````
+These commands give the default service account the ability to view and edit cluster resources. Nextflow driver pods use this account to deploy process pods. This creates rolebindings in the `default` namespace. If you are not in the default namespace, use 
+`KUBE_EDITOR="nano" kubectl edit rolebinding <role-binding>`
+Edit the `namespace` to the one you are using, then save.
+
 #### Ingress
 
 If you are using an `Ingress`, simply navigate in your web browser to the `Host` that you specified.
