@@ -4,7 +4,6 @@
 # PVC
 NewLocalPVC:
   # If true, create new PVC on local cluster.
-  # (temp, future PVCs will be dynamically configurable)
   Enabled: false
   Name: nextflow-api-pvc
   StorageClass: nfs
@@ -12,11 +11,9 @@ NewLocalPVC:
 
 ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
-  # (temp, future PVCs will be dynamically configurable)
   Enabled: true
   Name: deepgtex-prp
 
-# Remote cluster settings(temp, future will be dynamically configurable)
 Remote:
   # If true, use PVC/compute of remote cluster.
   # Otherwise, PVC/compute of local cluster will be used.
