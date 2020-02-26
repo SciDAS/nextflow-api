@@ -12,8 +12,7 @@ NewLocalPVC:
 ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
   Enabled: true
-  Name: scidas-dev
-
+  Name: deepgtex-prp
 
 Remote:
   # If true, use PVC/compute of remote cluster.
@@ -42,7 +41,7 @@ Ingress:
   # and the other settings in this section will be ignored.
   Enabled: true
   # The subdomain to associate with this service.
-  Host: nextflow-api-scidas-dev.nautilus.optiputer.net
+  Host: nextflow-api.nautilus.optiputer.net
   # The class of the ingress controller to use.
   # For SLATE this should be 'slate'.
   Class: traefik
