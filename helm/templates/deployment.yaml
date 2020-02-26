@@ -6,20 +6,17 @@ metadata:
     app: {{ template "nextflow-api.name" . }}
     chart: {{ template "nextflow-api.chart" . }}
     release: {{ .Release.Name }}
-    instance: {{ .Values.Instance }}
 spec:
   replicas: {{ .Values.Replicas }}
   selector:
     matchLabels:
       app: {{ template "nextflow-api.name" . }}
-      instance: {{ .Values.Instance }}
   template:
     metadata:
       labels:
         app: {{ template "nextflow-api.name" . }}
         chart: {{ template "nextflow-api.chart" . }}
         release: {{ .Release.Name }}
-        instance: {{ .Values.Instance }}
     spec:
       serviceAccountName: default
       containers:
