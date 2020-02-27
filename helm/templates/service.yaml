@@ -7,7 +7,6 @@ metadata:
     app: {{ template "nextflow-api.name" . }}
     chart: {{ template "nextflow-api.chart" . }}
     release: {{ .Release.Name }}
-    instance: {{ .Values.Instance }}
 spec:
   ports:
   - port: 8080
@@ -15,7 +14,6 @@ spec:
   type: LoadBalancer
   selector:
     app: {{ template "nextflow-api.name" . }}
-    instance: {{ .Values.Instance }}
 {{ end }}
 ---
 {{ if .Values.Ingress.Enabled }}

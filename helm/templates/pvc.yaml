@@ -7,7 +7,6 @@ metadata:
     app: {{ template "nextflow-api.name" . }}
     chart: {{ template "nextflow-api.chart" . }}
     release: {{ .Release.Name }}
-    instance: {{ .Values.Instance }}
 spec:
   accessModes:
     - ReadWriteMany
