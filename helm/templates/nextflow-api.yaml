@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextflow-api
+  labels:
+    app: nextflow-api
+    chart: {{ template "nextflow-api.chart" . }}
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.WebServer.Replicas }}
+  selector:
+    matchLabels:
+      app: nextflow-api
+  template:
+    metadata:
+      labels:
+        app: nextflow-api
+        chart: {{ template "nextflow-api.chart" . }}
+        release: {{ .Release.Name }}
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: nextflow-api
+        image: bentsherman/nextflow-api
+        env:
+        - name: NXF_EXECUTOR
+          value: "k8s"
+        {{ if .Values.Remote.Enabled }}
+        - name: PVC_NAME
+          value: {{ .Values.Remote.PVC }}
+        {{ else if .Values.NewLocalPVC.Enabled }}
+        - name: PVC_NAME
+          value: {{ .Values.NewLocalPVC.Name }}
+        {{ else if .Values.ExistingLocalPVC.Enabled }}
+        - name: PVC_NAME
+          value: {{ .Values.ExistingLocalPVC.Name }}
+        {{ end }}
+        command:
+        - /bin/bash
+        - -c
+        {{ if .Values.Remote.Enabled }}
+        - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 bin/server.py --db-hostname=nextflow-db
+        {{ else }}
+        - cd /opt/nextflow-api; python3 bin/server.py --db-hostname=nextflow-db
+        {{ end }}
+        resources:
+          requests:
+            cpu: {{ .Values.WebServer.Resources.Requests.CPU }}
+            memory: {{ .Values.WebServer.Resources.Requests.Memory }}
+          limits:
+            cpu: {{ .Values.WebServer.Resources.Limits.CPU }}
+            memory: {{ .Values.WebServer.Resources.Limits.Memory }}
+        volumeMounts:
+        - name: vol-1
+          mountPath: /workspace
+        {{ if .Values.Remote.Enabled }}
+        - name: conf
+          mountPath: "/etc/.kube"
+        {{ end }}
+        ports:
+        - containerPort: 8080
+      volumes:
+      {{ if .Values.Remote.Enabled }}
+      - name: conf
+        secret:
+          secretName: kubeconfig
+          defaultMode: 256
+      {{ end }}
+      {{ if .Values.NewLocalPVC.Enabled }}
+      - name: vol-1
+        persistentVolumeClaim:
+          claimName: {{ .Values.NewLocalPVC.Name }}
+      {{ end }}
+      {{ if .Values.ExistingLocalPVC.Enabled }}
+      - name: vol-1
+        persistentVolumeClaim:
+          claimName: {{ .Values.ExistingLocalPVC.Name }}
+      {{ end }}
+---
+{{ if .Values.Ingress.Enabled }}{{ else }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextflow-api
+  labels:
+    app: nextflow-api
+    chart: {{ template "nextflow-api.chart" . }}
+    release: {{ .Release.Name }}
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: LoadBalancer
+  selector:
+    app: nextflow-api
+{{ end }}
+---
+{{ if .Values.Ingress.Enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextflow-api
+  labels:
+    app: nextflow-api
+    chart: {{ template "nextflow-api.chart" . }}
+    release: {{ .Release.Name }}
+spec:
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: nextflow-api
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nextflow-api
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.Ingress.Class }}
+spec:
+  rules:
+  - host: {{ .Values.Ingress.Host }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nextflow-api
+          servicePort: 8080
+{{ end }}

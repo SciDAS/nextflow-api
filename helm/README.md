@@ -45,22 +45,34 @@ If you want to use an existing PVC:
 
 __TODO__: Remote cluster configuration (disregard and leave `false` for now)
 
-#### Resources, Replicas
+#### Database and Web Server Deployments
 ```
-# Resource request per container
-Resources:
-  Requests:
-    CPU: 250m
-    Memory: 1Gi
-  Limits:
-    CPU: 500m
-    Memory: 2Gi
+# Database deployment settings
+Database:
+  # Resource requests and limits per container
+  Resources:
+    Requests:
+      CPU: 4
+      Memory: 8Gi
+    Limits:
+      CPU: 8
+      Memory: 16Gi
 
-# Number of containers
-Replicas: 1
+# Web server deployment settings
+WebServer:
+  # Number of containers
+  Replicas: 1
+  # Resource requests and limits per container
+  Resources:
+    Requests:
+      CPU: 1
+      Memory: 4Gi
+    Limits:
+      CPU: 1
+      Memory: 4Gi
 ```
 
-You may change the resource requests/limits to your liking. Leave the number of replicas alone for now.
+Nextflow-API contains a database deployment and a web server deployment, which can optionally include multiple replicas. Note that you must use a `LoadBalancer` in order to have multiple web server replicas.
 
 #### Ingress / LoadBalancer
 ```
@@ -97,12 +109,11 @@ Deploy using `helm install nextflow-api .`
 
 #### Give Nextflow the necessary permissions to deploy jobs to your K8s cluster.
 ````
-kubectl create rolebinding default-edit --clusterrole=edit --serviceaccount=default:default 
+kubectl create rolebinding default-edit --clusterrole=edit --serviceaccount=default:default
 kubectl create rolebinding default-view --clusterrole=view --serviceaccount=default:default
 ````
-These commands give the default service account the ability to view and edit cluster resources. Nextflow driver pods use this account to deploy process pods. This creates rolebindings in the `default` namespace. If you are not in the default namespace, use 
-`KUBE_EDITOR="nano" kubectl edit rolebinding <role-binding>`
-Edit the `namespace` to the one you are using, then save.
+
+These commands give the default service account the ability to view and edit cluster resources. Nextflow driver pods use this account to deploy process pods. This creates rolebindings in the `default` namespace. If you are not in the default namespace, use `KUBE_EDITOR="nano" kubectl edit rolebinding <role-binding>`. Edit the `namespace` to the one you are using, then save.
 
 #### Ingress
 

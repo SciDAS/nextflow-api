@@ -22,17 +22,29 @@ Remote:
   Context: nautilus
   PVC: deepgtex-prp
 
-# Resource requests and limits per container
-Resources:
-  Requests:
-    CPU: 1
-    Memory: 4Gi
-  Limits:
-    CPU: 1
-    Memory: 4Gi
+# Database deployment settings
+Database:
+  # Resource requests and limits per container
+  Resources:
+    Requests:
+      CPU: 4
+      Memory: 8Gi
+    Limits:
+      CPU: 8
+      Memory: 16Gi
 
-# Number of containers
-Replicas: 1
+# Web server deployment settings
+WebServer:
+  # Number of containers
+  Replicas: 1
+  # Resource requests and limits per container
+  Resources:
+    Requests:
+      CPU: 1
+      Memory: 4Gi
+    Limits:
+      CPU: 1
+      Memory: 4Gi
 
 # Ingress control settings
 Ingress:

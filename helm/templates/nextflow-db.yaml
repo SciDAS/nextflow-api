@@ -1,30 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "nextflow-api.fullname" . }}
+  name: nextflow-db
   labels:
-    app: {{ template "nextflow-api.name" . }}
+    app: nextflow-db
     chart: {{ template "nextflow-api.chart" . }}
     release: {{ .Release.Name }}
 spec:
-  replicas: {{ .Values.Replicas }}
+  replicas: 1
   selector:
     matchLabels:
-      app: {{ template "nextflow-api.name" . }}
+      app: nextflow-db
   template:
     metadata:
       labels:
-        app: {{ template "nextflow-api.name" . }}
+        app: nextflow-db
         chart: {{ template "nextflow-api.chart" . }}
         release: {{ .Release.Name }}
     spec:
-      serviceAccountName: default
       containers:
-      - name: nextflow-server
-        image: bentsherman/nextflow-api
+      - name: nextflow-db
+        image: bentsherman/nextflow-db
         env:
-        - name: NXF_EXECUTOR
-          value: "k8s"
         {{ if .Values.Remote.Enabled }}
         - name: PVC_NAME
           value: {{ .Values.Remote.PVC }}
@@ -38,34 +35,27 @@ spec:
         command:
         - /bin/bash
         - -c
-        {{ if .Values.Remote.Enabled }}
-        - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; scripts/startup.sh
-        {{ else }}
-        - cd /opt/nextflow-api; scripts/startup.sh
-        {{ end }}
+        - ./scripts/db-startup.sh; sleep infinity
         resources:
           requests:
-            cpu: {{ .Values.Resources.Requests.CPU }}
-            memory: {{ .Values.Resources.Requests.Memory }}
+            cpu: {{ .Values.Database.Resources.Requests.CPU }}
+            memory: {{ .Values.Database.Resources.Requests.Memory }}
           limits:
-            cpu: {{ .Values.Resources.Limits.CPU }}
-            memory: {{ .Values.Resources.Limits.Memory }}
+            cpu: {{ .Values.Database.Resources.Limits.CPU }}
+            memory: {{ .Values.Database.Resources.Limits.Memory }}
         volumeMounts:
         - name: vol-1
           mountPath: /workspace
-        {{ if .Values.Remote.Enabled }}
-        - name: conf
-          mountPath: "/etc/.kube"
-        {{ end }}
         ports:
-        - containerPort: 8080
+        - containerPort: 27017
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - ./scripts/db-backup.sh prestop; mongod --shutdown
       volumes:
-      {{ if .Values.Remote.Enabled }}
-      - name: conf
-        secret:
-          secretName: kubeconfig
-          defaultMode: 256
-      {{ end }}
       {{ if .Values.NewLocalPVC.Enabled }}
       - name: vol-1
         persistentVolumeClaim:
@@ -76,3 +66,19 @@ spec:
         persistentVolumeClaim:
           claimName: {{ .Values.ExistingLocalPVC.Name }}
       {{ end }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nextflow-db
+  labels:
+    app: nextflow-db
+    chart: {{ template "nextflow-api.chart" . }}
+    release: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: nextflow-db
+  ports:
+  - port: 27017
+    targetPort: 27017
