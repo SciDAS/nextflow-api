@@ -19,6 +19,7 @@ def run_workflow(workflow, work_dir, resume):
 		args = [
 			"nextflow",
 			"-config", "nextflow.config",
+			"-log", os.path.join(workflow["output_dir"], "nextflow.log"),
 			"kuberun",
 			workflow["pipeline"],
 			"-ansi-log", "false",
@@ -31,6 +32,7 @@ def run_workflow(workflow, work_dir, resume):
 		args = [
 			"nextflow",
 			"-config", "nextflow.config",
+			"-log", os.path.join(workflow["output_dir"], "nextflow.log"),
 			"run",
 			workflow["pipeline"],
 			"-ansi-log", "false",
@@ -43,6 +45,7 @@ def run_workflow(workflow, work_dir, resume):
 		args = [
 			"nextflow",
 			"-config", "nextflow.config",
+			"-log", os.path.join(workflow["output_dir"], "nextflow.log"),
 			"run",
 			workflow["pipeline"],
 			"-ansi-log", "false",
