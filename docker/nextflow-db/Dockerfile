@@ -5,7 +5,7 @@ EXPOSE 27017
 
 # install package dependencies
 RUN apt-get update -qq \
-	&& apt-get install -qq -y git mongodb
+	&& apt-get install -qq -y cron git mongodb
 
 # install nextflow-api
 WORKDIR /opt
