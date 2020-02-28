@@ -23,7 +23,7 @@ tar -czvf $(date +"${BACKUPS}/${TYPE}_%Y_%m_%d.tar.gz") ${DUMP}
 
 # remove older archives of the same type
 NUM_BACKUPS=$(ls ${BACKUPS}/${TYPE}_* | wc -l)
-MAX_BACKUPS=5
+MAX_BACKUPS=10
 
 if [[ ${NUM_BACKUPS} > ${MAX_BACKUPS} ]]; then
 	rm -f "$(ls ${BACKUPS}/${TYPE}_* | head -n 1)"
