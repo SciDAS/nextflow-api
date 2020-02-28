@@ -22,3 +22,6 @@ LATEST=$(ls ${BACKUPS} | tail -n 1)
 if [[ ! -z ${LATEST} ]]; then
     ./scripts/db-restore.sh "${BACKUPS}/${LATEST}"
 fi
+
+# create cronjob to backup database daily
+echo "00 06 * * * cd ${PWD}; ./scripts/db-backup.sh daily" | crontab -
