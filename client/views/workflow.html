@@ -105,7 +105,9 @@
 					<label class="col-sm-3 col-form-label">Input Files</label>
 					<div class="col-sm-9">
 						<p class="form-control-plaintext" ng-show="workflow.input_files.length == 0">none</p>
-						<p class="form-control-plaintext" ng-repeat="f in workflow.input_files">{{f}}</p>
+						<p class="form-control-plaintext" ng-repeat="f in workflow.input_files">
+							<a ng-href="/api/workflows/{{workflow._id}}/download?path={{f}}" download>{{f}}</a>
+						</p>
 					</div>
 				</div>
 
