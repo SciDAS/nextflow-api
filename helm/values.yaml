@@ -12,7 +12,7 @@ NewLocalPVC:
 ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
   Enabled: true
-  Name: deepgtex-prp
+  Name: scidas-dev
 
 Remote:
   # If true, use PVC/compute of remote cluster.
@@ -21,17 +21,6 @@ Remote:
   Enabled: false
   Context: nautilus
   PVC: deepgtex-prp
-
-# Database deployment settings
-Database:
-  # Resource requests and limits per container
-  Resources:
-    Requests:
-      CPU: 4
-      Memory: 8Gi
-    Limits:
-      CPU: 8
-      Memory: 16Gi
 
 # Web server deployment settings
 WebServer:
@@ -46,14 +35,23 @@ WebServer:
       CPU: 1
       Memory: 4Gi
 
+# NodePort Settings
+LoadBalancer:
+  Enabled: false
+
 # Ingress control settings
 Ingress:
   # If true, use Ingress control.
   # Otherwise, generic LoadBalancer networking will be used,
   # and the other settings in this section will be ignored.
-  Enabled: true
+  Enabled: false
   # The subdomain to associate with this service.
   Host: nextflow-api.nautilus.optiputer.net
   # The class of the ingress controller to use.
   # For SLATE this should be 'slate'.
   Class: traefik
+
+# NodePort Settings
+NodePorts:
+  Enabled: false
+  NextflowPort: 5432
