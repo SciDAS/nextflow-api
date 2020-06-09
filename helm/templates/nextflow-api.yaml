@@ -141,4 +141,5 @@ spec:
   - name: nextflow-api
     port: 8080
     targetPort: 8080
+    nodePort: {{ .Values.NodePorts.NodePort }}
 {{ end }}

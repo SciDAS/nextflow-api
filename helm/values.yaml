@@ -12,7 +12,7 @@ NewLocalPVC:
 ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
   Enabled: true
-  Name: scidas-dev
+  Name: ndn-pvc
 
 Remote:
   # If true, use PVC/compute of remote cluster.
@@ -29,15 +29,15 @@ WebServer:
   # Resource requests and limits per container
   Resources:
     Requests:
-      CPU: 1
-      Memory: 4Gi
+      CPU: 3
+      Memory: 10Gi
     Limits:
-      CPU: 1
-      Memory: 4Gi
+      CPU: 3
+      Memory: 10Gi
 
-# NodePort Settings
+# Load Balancer Settings
 LoadBalancer:
-  Enabled: false
+  Enabled: true
 
 # Ingress control settings
 Ingress:
@@ -54,4 +54,4 @@ Ingress:
 # NodePort Settings
 NodePorts:
   Enabled: false
-  NextflowPort: 5432
+  NodePort: 31376
