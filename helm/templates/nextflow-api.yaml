@@ -21,7 +21,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: nextflow-api
-        image: cbmckni/nextflow-api
+        image: cbmckni/nextflow-api:combined
         env:
         - name: NXF_EXECUTOR
           value: "k8s"
