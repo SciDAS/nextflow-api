@@ -27,8 +27,11 @@ WORKDIR /opt
 ADD https://api.github.com/repos/scidas/nextflow-api/git/refs/heads/master version.json
 RUN git clone -q https://github.com/scidas/nextflow-api.git
 
-# install python dependencies
-RUN pip3 install -r nextflow-api/requirements.txt
-
 # move to nextflow-api directory
 WORKDIR /opt/nextflow-api
+
+# Switch to rodeo tag
+RUN git fetch && git checkout origin/combined
+
+# install python dependencies
+RUN pip3 install -r nextflow-api/requirements.txt
