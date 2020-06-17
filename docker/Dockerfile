@@ -34,4 +34,4 @@ WORKDIR /opt/nextflow-api
 RUN git fetch && git checkout origin/combined
 
 # install python dependencies
-RUN pip3 install -r nextflow-api/requirements.txt
+RUN pip3 install -r requirements.txt
