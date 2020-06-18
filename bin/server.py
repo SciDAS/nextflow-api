@@ -3,6 +3,7 @@
 import argparse
 import bson
 import json
+import multiprocessing as mp
 import os
 import shutil
 import signal
@@ -267,16 +268,16 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			f.write("weblog { enabled = true\n url = \"http://%s:8080/api/tasks\" }\n" % (socket.gethostbyname(socket.gethostname())))
 			f.write("k8s { launchDir = \"%s\" }\n" % (work_dir))
 
-		# launch workflow as a child process
-		tornado.ioloop.IOLoop.current().spawn_callback(Workflow.launch, db, workflow, self.resume)
-
 		try:
-			# TODO: should be handled by workflow process
 			# update workflow status
 			workflow["status"] = "running"
 			workflow["date_submitted"] = int(time.time() * 1000)
 
 			await db.workflow_update(id, workflow)
+
+			# launch workflow as a child process
+			p = mp.Process(target=Workflow.launch, args=(db, workflow, self.resume))
+			p.start()
 
 			self.set_status(200)
 			self.write(message(200, "Workflow \"%s\" was launched" % id))

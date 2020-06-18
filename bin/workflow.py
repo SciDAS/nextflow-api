@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import asyncio
 import os
 import subprocess
 
@@ -83,7 +84,7 @@ async def set_property(db, workflow, key, value):
 
 
 
-async def launch(db, workflow, resume):
+async def launch_async(db, workflow, resume):
 	# start workflow
 	work_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"])
 	proc = run_workflow(workflow, work_dir, resume)
@@ -106,3 +107,8 @@ async def launch(db, workflow, resume):
 
 	# save final status
 	await set_property(db, workflow, "status", "completed")
+
+
+
+def launch(db, workflow, resume):
+	asyncio.run(launch_async(db, workflow, resume))
