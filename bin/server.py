@@ -3,9 +3,7 @@
 import argparse
 import bson
 import json
-import motor.motor_tornado
 import os
-import pymongo
 import shutil
 import signal
 import socket
@@ -17,6 +15,7 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 
+import backend
 import env
 import workflow as Workflow
 
@@ -46,11 +45,7 @@ class WorkflowQueryHandler(tornado.web.RequestHandler):
 		page_size = int(self.get_query_argument("page_size", 100))
 
 		db = self.settings["db"]
-		workflows = await db.workflows \
-			.find() \
-			.sort("date_created", pymongo.DESCENDING) \
-			.skip(page * page_size) \
-			.to_list(length=page_size)
+		workflows = await db.workflow_query(page, page_size)
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")
@@ -104,7 +99,7 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 		workflow["date_created"] = int(time.time() * 1000)
 
 		# save workflow
-		result = await db.workflows.insert_one(workflow)
+		await db.workflow_create(workflow)
 
 		# create workflow directory
 		work_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"])
@@ -135,7 +130,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 		db = self.settings["db"]
 
 		# get workflow
-		workflow = await db.workflows.find_one({ "_id": id })
+		workflow = await db.workflow_get(id)
 
 		# append list of input files
 		work_dir = os.path.join(env.WORKFLOWS_DIR, id)
@@ -177,10 +172,10 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 			return
 
 		# save workflow config
-		workflow = await db.workflows.find_one({ "_id": id })
+		workflow = await db.workflow_get(id)
 		workflow = {**self.DEFAULTS, **workflow, **data}
 
-		await db.workflows.replace_one({ "_id": id }, workflow)
+		await db.workflow_update(id, workflow)
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")
@@ -191,7 +186,7 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 
 		try:
 			# delete workflow
-			await db.workflows.delete_one({ "_id": id })
+			await db.workflow_delete(id)
 
 			# delete workflow directory
 			shutil.rmtree(os.path.join(env.WORKFLOWS_DIR, id), ignore_errors=True)
@@ -219,7 +214,7 @@ class WorkflowUploadHandler(tornado.web.RequestHandler):
 			return
 
 		# get workflow
-		workflow = await db.workflows.find_one({ "_id": id })
+		workflow = await db.workflow_get(id)
 
 		# initialize input directory
 		input_dir = os.path.join(env.WORKFLOWS_DIR, id, workflow["input_dir"])
@@ -248,7 +243,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 		db = self.settings["db"]
 
 		# get workflow
-		workflow = await db.workflows.find_one({ "_id": id })
+		workflow = await db.workflow_get(id)
 
 		# make sure workflow is not already running
 		if workflow["status"] == "running":
@@ -276,13 +271,12 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 		tornado.ioloop.IOLoop.current().spawn_callback(Workflow.launch, db, workflow, self.resume)
 
 		try:
+			# TODO: should be handled by workflow process
 			# update workflow status
-			await db.workflows.update_one({ "_id": workflow["_id"] }, {
-				"$set": {
-					"status": "running",
-					"date_submitted": int(time.time() * 1000)
-				}
-			})
+			workflow["status"] = "running"
+			workflow["date_submitted"] = int(time.time() * 1000)
+
+			await db.workflow_update(id, workflow)
 
 			self.set_status(200)
 			self.write(message(200, "Workflow \"%s\" was launched" % id))
@@ -304,7 +298,7 @@ class WorkflowCancelHandler(tornado.web.RequestHandler):
 		db = self.settings["db"]
 
 		# get workflow
-		workflow = await db.workflows.find_one({ "_id": id })
+		workflow = await db.workflow_get(id)
 		workflow = {**{ "pid": -1 }, **workflow}
 
 		# terminate child process
@@ -314,12 +308,12 @@ class WorkflowCancelHandler(tornado.web.RequestHandler):
 			except ProcessLookupError:
 				pass
 
-		# update workflow
-		workflow["status"] = "failed"
-		workflow["pid"] = -1
-
 		try:
-			await db.workflows.replace_one({ "_id": id }, workflow)
+			# update workflow status
+			workflow["status"] = "failed"
+			workflow["pid"] = -1
+
+			await db.workflow_update(id, workflow)
 
 			self.set_status(200)
 			self.write(message(200, "Workflow \"%s\" was canceled" % id))
@@ -335,7 +329,7 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 		db = self.settings["db"]
 
 		# get workflow
-		workflow = await db.workflows.find_one({ "_id": id })
+		workflow = await db.workflow_get(id)
 
 		# append log if it exists
 		log_file = os.path.join(env.WORKFLOWS_DIR, id, ".workflow.log")
@@ -375,11 +369,7 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 		page_size = int(self.get_query_argument("page_size", 100))
 
 		db = self.settings["db"]
-		tasks = await db.tasks \
-			.find({}, { "_id": 1, "runName": 1, "utcTime": 1, "event": 1 }) \
-			.sort("utcTime", pymongo.DESCENDING) \
-			.skip(page * page_size) \
-			.to_list(length=page_size)
+		tasks = await db.task_query(page, page_size)
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")
@@ -400,7 +390,7 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 		task["_id"] = str(bson.ObjectId())
 
 		# save task
-		result = await db.tasks.insert_one(task)
+		await db.task_create(task)
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")
@@ -412,7 +402,7 @@ class TaskEditHandler(tornado.web.RequestHandler):
 
 	async def get(self, id):
 		db = self.settings["db"]
-		task = await db.tasks.find_one({ "_id": id })
+		task = await db.task_get(id)
 
 		self.set_status(200)
 		self.set_header("Content-type", "application/json")
@@ -422,7 +412,9 @@ class TaskEditHandler(tornado.web.RequestHandler):
 
 if __name__ == "__main__":
 	# parse command-line options
-	tornado.options.define("db-hostname", default="localhost", help="hostname of mongodb service")
+	tornado.options.define("backend", default="json", help="Database backend to use (json or mongo)")
+	tornado.options.define("json-filename", default="db.json", help="json file for json backend")
+	tornado.options.define("mongo-hostname", default="localhost", help="mongodb service url for mongo backend")
 	tornado.options.define("np", default=1, help="number of server processes")
 	tornado.options.define("port", default=8080)
 	tornado.options.parse_command_line()
@@ -453,9 +445,14 @@ if __name__ == "__main__":
 		server.start(tornado.options.options.np)
 
 		# connect to database
-		client = motor.motor_tornado.MotorClient("mongodb://%s:27017" % (tornado.options.options.db_hostname))
-		db = client["nextflow_api"]
-		app.settings["db"] = db
+		if tornado.options.options.backend == "json":
+			app.settings["db"] = backend.JSONBackend(tornado.options.options.json_filename)
+
+		elif tornado.options.options.backend == "mongo":
+			app.settings["db"] = backend.MongoBackend(tornado.options.options.mongo_hostname)
+
+		else:
+			raise KeyError("Backend must be either \'json\' or \'mongo\'")
 
 		# start the event loop
 		print("The API is listening on http://0.0.0.0:8080", flush=True)

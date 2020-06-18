@@ -28,6 +28,7 @@ def run_workflow(workflow, work_dir, resume):
 			"-revision", workflow["revision"],
 			"-volume-mount", env.PVC_NAME
 		]
+
 	elif env.NXF_EXECUTOR == "local":
 		args = [
 			"nextflow",
@@ -41,6 +42,7 @@ def run_workflow(workflow, work_dir, resume):
 			"-revision", workflow["revision"],
 			"-with-docker"
 		]
+
 	elif env.NXF_EXECUTOR == "pbspro":
 		args = [
 			"nextflow",
@@ -76,7 +78,8 @@ def save_output(workflow, output_dir):
 
 
 async def set_property(db, workflow, key, value):
-	await db.workflows.update_one({ "_id": workflow["_id"] }, { "$set": { key: value } })
+	workflow[key] = value
+	await db.workflow_update(workflow["_id"], workflow)
 
 
 

@@ -1,3 +1,5 @@
+_workflows
+
 helm/.helmignore
 helm/.nextflow.log
 helm/.sops.yaml
