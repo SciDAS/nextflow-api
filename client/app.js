@@ -240,6 +240,7 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 				$scope.workflow.status = "";
 				$scope.workflow.log = "";
 				$scope.launching = false;
+				$scope.fetchLog();
 			}, function() {
 				alert.error("Failed to launch workflow instance.");
 				$scope.launching = false;
@@ -255,6 +256,7 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 				$scope.workflow.status = "";
 				$scope.workflow.log = "";
 				$scope.resuming = false;
+				$scope.fetchLog();
 			}, function() {
 				alert.error("Failed to resume workflow instance.");
 				$scope.resuming = false;
