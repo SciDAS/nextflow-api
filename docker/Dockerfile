@@ -7,7 +7,7 @@ EXPOSE 27017
 
 # install package dependencies
 RUN apt-get update -qq \
-	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl git openjdk-8-jre python3 python3-pip cron mongodb
+	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl git openjdk-8-jre python3.7 python3-pip cron mongodb
 
 # install kubectl
 RUN apt-get update && apt-get install -y apt-transport-https \
@@ -20,6 +20,10 @@ RUN apt-get update && apt-get install -y apt-transport-https \
 RUN curl -s https://get.nextflow.io | bash \
 	&& mv nextflow /usr/local/bin \
 	&& nextflow info
+
+# Upgrade python3
+
+RUN rm /usr/bin/python3 && ln -s python3.7 /usr/bin/python3
 
 # install nextflow-api
 WORKDIR /opt
@@ -35,3 +39,4 @@ RUN git fetch && git checkout origin/combined
 
 # install python dependencies
 RUN pip3 install -r requirements.txt
+RUN python3 --version

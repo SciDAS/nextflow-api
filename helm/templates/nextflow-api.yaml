@@ -21,7 +21,8 @@ spec:
       serviceAccountName: default
       containers:
       - name: nextflow-api
-        image: cbmckni/nextflow-api:combined
+        image: cbmckni/nextflow-api
+        imagePullPolicy: Always
         env:
         - name: NXF_EXECUTOR
           value: "k8s"
@@ -41,7 +42,7 @@ spec:
         {{ if .Values.Remote.Enabled }}
         - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 bin/server.py --db-hostname=nextflow-db
         {{ else }}
-        - ./scripts/db-startup.sh && cd /opt/nextflow-api; python3 bin/server.py --db-hostname=127.0.0.1
+        - ./scripts/db-startup.sh && cd /opt/nextflow-api; python3 bin/server.py
         {{ end }}
         resources:
           requests:
