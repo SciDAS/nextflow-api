@@ -12,7 +12,7 @@ NewLocalPVC:
 ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
   Enabled: true
-  Name: deepgtex-prp
+  Name: ndn-pvc
 
 Remote:
   # If true, use PVC/compute of remote cluster.
@@ -37,14 +37,14 @@ WebServer:
 
 # Load Balancer Settings
 LoadBalancer:
-  Enabled: false
+  Enabled: true
 
 # Ingress control settings
 Ingress:
   # If true, use Ingress control.
   # Otherwise, generic LoadBalancer networking will be used,
   # and the other settings in this section will be ignored.
-  Enabled: true
+  Enabled: false
   # The subdomain to associate with this service.
   Host: nextflow-api.nautilus.optiputer.net
   # The class of the ingress controller to use.
