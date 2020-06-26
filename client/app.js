@@ -209,7 +209,7 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 	$scope.workflow = {};
 
 	$scope.uploader = new FileUploader({
-		 url: "/api/workflows/" + $route.current.params.id + "/upload"
+		 url: window.location.pathname + "/api/workflows/" + $route.current.params.id + "/upload"
 	});
 
 	$scope.uploader.onCompleteAll = function() {

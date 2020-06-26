@@ -35,7 +35,7 @@ RUN git clone -q https://github.com/scidas/nextflow-api.git
 WORKDIR /opt/nextflow-api
 
 # Switch to rodeo tag
-RUN git fetch && git checkout origin/relative3
+RUN git fetch && git checkout origin/relative4
 
 # install python dependencies
 RUN pip3 install -r requirements.txt
