@@ -92,60 +92,60 @@ app.service("api", ["$http", function($http) {
 	this.Workflow = {};
 
 	this.Workflow.query = function(page) {
-		return $http.get(window.location.pathname + "/api/workflows", { params: { page: page } })
+		return $http.get(window.location.pathname + "api/workflows", { params: { page: page } })
 			.then(function(res) {
 				return res.data;
 			});
 	};
 
 	this.Workflow.get = function(id) {
-		return $http.get(window.location.pathname + "/api/workflows/" + id)
+		return $http.get(window.location.pathname + "api/workflows/" + id)
 			.then(function(res) {
 				return res.data;
 			});
 	};
 
 	this.Workflow.save = function(workflow) {
-		return $http.post(window.location.pathname + "/api/workflows/" + workflow._id, workflow)
+		return $http.post(window.location.pathname + "api/workflows/" + workflow._id, workflow)
 			.then(function(res) {
 				return res.data;
 			});
 	};
 
 	this.Workflow.launch = function(id) {
-		return $http.post(window.location.pathname + "/api/workflows/" + id + "/launch");
+		return $http.post(window.location.pathname + "api/workflows/" + id + "/launch");
 	};
 
 	this.Workflow.resume = function(id) {
-		return $http.post(window.location.pathname + "/api/workflows/" + id + "/resume");
+		return $http.post(window.location.pathname + "api/workflows/" + id + "/resume");
 	};
 
 	this.Workflow.cancel = function(id) {
-		return $http.post(window.location.pathname + "/api/workflows/" + id + "/cancel");
+		return $http.post(window.location.pathname + "api/workflows/" + id + "/cancel");
 	};
 
 	this.Workflow.log = function(id) {
-		return $http.get(window.location.pathname + "/api/workflows/" + id + "/log")
+		return $http.get(window.location.pathname + "api/workflows/" + id + "/log")
 			.then(function(res) {
 				return res.data;
 			});
 	};
 
 	this.Workflow.remove = function(id) {
-		return $http.delete(window.location.pathname + "/api/workflows/" + id);
+		return $http.delete(window.location.pathname + "api/workflows/" + id);
 	};
 
 	this.Task = {};
 
 	this.Task.query = function(page) {
-		return $http.get(window.location.pathname + "/api/tasks", { params: { page: page } })
+		return $http.get(window.location.pathname + "api/tasks", { params: { page: page } })
 			.then(function(res) {
 				return res.data;
 			});
 	};
 
 	this.Task.get = function(id) {
-		return $http.get(window.location.pathname + "/api/tasks/" + id)
+		return $http.get(window.location.pathname + "api/tasks/" + id)
 			.then(function(res) {
 				return res.data;
 			});
@@ -209,7 +209,7 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 	$scope.workflow = {};
 
 	$scope.uploader = new FileUploader({
-		 url: window.location.pathname + "/api/workflows/" + $route.current.params.id + "/upload"
+		 url: window.location.pathname + "api/workflows/" + $route.current.params.id + "/upload"
 	});
 
 	$scope.uploader.onCompleteAll = function() {

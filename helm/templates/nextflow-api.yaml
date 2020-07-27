@@ -21,7 +21,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: nextflow-api
-        image: cbmckni/nextflow-api:relative
+        image: cbmckni/nextflow-api:dev
         imagePullPolicy: Always
         env:
         - name: NXF_EXECUTOR
@@ -117,6 +117,7 @@ kind: Ingress
 metadata:
   name: nextflow-api
   annotations:
+    traefik.ingress.kubernetes.io/router.tls: ""
     kubernetes.io/ingress.class: {{ .Values.Ingress.Class }}
 spec:
   rules:

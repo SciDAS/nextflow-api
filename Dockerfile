@@ -26,17 +26,19 @@ RUN curl -s https://get.nextflow.io | bash \
 RUN rm /usr/bin/python3 && ln -s python3.7 /usr/bin/python3
 
 # install nextflow-api
-WORKDIR /opt
-
-ADD https://api.github.com/repos/scidas/nextflow-api/git/refs/heads/master version.json
-RUN git clone -q https://github.com/scidas/nextflow-api.git
-
-# move to nextflow-api directory
 WORKDIR /opt/nextflow-api
+
+#ADD https://api.github.com/repos/scidas/nextflow-api/git/refs/heads/master version.json
+
+#RUN git clone -q https://github.com/scidas/nextflow-api.git
+RUN ls -lh
+COPY . .
+# move to nextflow-api directory
+#WORKDIR /opt/nextflow-api
 
 # Switch to rodeo tag
 RUN ls
-RUN git fetch && git checkout origin/relative4
+#RUN git fetch && git checkout origin/relative
 
 # install python dependencies
 RUN pip3 install -r requirements.txt

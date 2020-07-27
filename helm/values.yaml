@@ -12,7 +12,7 @@ NewLocalPVC:
 ExistingLocalPVC:
   # If true, use existing PVC on local cluster.
   Enabled: true
-  Name: ndn-pvc
+  Name: scidas-dev
 
 Remote:
   # If true, use PVC/compute of remote cluster.
@@ -37,14 +37,14 @@ WebServer:
 
 # Load Balancer Settings
 LoadBalancer:
-  Enabled: true
+  Enabled: false
 
 # Ingress control settings
 Ingress:
   # If true, use Ingress control.
   # Otherwise, generic LoadBalancer networking will be used,
   # and the other settings in this section will be ignored.
-  Enabled: false
+  Enabled: true
   # The subdomain to associate with this service.
   Host: nextflow-api-rel.nautilus.optiputer.net
   # The class of the ingress controller to use.
