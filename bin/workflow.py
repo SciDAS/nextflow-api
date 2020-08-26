@@ -85,6 +85,9 @@ async def set_property(db, workflow, key, value):
 
 
 async def launch_async(db, workflow, resume):
+	# re-initialize database backend
+	db.initialize()
+
 	# start workflow
 	work_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"])
 	proc = run_workflow(workflow, work_dir, resume)

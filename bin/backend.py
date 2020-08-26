@@ -8,6 +8,9 @@ class Backend():
 	def __init__(self):
 		pass
 
+	def initialize(self):
+		pass
+
 	async def workflow_query(self, page, page_size):
 		raise NotImplementedError()
 
@@ -35,13 +38,17 @@ class Backend():
 
 
 class JSONBackend(Backend):
-	def __init__(self, filename):
+	def __init__(self, url):
+		self._url = url
+		self.initialize()
+
+	def initialize(self):
+		# load database from json file
 		try:
-			# load database from json file
-			self._filename = filename
-			self._db = json.load(open(filename))
+			self._db = json.load(open(self._url))
+
+		# initialize empty database if json file doesn't exist
 		except FileNotFoundError:
-			# initialize empty database if json file doesn't exist
 			self._db = {
 				"workflows": [],
 				"tasks": []
@@ -59,7 +66,7 @@ class JSONBackend(Backend):
 		self._db["workflows"].append(workflow)
 
 		# save json file
-		json.dump(self._db, open(self._filename, "w"))
+		json.dump(self._db, open(self._url, "w"))
 
 	async def workflow_get(self, id):
 		# search for workflow by id
@@ -78,7 +85,7 @@ class JSONBackend(Backend):
 				self._db["workflows"][i] = workflow
 
 				# save json file
-				json.dump(self._db, open(self._filename, "w"))
+				json.dump(self._db, open(self._url, "w"))
 				return
 
 		# raise error if workflow wasn't found
@@ -92,7 +99,7 @@ class JSONBackend(Backend):
 				self._db["workflows"].pop(i)
 
 				# save json file
-				json.dump(self._db, open(self._filename, "w"))
+				json.dump(self._db, open(self._url, "w"))
 				return
 
 		# raise error if workflow wasn't found
@@ -110,7 +117,7 @@ class JSONBackend(Backend):
 		self._db["tasks"].append(task)
 
 		# save json file
-		json.dump(self._db, open(self._filename, "w"))
+		json.dump(self._db, open(self._url, "w"))
 
 	async def task_get(self, id):
 		# search for task by id
@@ -125,7 +132,11 @@ class JSONBackend(Backend):
 
 class MongoBackend(Backend):
 	def __init__(self, url):
-		self._client = motor.motor_tornado.MotorClient(url)
+		self._url = url
+		self.initialize()
+
+	def initialize(self):
+		self._client = motor.motor_tornado.MotorClient(self._url)
 		self._db = self._client["nextflow_api"]
 
 	async def workflow_query(self, page, page_size):
