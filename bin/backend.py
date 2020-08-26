@@ -1,5 +1,6 @@
 import json
 import motor.motor_tornado
+import multiprocessing as mp
 import pymongo
 
 
@@ -39,94 +40,162 @@ class Backend():
 
 class JSONBackend(Backend):
 	def __init__(self, url):
+		self._lock = mp.Lock()
 		self._url = url
 		self.initialize()
 
-	def initialize(self):
-		# load database from json file
+	def initialize(self, error_not_found=False):
 		try:
+			# load database from json file
 			self._db = json.load(open(self._url))
 
-		# initialize empty database if json file doesn't exist
 		except FileNotFoundError:
-			self._db = {
-				"workflows": [],
-				"tasks": []
-			}
+			# raise error if specified
+			if error_not_found:
+				raise FileNotFoundError("Database file not found")
+
+			# otherwise initialize empty database if json file doesn't exist
+			else:
+				self._db = {
+					"workflows": [],
+					"tasks": []
+				}
+
+	def load(self):
+		self.initialize(error_not_found=True)
+
+	def save(self):
+		json.dump(self._db, open(self._url, "w"))
 
 	async def workflow_query(self, page, page_size):
+		self._lock.acquire()
+		self.load()
+
 		# sort workflows by date_created in descending order
 		self._db["workflows"].sort(key=lambda w: w["date_created"], reverse=True)
 
 		# return the specified page of workflows
-		return self._db["workflows"][(page * page_size) : ((page + 1) * page_size)]
+		workflows = self._db["workflows"][(page * page_size) : ((page + 1) * page_size)]
+
+		self._lock.release()
+
+		return workflows
 
 	async def workflow_create(self, workflow):
+		self._lock.acquire()
+		self.load()
+
 		# append workflow to list of workflows
 		self._db["workflows"].append(workflow)
 
-		# save json file
-		json.dump(self._db, open(self._url, "w"))
+		self.save()
+		self._lock.release()
 
 	async def workflow_get(self, id):
+		self._lock.acquire()
+		self.load()
+
 		# search for workflow by id
+		workflow = None
+
 		for w in self._db["workflows"]:
 			if w["_id"] == id:
-				return w
+				workflow = w
+				break
 
-		# raise error if workflow wasn't found
-		raise IndexError("Workflow was not found")
+		self._lock.release()
+
+		# return workflow or raise error if workflow wasn't found
+		if workflow != None:
+			return workflow
+		else:
+			raise IndexError("Workflow was not found")
 
 	async def workflow_update(self, id, workflow):
+		self._lock.acquire()
+		self.load()
+
 		# search for workflow by id and update it
+		found = False
+
 		for i, w in enumerate(self._db["workflows"]):
 			if w["_id"] == id:
 				# update workflow
 				self._db["workflows"][i] = workflow
+				found = True
+				break
 
-				# save json file
-				json.dump(self._db, open(self._url, "w"))
-				return
+		self.save()
+		self._lock.release()
 
 		# raise error if workflow wasn't found
-		raise IndexError("Workflow was not found")
+		if not found:
+			raise IndexError("Workflow was not found")
 
 	async def workflow_delete(self, id):
+		self._lock.acquire()
+		self.load()
+
 		# search for workflow by id and delete it
+		found = False
+
 		for i, w in enumerate(self._db["workflows"]):
 			if w["_id"] == id:
 				# delete workflow
 				self._db["workflows"].pop(i)
+				found = True
+				break
 
-				# save json file
-				json.dump(self._db, open(self._url, "w"))
-				return
+		self.save()
+		self._lock.release()
 
 		# raise error if workflow wasn't found
-		raise IndexError("Workflow was not found")
+		if not found:
+			raise IndexError("Workflow was not found")
 
 	async def task_query(self, page, page_size):
+		self._lock.acquire()
+		self.load()
+
 		# sort tasks by date_created in descending order
 		self._db["tasks"].sort(key=lambda t: t["utcTime"], reverse=True)
 
 		# return the specified page of workflows
-		return self._db["tasks"][(page * page_size) : ((page + 1) * page_size)]
+		tasks = self._db["tasks"][(page * page_size) : ((page + 1) * page_size)]
+
+		self._lock.release()
+
+		return tasks
 
 	async def task_create(self, task):
+		self._lock.acquire()
+		self.load()
+
 		# append workflow to list of workflows
 		self._db["tasks"].append(task)
 
-		# save json file
-		json.dump(self._db, open(self._url, "w"))
+		self.save()
+		self._lock.release()
 
 	async def task_get(self, id):
+		self._lock.acquire()
+		self.load()
+
 		# search for task by id
+		task = None
+
 		for t in self._db["tasks"]:
 			if t["_id"] == id:
-				return t
+				task = t
+				break
+
+		self._lock.release()
 
 		# raise error if task wasn't found
-		raise IndexError("Task was not found")
+		if task != None:
+			return task
+		else:
+			raise IndexError("Task was not found")
 
 
 
