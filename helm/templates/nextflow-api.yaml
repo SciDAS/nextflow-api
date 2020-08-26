@@ -21,7 +21,8 @@ spec:
       serviceAccountName: default
       containers:
       - name: nextflow-api
-        image: bentsherman/nextflow-api
+        image: cbmckni/nextflow-api
+        imagePullPolicy: Always
         env:
         - name: NXF_EXECUTOR
           value: "k8s"
@@ -41,7 +42,7 @@ spec:
         {{ if .Values.Remote.Enabled }}
         - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 bin/server.py --db-hostname=nextflow-db
         {{ else }}
-        - cd /opt/nextflow-api; python3 bin/server.py --db-hostname=nextflow-db
+        - cd /opt/nextflow-api; python3 bin/server.py
         {{ end }}
         resources:
           requests:
@@ -77,7 +78,7 @@ spec:
           claimName: {{ .Values.ExistingLocalPVC.Name }}
       {{ end }}
 ---
-{{ if .Values.Ingress.Enabled }}{{ else }}
+{{ if .Values.LoadBalancer.Enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -116,6 +117,7 @@ kind: Ingress
 metadata:
   name: nextflow-api
   annotations:
+    traefik.ingress.kubernetes.io/router.tls: ""
     kubernetes.io/ingress.class: {{ .Values.Ingress.Class }}
 spec:
   rules:
@@ -126,4 +128,20 @@ spec:
         backend:
           serviceName: nextflow-api
           servicePort: 8080
+{{ end }}
+---
+{{ if .Values.NodePorts.Enabled }}
+apiVersion: v1
+kind: Service
+metadata:  
+  name: nextflow-api
+spec:
+  selector:    
+    app: nextflow-api
+  type: NodePort
+  ports:  
+  - name: nextflow-api
+    port: 8080
+    targetPort: 8080
+    nodePort: {{ .Values.NodePorts.NodePort }}
 {{ end }}

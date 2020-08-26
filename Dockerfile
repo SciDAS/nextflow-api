@@ -3,10 +3,11 @@ FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NXF_VER="19.10.0"
 EXPOSE 8080
+EXPOSE 27017
 
 # install package dependencies
 RUN apt-get update -qq \
-	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl git openjdk-8-jre python3 python3-pip
+	&& apt-get install -qq -y apt-transport-https apt-utils ca-certificates curl git openjdk-8-jre python3.7 python3-pip cron mongodb
 
 # install kubectl
 RUN apt-get update && apt-get install -y apt-transport-https \
@@ -20,14 +21,25 @@ RUN curl -s https://get.nextflow.io | bash \
 	&& mv nextflow /usr/local/bin \
 	&& nextflow info
 
-# install nextflow-api
-WORKDIR /opt
+# Upgrade python3
 
-ADD https://api.github.com/repos/scidas/nextflow-api/git/refs/heads/master version.json
-RUN git clone -q https://github.com/scidas/nextflow-api.git
+RUN rm /usr/bin/python3 && ln -s python3.7 /usr/bin/python3
+
+# install nextflow-api
+WORKDIR /opt/nextflow-api
+
+#ADD https://api.github.com/repos/scidas/nextflow-api/git/refs/heads/master version.json
+
+#RUN git clone -q https://github.com/scidas/nextflow-api.git
+RUN ls -lh
+COPY . .
+# move to nextflow-api directory
+#WORKDIR /opt/nextflow-api
+
+# Switch to rodeo tag
+RUN ls
+#RUN git fetch && git checkout origin/relative
 
 # install python dependencies
-RUN pip3 install -r nextflow-api/requirements.txt
-
-# move to nextflow-api directory
-WORKDIR /opt/nextflow-api
+RUN pip3 install -r requirements.txt
+RUN python3 --version
