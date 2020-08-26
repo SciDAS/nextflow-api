@@ -413,7 +413,7 @@ class TaskEditHandler(tornado.web.RequestHandler):
 
 if __name__ == "__main__":
 	# parse command-line options
-	tornado.options.define("backend", default="json", help="Database backend to use (json or mongo)")
+	tornado.options.define("backend", default="mongo", help="Database backend to use (json or mongo)")
 	tornado.options.define("json-filename", default="db.json", help="json file for json backend")
 	tornado.options.define("mongo-hostname", default="localhost", help="mongodb service url for mongo backend")
 	tornado.options.define("np", default=1, help="number of server processes")
