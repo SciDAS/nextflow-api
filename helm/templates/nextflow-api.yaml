@@ -39,10 +39,14 @@ spec:
         command:
         - /bin/bash
         - -c
-        {{ if .Values.Remote.Enabled }}
-        - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 bin/server.py --db-hostname=nextflow-db
+        {{ if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.JSONBackend false) }}
+        - ./scripts/db-startup.sh && cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 bin/server.py --backend=mongo
+        {{ else if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.JSONBackend true) }}
+        - cd /opt/nextflow-api; cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 bin/server.py --backend=json
+        {{ else if and (eq .Values.Remote.Enabled false) (eq .Values.WebServer.JSONBackend true) }}
+        - cd /opt/nextflow-api; python3 bin/server.py --backend=json
         {{ else }}
-        - cd /opt/nextflow-api; python3 bin/server.py
+        - ./scripts/db-startup.sh && cd /opt/nextflow-api; python3 bin/server.py --backend=mongo
         {{ end }}
         resources:
           requests:
@@ -77,6 +81,20 @@ spec:
         persistentVolumeClaim:
           claimName: {{ .Values.ExistingLocalPVC.Name }}
       {{ end }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nextflow-api-ip
+  labels:
+    app: nextflow-api-ip
+spec:
+  type: ClusterIP
+  selector:
+    app: nextflow-api-ip
+  ports:
+  - port: 8080
+    targetPort: 8080
 ---
 {{ if .Values.LoadBalancer.Enabled }}
 apiVersion: v1
