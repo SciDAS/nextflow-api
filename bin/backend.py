@@ -45,24 +45,20 @@ class JSONBackend(Backend):
 		self.initialize()
 
 	def initialize(self, error_not_found=False):
+		# load database from json file
 		try:
-			# load database from json file
 			self._db = json.load(open(self._url))
 
+		# initialize empty database if json file doesn't exist
 		except FileNotFoundError:
-			# raise error if specified
-			if error_not_found:
-				raise FileNotFoundError("Database file not found")
-
-			# otherwise initialize empty database if json file doesn't exist
-			else:
-				self._db = {
-					"workflows": [],
-					"tasks": []
-				}
+			self._db = {
+				"workflows": [],
+				"tasks": []
+			}
+			self.save()
 
 	def load(self):
-		self.initialize(error_not_found=True)
+		self._db = json.load(open(self._url))
 
 	def save(self):
 		json.dump(self._db, open(self._url, "w"))
