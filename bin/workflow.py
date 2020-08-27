@@ -92,24 +92,38 @@ async def launch_async(db, workflow, resume):
 	work_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"])
 	proc = run_workflow(workflow, work_dir, resume)
 
+	print('saving workflow pid...')
+
 	# save workflow pid
 	await set_property(db, workflow, "pid", proc.pid)
 
+	print('waiting for workflow to finish...')
+
 	# wait for workflow to complete
 	if proc.wait() != 0:
+		print('saving workflow status...')
 		await set_property(db, workflow, "status", "failed")
+		print('workflow failed')
 		return
+
+	print('saving output data...')
 
 	# save output data
 	output_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"], workflow["output_dir"])
 	proc = save_output(workflow, output_dir)
 
 	if proc.wait() != 0:
+		print('saving workflow status...')
 		await set_property(db, workflow, "status", "failed")
+		print('save output data failed')
 		return
+
+	print('saving workflow status...')
 
 	# save final status
 	await set_property(db, workflow, "status", "completed")
+
+	print('workflow completed')
 
 
 
