@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV NXF_VER="19.10.0"
+ENV NXF_VER="20.07.1"
 EXPOSE 8080
 EXPOSE 27017
 
@@ -33,12 +33,9 @@ WORKDIR /opt/nextflow-api
 #RUN git clone -q https://github.com/scidas/nextflow-api.git
 RUN ls -lh
 COPY . .
+
 # move to nextflow-api directory
 #WORKDIR /opt/nextflow-api
-
-# Switch to rodeo tag
-RUN ls
-#RUN git fetch && git checkout origin/relative
 
 # install python dependencies
 RUN pip3 install -r requirements.txt

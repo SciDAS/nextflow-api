@@ -24,6 +24,8 @@ Remote:
 
 # Web server deployment settings
 WebServer:
+  # Database Backend - default is MongoDB
+  JSONBackend: false
   # Number of containers
   Replicas: 1
   # Resource requests and limits per container
@@ -34,6 +36,7 @@ WebServer:
     Limits:
       CPU: 3
       Memory: 10Gi
+  
 
 # Load Balancer Settings
 LoadBalancer:
@@ -46,7 +49,7 @@ Ingress:
   # and the other settings in this section will be ignored.
   Enabled: true
   # The subdomain to associate with this service.
-  Host: nextflow-api-rel.nautilus.optiputer.net
+  Host: nextflow-api-dev.nautilus.optiputer.net
   # The class of the ingress controller to use.
   # For SLATE this should be 'slate'.
   Class: traefik
