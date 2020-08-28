@@ -99,6 +99,9 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 		# append creation timestamp to workflow
 		workflow["date_created"] = int(time.time() * 1000)
 
+		# transform pipeline name to lowercase
+		workflow["pipeline"] = workflow["pipeline"].lower() 
+
 		# save workflow
 		await db.workflow_create(workflow)
 
@@ -172,10 +175,14 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 			self.write(message(400, "Missing required field(s): %s" % list(missing_keys)))
 			return
 
-		# save workflow config
+		# update workflow from request body
 		workflow = await db.workflow_get(id)
 		workflow = {**self.DEFAULTS, **workflow, **data}
 
+		# transform pipeline name to lowercase
+		workflow["pipeline"] = workflow["pipeline"].lower() 
+
+		# save workflow
 		await db.workflow_update(id, workflow)
 
 		self.set_status(200)
