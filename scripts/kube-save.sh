@@ -19,6 +19,11 @@ done
 # copy log file into output folder
 cp ${DST_DIRNAME}/.workflow.log ${SRC_PATH}/workflow.log
 
+# remove old nextflow reports (except for logs)
+rm -f ${SRC_PATH}/reports/report.html.*
+rm -f ${SRC_PATH}/reports/timeline.html.*
+rm -f ${SRC_PATH}/reports/trace.txt.*
+
 # create archive of output data
 cd ${DST_DIRNAME}
 
