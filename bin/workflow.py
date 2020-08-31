@@ -41,7 +41,7 @@ def run_workflow(workflow, work_dir, resume):
 			"-latest",
 			"-profile", workflow["profiles"],
 			"-revision", workflow["revision"],
-			"-with-docker"
+			"-with-docker" if workflow["with_container"] else ""
 		]
 
 	elif env.NXF_EXECUTOR == "pbspro":
@@ -54,7 +54,8 @@ def run_workflow(workflow, work_dir, resume):
 			"-ansi-log", "false",
 			"-latest",
 			"-profile", workflow["profiles"],
-			"-revision", workflow["revision"]
+			"-revision", workflow["revision"],
+			"-with-singularity" if workflow["with_container"] else ""
 		]
 
 	if resume:
