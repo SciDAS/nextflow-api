@@ -16,54 +16,54 @@ def run_workflow(workflow, work_dir, resume):
 	os.chdir(work_dir)
 
 	# launch workflow, wait for completion
-	if env.NXF_EXECUTOR == "k8s":
+	if env.NXF_EXECUTOR == 'k8s':
 		args = [
-			"nextflow",
-			"-config", "nextflow.config",
-			"-log", os.path.join(workflow["output_dir"], "nextflow.log"),
-			"kuberun",
-			workflow["pipeline"],
-			"-ansi-log", "false",
-			"-latest",
-			"-profile", workflow["profiles"],
-			"-revision", workflow["revision"],
-			"-volume-mount", env.PVC_NAME
+			'nextflow',
+			'-config', 'nextflow.config',
+			'-log', os.path.join(workflow['output_dir'], 'nextflow.log'),
+			'kuberun',
+			workflow['pipeline'],
+			'-ansi-log', 'false',
+			'-latest',
+			'-profile', workflow['profiles'],
+			'-revision', workflow['revision'],
+			'-volume-mount', env.PVC_NAME
 		]
 
-	elif env.NXF_EXECUTOR == "local":
+	elif env.NXF_EXECUTOR == 'local':
 		args = [
-			"nextflow",
-			"-config", "nextflow.config",
-			"-log", os.path.join(workflow["output_dir"], "nextflow.log"),
-			"run",
-			workflow["pipeline"],
-			"-ansi-log", "false",
-			"-latest",
-			"-profile", workflow["profiles"],
-			"-revision", workflow["revision"],
-			"-with-docker" if workflow["with_container"] else ""
+			'nextflow',
+			'-config', 'nextflow.config',
+			'-log', os.path.join(workflow['output_dir'], 'nextflow.log'),
+			'run',
+			workflow['pipeline'],
+			'-ansi-log', 'false',
+			'-latest',
+			'-profile', workflow['profiles'],
+			'-revision', workflow['revision'],
+			'-with-docker' if workflow['with_container'] else ''
 		]
 
-	elif env.NXF_EXECUTOR == "pbspro":
+	elif env.NXF_EXECUTOR == 'pbspro':
 		args = [
-			"nextflow",
-			"-config", "nextflow.config",
-			"-log", os.path.join(workflow["output_dir"], "nextflow.log"),
-			"run",
-			workflow["pipeline"],
-			"-ansi-log", "false",
-			"-latest",
-			"-profile", workflow["profiles"],
-			"-revision", workflow["revision"],
-			"-with-singularity" if workflow["with_container"] else ""
+			'nextflow',
+			'-config', 'nextflow.config',
+			'-log', os.path.join(workflow['output_dir'], 'nextflow.log'),
+			'run',
+			workflow['pipeline'],
+			'-ansi-log', 'false',
+			'-latest',
+			'-profile', workflow['profiles'],
+			'-revision', workflow['revision'],
+			'-with-singularity' if workflow['with_container'] else ''
 		]
 
 	if resume:
-		args.append("-resume")
+		args.append('-resume')
 
 	proc = subprocess.Popen(
 		args,
-		stdout=open(".workflow.log", "w"),
+		stdout=open('.workflow.log', 'w'),
 		stderr=subprocess.STDOUT
 	)
 
@@ -75,13 +75,13 @@ def run_workflow(workflow, work_dir, resume):
 
 
 def save_output(workflow, output_dir):
-	return subprocess.Popen(["./scripts/kube-save.sh", workflow["_id"], output_dir])
+	return subprocess.Popen(['./scripts/kube-save.sh', workflow['_id'], output_dir])
 
 
 
 async def set_property(db, workflow, key, value):
 	workflow[key] = value
-	await db.workflow_update(workflow["_id"], workflow)
+	await db.workflow_update(workflow['_id'], workflow)
 
 
 
@@ -90,39 +90,39 @@ async def launch_async(db, workflow, resume):
 	db.initialize()
 
 	# start workflow
-	work_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"])
+	work_dir = os.path.join(env.WORKFLOWS_DIR, workflow['_id'])
 	proc = run_workflow(workflow, work_dir, resume)
 
 	print('saving workflow pid...')
 
 	# save workflow pid
-	await set_property(db, workflow, "pid", proc.pid)
+	await set_property(db, workflow, 'pid', proc.pid)
 
 	print('waiting for workflow to finish...')
 
 	# wait for workflow to complete
 	if proc.wait() != 0:
 		print('saving workflow status...')
-		await set_property(db, workflow, "status", "failed")
+		await set_property(db, workflow, 'status', 'failed')
 		print('workflow failed')
 		return
 
 	print('saving output data...')
 
 	# save output data
-	output_dir = os.path.join(env.WORKFLOWS_DIR, workflow["_id"], workflow["output_dir"])
+	output_dir = os.path.join(env.WORKFLOWS_DIR, workflow['_id'], workflow['output_dir'])
 	proc = save_output(workflow, output_dir)
 
 	if proc.wait() != 0:
 		print('saving workflow status...')
-		await set_property(db, workflow, "status", "failed")
+		await set_property(db, workflow, 'status', 'failed')
 		print('save output data failed')
 		return
 
 	print('saving workflow status...')
 
 	# save final status
-	await set_property(db, workflow, "status", "completed")
+	await set_property(db, workflow, 'status', 'completed')
 
 	print('workflow completed')
 

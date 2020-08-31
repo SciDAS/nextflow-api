@@ -52,8 +52,8 @@ class JSONBackend(Backend):
 		# initialize empty database if json file doesn't exist
 		except FileNotFoundError:
 			self._db = {
-				"workflows": [],
-				"tasks": []
+				'workflows': [],
+				'tasks': []
 			}
 			self.save()
 
@@ -61,17 +61,17 @@ class JSONBackend(Backend):
 		self._db = json.load(open(self._url))
 
 	def save(self):
-		json.dump(self._db, open(self._url, "w"))
+		json.dump(self._db, open(self._url, 'w'))
 
 	async def workflow_query(self, page, page_size):
 		self._lock.acquire()
 		self.load()
 
 		# sort workflows by date_created in descending order
-		self._db["workflows"].sort(key=lambda w: w["date_created"], reverse=True)
+		self._db['workflows'].sort(key=lambda w: w['date_created'], reverse=True)
 
 		# return the specified page of workflows
-		workflows = self._db["workflows"][(page * page_size) : ((page + 1) * page_size)]
+		workflows = self._db['workflows'][(page * page_size) : ((page + 1) * page_size)]
 
 		self._lock.release()
 
@@ -82,7 +82,7 @@ class JSONBackend(Backend):
 		self.load()
 
 		# append workflow to list of workflows
-		self._db["workflows"].append(workflow)
+		self._db['workflows'].append(workflow)
 
 		self.save()
 		self._lock.release()
@@ -94,8 +94,8 @@ class JSONBackend(Backend):
 		# search for workflow by id
 		workflow = None
 
-		for w in self._db["workflows"]:
-			if w["_id"] == id:
+		for w in self._db['workflows']:
+			if w['_id'] == id:
 				workflow = w
 				break
 
@@ -105,7 +105,7 @@ class JSONBackend(Backend):
 		if workflow != None:
 			return workflow
 		else:
-			raise IndexError("Workflow was not found")
+			raise IndexError('Workflow was not found')
 
 	async def workflow_update(self, id, workflow):
 		self._lock.acquire()
@@ -114,10 +114,10 @@ class JSONBackend(Backend):
 		# search for workflow by id and update it
 		found = False
 
-		for i, w in enumerate(self._db["workflows"]):
-			if w["_id"] == id:
+		for i, w in enumerate(self._db['workflows']):
+			if w['_id'] == id:
 				# update workflow
-				self._db["workflows"][i] = workflow
+				self._db['workflows'][i] = workflow
 				found = True
 				break
 
@@ -126,7 +126,7 @@ class JSONBackend(Backend):
 
 		# raise error if workflow wasn't found
 		if not found:
-			raise IndexError("Workflow was not found")
+			raise IndexError('Workflow was not found')
 
 	async def workflow_delete(self, id):
 		self._lock.acquire()
@@ -135,10 +135,10 @@ class JSONBackend(Backend):
 		# search for workflow by id and delete it
 		found = False
 
-		for i, w in enumerate(self._db["workflows"]):
-			if w["_id"] == id:
+		for i, w in enumerate(self._db['workflows']):
+			if w['_id'] == id:
 				# delete workflow
-				self._db["workflows"].pop(i)
+				self._db['workflows'].pop(i)
 				found = True
 				break
 
@@ -147,17 +147,17 @@ class JSONBackend(Backend):
 
 		# raise error if workflow wasn't found
 		if not found:
-			raise IndexError("Workflow was not found")
+			raise IndexError('Workflow was not found')
 
 	async def task_query(self, page, page_size):
 		self._lock.acquire()
 		self.load()
 
 		# sort tasks by date_created in descending order
-		self._db["tasks"].sort(key=lambda t: t["utcTime"], reverse=True)
+		self._db['tasks'].sort(key=lambda t: t['utcTime'], reverse=True)
 
 		# return the specified page of workflows
-		tasks = self._db["tasks"][(page * page_size) : ((page + 1) * page_size)]
+		tasks = self._db['tasks'][(page * page_size) : ((page + 1) * page_size)]
 
 		self._lock.release()
 
@@ -168,7 +168,7 @@ class JSONBackend(Backend):
 		self.load()
 
 		# append workflow to list of workflows
-		self._db["tasks"].append(task)
+		self._db['tasks'].append(task)
 
 		self.save()
 		self._lock.release()
@@ -180,8 +180,8 @@ class JSONBackend(Backend):
 		# search for task by id
 		task = None
 
-		for t in self._db["tasks"]:
-			if t["_id"] == id:
+		for t in self._db['tasks']:
+			if t['_id'] == id:
 				task = t
 				break
 
@@ -191,7 +191,7 @@ class JSONBackend(Backend):
 		if task != None:
 			return task
 		else:
-			raise IndexError("Task was not found")
+			raise IndexError('Task was not found')
 
 
 
@@ -202,12 +202,12 @@ class MongoBackend(Backend):
 
 	def initialize(self):
 		self._client = motor.motor_tornado.MotorClient(self._url)
-		self._db = self._client["nextflow_api"]
+		self._db = self._client['nextflow_api']
 
 	async def workflow_query(self, page, page_size):
 		return await self._db.workflows \
 			.find() \
-			.sort("date_created", pymongo.DESCENDING) \
+			.sort('date_created', pymongo.DESCENDING) \
 			.skip(page * page_size) \
 			.to_list(length=page_size)
 
@@ -215,18 +215,18 @@ class MongoBackend(Backend):
 		return await self._db.workflows.insert_one(workflow)
 
 	async def workflow_get(self, id):
-		return await self._db.workflows.find_one({ "_id": id })
+		return await self._db.workflows.find_one({ '_id': id })
 
 	async def workflow_update(self, id, workflow):
-		return await self._db.workflows.replace_one({ "_id": id }, workflow)
+		return await self._db.workflows.replace_one({ '_id': id }, workflow)
 
 	async def workflow_delete(self, id):
-		return await self._db.workflows.delete_one({ "_id": id })
+		return await self._db.workflows.delete_one({ '_id': id })
 
 	async def task_query(self, page, page_size):
 		return await self._db.tasks \
-			.find({}, { "_id": 1, "runName": 1, "utcTime": 1, "event": 1 }) \
-			.sort("utcTime", pymongo.DESCENDING) \
+			.find({}, { '_id': 1, 'runName': 1, 'utcTime': 1, 'event': 1 }) \
+			.sort('utcTime', pymongo.DESCENDING) \
 			.skip(page * page_size) \
 			.to_list(length=page_size)
 
@@ -234,4 +234,4 @@ class MongoBackend(Backend):
 		return await self._db.tasks.insert_one(task)
 
 	async def task_get(self, id):
-		return await self._db.tasks.find_one({ "_id": id })
+		return await self._db.tasks.find_one({ '_id': id })
