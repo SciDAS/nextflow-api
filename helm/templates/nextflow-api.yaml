@@ -40,13 +40,13 @@ spec:
         - /bin/bash
         - -c
         {{ if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.JSONBackend false) }}
-        - ./scripts/db-startup.sh && cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 bin/server.py --backend=mongo
+        - ./scripts/db-startup.sh && ./scripts/kube-config.sh {{ .Values.Remote.Context }} && python3 bin/server.py --backend=mongo
         {{ else if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.JSONBackend true) }}
-        - cp -R /etc/.kube /root; kubectl config --kubeconfig=/root/.kube/config use-context {{ .Values.Remote.Context }}; kubectl get pods; python3 bin/server.py --backend=json
-        {{ else if and (eq .Values.Remote.Enabled false) (eq .Values.WebServer.JSONBackend true) }}
-        - python3 bin/server.py --backend=json
-        {{ else }}
+        - ./scripts/kube-config.sh {{ .Values.Remote.Context }} && python3 bin/server.py --backend=json
+        {{ else if and (eq .Values.Remote.Enabled false) (eq .Values.WebServer.JSONBackend false) }}
         - ./scripts/db-startup.sh && python3 bin/server.py --backend=mongo
+        {{ else }}
+        - python3 bin/server.py --backend=json
         {{ end }}
         resources:
           requests:
