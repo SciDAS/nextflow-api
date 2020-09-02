@@ -49,7 +49,7 @@ class WorkflowQueryHandler(tornado.web.RequestHandler):
 		workflows = await db.workflow_query(page, page_size)
 
 		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
+		self.set_header('content-type', 'application/json')
 		self.write(tornado.escape.json_encode(workflows))
 
 
@@ -73,7 +73,7 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 		workflow = {**self.DEFAULTS, **{ '_id': '0' }}
 
 		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
+		self.set_header('content-type', 'application/json')
 		self.write(tornado.escape.json_encode(workflow))
 
 	async def post(self):
@@ -111,7 +111,7 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 		os.makedirs(work_dir)
 
 		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
+		self.set_header('content-type', 'application/json')
 		self.write(tornado.escape.json_encode({ '_id': workflow['_id'] }))
 
 
@@ -135,31 +135,35 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 	async def get(self, id):
 		db = self.settings['db']
 
-		# get workflow
-		workflow = await db.workflow_get(id)
+		try:
+			# get workflow
+			workflow = await db.workflow_get(id)
 
-		# append list of input files
-		work_dir = os.path.join(env.WORKFLOWS_DIR, id)
-		input_dir = os.path.join(work_dir, workflow['input_dir'])
-		output_dir = os.path.join(work_dir, workflow['output_dir'])
+			# append list of input files
+			work_dir = os.path.join(env.WORKFLOWS_DIR, id)
+			input_dir = os.path.join(work_dir, workflow['input_dir'])
+			output_dir = os.path.join(work_dir, workflow['output_dir'])
 
-		if os.path.exists(input_dir):
-			workflow['input_files'] = list_dir_recursive(input_dir, relpath_start=work_dir)
-		else:
-			workflow['input_files'] = []
+			if os.path.exists(input_dir):
+				workflow['input_files'] = list_dir_recursive(input_dir, relpath_start=work_dir)
+			else:
+				workflow['input_files'] = []
 
-		# append list of output files
-		if os.path.exists(output_dir):
-			workflow['output_files'] = list_dir_recursive(output_dir, relpath_start=work_dir)
-		else:
-			workflow['output_files'] = []
+			# append list of output files
+			if os.path.exists(output_dir):
+				workflow['output_files'] = list_dir_recursive(output_dir, relpath_start=work_dir)
+			else:
+				workflow['output_files'] = []
 
-		# append status of output data
-		workflow['output_data'] = os.path.exists('%s/%s-output.tar.gz' % (work_dir, id))
+			# append status of output data
+			workflow['output_data'] = os.path.exists('%s/%s-output.tar.gz' % (work_dir, id))
 
-		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
-		self.write(tornado.escape.json_encode(workflow))
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(workflow))
+		except:
+			self.set_status(404)
+			self.write(message(404, 'Failed to get workflow \"%s\"' % id))
 
 	async def post(self, id):
 		db = self.settings['db']
@@ -177,19 +181,23 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 			self.write(message(400, 'Missing required field(s): %s' % list(missing_keys)))
 			return
 
-		# update workflow from request body
-		workflow = await db.workflow_get(id)
-		workflow = {**self.DEFAULTS, **workflow, **data}
+		try:
+			# update workflow from request body
+			workflow = await db.workflow_get(id)
+			workflow = {**self.DEFAULTS, **workflow, **data}
 
-		# transform pipeline name to lowercase
-		workflow['pipeline'] = workflow['pipeline'].lower() 
+			# transform pipeline name to lowercase
+			workflow['pipeline'] = workflow['pipeline'].lower() 
 
-		# save workflow
-		await db.workflow_update(id, workflow)
+			# save workflow
+			await db.workflow_update(id, workflow)
 
-		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
-		self.write(tornado.escape.json_encode({ '_id': id }))
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode({ '_id': id }))
+		except:
+			self.set_status(404)
+			self.write(message(404, 'Failed to update workflow \"%s\"' % id))
 
 	async def delete(self, id):
 		db = self.settings['db']
@@ -252,32 +260,32 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 	async def post(self, id):
 		db = self.settings['db']
 
-		# get workflow
-		workflow = await db.workflow_get(id)
-
-		# make sure workflow is not already running
-		if workflow['status'] == 'running':
-			self.set_status(400)
-			self.write(message(400, 'Workflow \"%s\" is already running' % id))
-			return
-
-		# copy nextflow.config from input directory if it exists
-		work_dir = os.path.join(env.WORKFLOWS_DIR, id)
-		input_dir = os.path.join(work_dir, workflow['input_dir'])
-		src = os.path.join(input_dir, 'nextflow.config')
-		dst = os.path.join(work_dir, 'nextflow.config')
-
-		if os.path.exists(src):
-			shutil.copyfile(src, dst)
-		elif os.path.exists(dst):
-			os.remove(dst)
-
-		# append additional settings to nextflow.config
-		with open(dst, 'a') as f:
-			f.write('weblog { enabled = true\n url = \"http://%s:8080/api/tasks\" }\n' % (socket.gethostbyname(socket.gethostname())))
-			f.write('k8s { launchDir = \"%s\" }\n' % (work_dir))
-
 		try:
+			# get workflow
+			workflow = await db.workflow_get(id)
+
+			# make sure workflow is not already running
+			if workflow['status'] == 'running':
+				self.set_status(400)
+				self.write(message(400, 'Workflow \"%s\" is already running' % id))
+				return
+
+			# copy nextflow.config from input directory if it exists
+			work_dir = os.path.join(env.WORKFLOWS_DIR, id)
+			input_dir = os.path.join(work_dir, workflow['input_dir'])
+			src = os.path.join(input_dir, 'nextflow.config')
+			dst = os.path.join(work_dir, 'nextflow.config')
+
+			if os.path.exists(src):
+				shutil.copyfile(src, dst)
+			elif os.path.exists(dst):
+				os.remove(dst)
+
+			# append additional settings to nextflow.config
+			with open(dst, 'a') as f:
+				f.write('weblog { enabled = true\n url = \"http://%s:8080/api/tasks\" }\n' % (socket.gethostbyname(socket.gethostname())))
+				f.write('k8s { launchDir = \"%s\" }\n' % (work_dir))
+
 			# update workflow status
 			workflow['status'] = 'running'
 			workflow['date_submitted'] = int(time.time() * 1000)
@@ -307,18 +315,18 @@ class WorkflowCancelHandler(tornado.web.RequestHandler):
 	async def post(self, id):
 		db = self.settings['db']
 
-		# get workflow
-		workflow = await db.workflow_get(id)
-		workflow = {**{ 'pid': -1 }, **workflow}
-
-		# terminate child process
-		if workflow['pid'] != -1:
-			try:
-				os.kill(workflow['pid'], signal.SIGINT)
-			except ProcessLookupError:
-				pass
-
 		try:
+			# get workflow
+			workflow = await db.workflow_get(id)
+			workflow = {**{ 'pid': -1 }, **workflow}
+
+			# terminate child process
+			if workflow['pid'] != -1:
+				try:
+					os.kill(workflow['pid'], signal.SIGINT)
+				except ProcessLookupError:
+					pass
+
 			# update workflow status
 			workflow['status'] = 'failed'
 			workflow['pid'] = -1
@@ -338,21 +346,26 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 	async def get(self, id):
 		db = self.settings['db']
 
-		# get workflow
-		workflow = await db.workflow_get(id)
+		try:
+			# get workflow
+			workflow = await db.workflow_get(id)
 
-		# append log if it exists
-		log_file = os.path.join(env.WORKFLOWS_DIR, id, '.workflow.log')
+			# append log if it exists
+			log_file = os.path.join(env.WORKFLOWS_DIR, id, '.workflow.log')
 
-		if os.path.exists(log_file):
-			f = open(log_file)
-			log = ''.join(f.readlines())
-		else:
-			log = ''
+			if os.path.exists(log_file):
+				f = open(log_file)
+				log = ''.join(f.readlines())
+			else:
+				log = ''
 
-		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
-		self.write(tornado.escape.json_encode({ '_id': id, 'status': workflow['status'], 'log': log }))
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.set_header('cache-control', 'no-store, no-cache, must-revalidate, max-age=0')
+			self.write(tornado.escape.json_encode({ '_id': id, 'status': workflow['status'], 'log': log }))
+		except:
+			self.set_status(404)
+			self.write(message(404, 'Failed to fetch log for workflow \"%s\"' % id))
 
 
 
@@ -367,7 +380,7 @@ class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 		except tornado.web.MissingArgumentError:
 			filename = '%s-output.tar.gz' % id
 
-		self.set_header('Content-Disposition', 'attachment; filename=\"%s\"' % filename)
+		self.set_header('content-disposition', 'attachment; filename=\"%s\"' % filename)
 		return os.path.join(id, filename)
 
 
@@ -382,7 +395,7 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 		tasks = await db.task_query(page, page_size)
 
 		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
+		self.set_header('content-type', 'application/json')
 		self.write(tornado.escape.json_encode(tasks))
 
 	async def post(self):
@@ -396,15 +409,19 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 			self.write(message(422, 'Ill-formatted JSON'))
 			return
 
-		# append id to task
-		task['_id'] = str(bson.ObjectId())
+		try:
+			# append id to task
+			task['_id'] = str(bson.ObjectId())
 
-		# save task
-		await db.task_create(task)
+			# save task
+			await db.task_create(task)
 
-		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
-		self.write(tornado.escape.json_encode({ '_id': task['_id'] }))
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode({ '_id': task['_id'] }))
+		except:
+			self.set_status(404)
+			self.write(message(404, 'Failed to save new task'))
 
 
 
@@ -412,11 +429,16 @@ class TaskEditHandler(tornado.web.RequestHandler):
 
 	async def get(self, id):
 		db = self.settings['db']
-		task = await db.task_get(id)
 
-		self.set_status(200)
-		self.set_header('Content-type', 'application/json')
-		self.write(tornado.escape.json_encode(task))
+		try:
+			task = await db.task_get(id)
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(task))
+		except:
+			self.set_status(404)
+			self.write(message(404, 'Failed to get task \"%s\"' % id))
 
 
 
