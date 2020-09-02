@@ -21,7 +21,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: nextflow-api
-        image: cbmckni/nextflow-api
+        image: {{ .Values.WebServer.Image }}
         imagePullPolicy: Always
         env:
         - name: NXF_EXECUTOR

@@ -17,13 +17,14 @@ ExistingLocalPVC:
 Remote:
   # If true, use PVC/compute of remote cluster.
   # Otherwise, PVC/compute of local cluster will be used.
-  # (temp, future will be dynamically configurable)
   Enabled: false
   Context: nautilus
   PVC: deepgtex-prp
 
 # Web server deployment settings
 WebServer:
+  # Docker image, change to your nextflow-api image if needed
+  Image: bentsherman/nextflow-api
   # Database Backend - default is MongoDB
   JSONBackend: false
   # Number of containers
@@ -36,7 +37,6 @@ WebServer:
     Limits:
       CPU: 3
       Memory: 10Gi
-  
 
 # Load Balancer Settings
 LoadBalancer:

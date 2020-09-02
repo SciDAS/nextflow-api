@@ -1,10 +1,16 @@
 #!/bin/bash
 
-docker build -t bentsherman/nextflow-db docker/nextflow-db
-docker push bentsherman/nextflow-db
+IMAGE_NAME="bentsherman/nextflow-api"
 
-docker build -t bentsherman/nextflow-api docker/nextflow-api
-docker push bentsherman/nextflow-api
+set -ex
 
+# remove data files
+rm -rf .nextflow* _workflows db.json
+
+# build docker image
+docker build -t ${IMAGE_NAME} .
+docker push ${IMAGE_NAME}
+
+# deploy helm chart to kubernetes cluster
 helm uninstall nextflow-api
 helm install nextflow-api ./helm
