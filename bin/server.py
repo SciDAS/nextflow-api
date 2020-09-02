@@ -416,6 +416,21 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 			# save task
 			await db.task_create(task)
 
+			# update workflow status on completed event
+			if task['event'] == 'completed':
+				# get workflow
+				workflow_id = task['runName'].split('-')[-1]
+				workflow = await db.workflow_get(workflow_id)
+
+				# update workflow status
+				success = task['metadata']['workflow']['success']
+				if success:
+					workflow['status'] = 'completed'
+				else:
+					workflow['status'] = 'failed'
+
+				await db.workflow_update(workflow['_id'], workflow)
+
 			self.set_status(200)
 			self.set_header('content-type', 'application/json')
 			self.write(tornado.escape.json_encode({ '_id': task['_id'] }))

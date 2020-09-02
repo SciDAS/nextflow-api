@@ -25,6 +25,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
+			'-name', 'workflow-%s' % (workflow['_id']),
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision'],
 			'-volume-mount', env.PVC_NAME
@@ -39,6 +40,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
+			'-name', 'workflow-%s' % (workflow['_id']),
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision'],
 			'-with-docker' if workflow['with_container'] else ''
@@ -53,6 +55,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
+			'-name', 'workflow-%s' % (workflow['_id']),
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision'],
 			'-with-singularity' if workflow['with_container'] else ''
@@ -102,10 +105,12 @@ async def launch_async(db, workflow, resume):
 	print('%d: waiting for workflow to finish...' % (proc_pid))
 
 	# wait for workflow to complete
-	if proc.wait() != 0:
-		print('%d: saving workflow status...' % (proc_pid))
-		await set_property(db, workflow, 'status', 'failed')
+	if proc.wait() == 0:
+		print('%d: workflow completed' % (proc_pid))
+		await set_property(db, workflow, 'status', 'completed')
+	else:
 		print('%d: workflow failed' % (proc_pid))
+		await set_property(db, workflow, 'status', 'failed')
 		return
 
 	print('%d: saving output data...' % (proc_pid))
@@ -114,18 +119,10 @@ async def launch_async(db, workflow, resume):
 	output_dir = os.path.join(env.WORKFLOWS_DIR, workflow['_id'], workflow['output_dir'])
 	proc = save_output(workflow, output_dir)
 
-	if proc.wait() != 0:
-		print('%d: saving workflow status...' % (proc_pid))
-		await set_property(db, workflow, 'status', 'failed')
+	if proc.wait() == 0:
+		print('%d: save output data completed' % (proc_pid))
+	else:
 		print('%d: save output data failed' % (proc_pid))
-		return
-
-	print('%d: saving workflow status...' % (proc_pid))
-
-	# save final status
-	await set_property(db, workflow, 'status', 'completed')
-
-	print('%d: workflow completed' % (proc_pid))
 
 
 
