@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import bson
 import json
 import multiprocessing as mp
@@ -66,7 +65,8 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 		'revision': 'master',
 		'with_container': False,
 		'input_dir': 'input',
-		'output_dir': 'output'
+		'output_dir': 'output',
+		'attempts': 0
 	}
 
 	def get(self):
@@ -129,7 +129,8 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 		'revision': 'master',
 		'with_container': False,
 		'input_dir': 'input',
-		'output_dir': 'output'
+		'output_dir': 'output',
+		'attempts': 0
 	}
 
 	async def get(self, id):
@@ -289,6 +290,7 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			# update workflow status
 			workflow['status'] = 'running'
 			workflow['date_submitted'] = int(time.time() * 1000)
+			workflow['attempts'] += 1
 
 			await db.workflow_update(id, workflow)
 
@@ -419,7 +421,7 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 			# update workflow status on completed event
 			if task['event'] == 'completed':
 				# get workflow
-				workflow_id = task['runName'].split('-')[-1]
+				workflow_id = task['runName'].split('-')[1]
 				workflow = await db.workflow_get(workflow_id)
 
 				# update workflow status

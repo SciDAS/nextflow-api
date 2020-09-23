@@ -25,7 +25,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
-			'-name', 'workflow-%s' % (workflow['_id']),
+			'-name', 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts']),
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision'],
 			'-volume-mount', env.PVC_NAME
@@ -40,7 +40,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
-			'-name', 'workflow-%s' % (workflow['_id']),
+			'-name', 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts']),
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision'],
 			'-with-docker' if workflow['with_container'] else ''
@@ -55,7 +55,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
-			'-name', 'workflow-%s' % (workflow['_id']),
+			'-name', 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts']),
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision'],
 			'-with-singularity' if workflow['with_container'] else ''

@@ -186,6 +186,15 @@
 					</div>
 				</div>
 
+				<div class="form-group row" ng-show="workflow.status">
+					<label class="col-sm-3 col-form-label">Attempts</label>
+					<div class="col-sm-9">
+						<p class="form-control-plaintext">
+							<strong>{{workflow.attempts}}</strong>
+						</p>
+					</div>
+				</div>
+
 				<div class="text-center">
 					<button type="button" class="btn btn-outline-dark" ng-disabled="workflow.status == 'running'" ng-click="workflow.status != 'running' && launch(workflow._id)">
 						<span ng-show="launching" class="spinner-border spinner-border-sm"></span>
