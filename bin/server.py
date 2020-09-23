@@ -361,10 +361,18 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 			else:
 				log = ''
 
+			# construct response data
+			data = {
+				'_id': id,
+				'status': workflow['status'],
+				'attempts': workflow['attempts'],
+				'log': log
+			}
+
 			self.set_status(200)
 			self.set_header('content-type', 'application/json')
 			self.set_header('cache-control', 'no-store, no-cache, must-revalidate, max-age=0')
-			self.write(tornado.escape.json_encode({ '_id': id, 'status': workflow['status'], 'log': log }))
+			self.write(tornado.escape.json_encode(data))
 		except:
 			self.set_status(404)
 			self.write(message(404, 'Failed to fetch log for workflow \"%s\"' % id))
