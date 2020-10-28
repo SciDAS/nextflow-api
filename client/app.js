@@ -214,11 +214,13 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 
 	$scope.uploader.onCompleteAll = function() {
 		alert.success("All input files uploaded.");
+		$scope.uploading = false;
 		$route.reload();
 	};
 
 	$scope.uploader.onErrorItem = function() {
 		alert.error("Failed to upload input files.");
+		$scope.uploading = false;
 	};
 
 	$scope.save = function(workflow) {
@@ -229,6 +231,11 @@ app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api",
 			}, function() {
 				alert.error("Failed to save workflow instance.");
 			});
+	};
+
+	$scope.upload = function() {
+		$scope.uploading = true;
+		$scope.uploader.uploadAll();
 	};
 
 	$scope.launch = function(id) {

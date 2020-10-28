@@ -168,7 +168,10 @@
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-click="uploader.uploadAll()">Upload</button>
+					<button type="button" class="btn btn-outline-dark" ng-click="upload()">
+						<span ng-show="uploading" class="spinner-border spinner-border-sm"></span>
+						<span ng-show="!uploading">Upload</span>
+					</button>
 				</div>
 			</form>
 		</div>
