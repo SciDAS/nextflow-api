@@ -423,6 +423,23 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 			# append id to task
 			task['_id'] = str(bson.ObjectId())
 
+			# extract input features for task
+			if task['event'] == 'process_completed':
+				# load execution log
+				filenames = ['.command.out', '.command.err']
+				filenames = [os.path.join(task['trace']['workdir'], filename) for filename in filenames]
+				files = [open(filename) for filename in filenames]
+				lines = [line.strip() for f in files for line in f]
+
+				# parse input features from trace directives
+				PREFIX = '#TRACE'
+				lines = [line[len(PREFIX):] for line in lines if line.startswith(PREFIX)]
+				items = [line.split('=') for line in lines]
+				conditions = {k.strip(): v.strip() for k, v in items}
+
+				# append input features to task trace
+				task['trace'] = {**task['trace'], **conditions}
+
 			# save task
 			await db.task_create(task)
 
@@ -446,7 +463,7 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 			self.write(tornado.escape.json_encode({ '_id': task['_id'] }))
 		except:
 			self.set_status(404)
-			self.write(message(404, 'Failed to save new task'))
+			self.write(message(404, 'Failed to save task'))
 
 
 
