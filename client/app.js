@@ -109,31 +109,31 @@ app.service('api', ['$http', '$q', function($http, $q) {
 	}
 
 	this.Workflow.get = function(id) {
-		return httpRequest('get', 'api/workflows/' + id)
+		return httpRequest('get', `api/workflows/${id}`)
 	}
 
 	this.Workflow.save = function(workflow) {
-		return httpRequest('post', 'api/workflows/' + workflow._id, null, workflow)
+		return httpRequest('post', `api/workflows/${workflow._id}`, null, workflow)
 	}
 
 	this.Workflow.launch = function(id) {
-		return httpRequest('post', 'api/workflows/' + id + '/launch')
+		return httpRequest('post', `api/workflows/${id}/launch`)
 	}
 
 	this.Workflow.resume = function(id) {
-		return httpRequest('post', 'api/workflows/' + id + '/resume')
+		return httpRequest('post', `api/workflows/${id}/resume`)
 	}
 
 	this.Workflow.cancel = function(id) {
-		return httpRequest('post', 'api/workflows/' + id + '/cancel')
+		return httpRequest('post', `api/workflows/${id}/cancel`)
 	}
 
 	this.Workflow.log = function(id) {
-		return httpRequest('get', 'api/workflows/' + id + '/log')
+		return httpRequest('get', `api/workflows/${id}/log`)
 	}
 
 	this.Workflow.remove = function(id) {
-		return httpRequest('delete', 'api/workflows/' + id)
+		return httpRequest('delete', `api/workflows/${id}`)
 	}
 
 	this.Task = {}
@@ -143,11 +143,11 @@ app.service('api', ['$http', '$q', function($http, $q) {
 	}
 
 	this.Task.get = function(id) {
-		return httpRequest('get', 'api/tasks/' + id)
+		return httpRequest('get', `api/tasks/${id}`)
 	}
 
 	this.Task.query_csv = function(pipeline) {
-		return httpRequest('post', 'api/tasks-csv/' + pipeline)
+		return httpRequest('post', `api/tasks-csv/${pipeline}`)
 	}
 }])
 
@@ -184,7 +184,7 @@ app.controller('WorkflowsCtrl', ['$scope', '$route', 'alert', 'api', function($s
 	}
 
 	$scope.delete = function(w) {
-		if ( !confirm('Are you sure you want to delete \"' + w._id + '\"?') ) {
+		if ( !confirm(`Are you sure you want to delete \"${w._id}\"?`) ) {
 			return
 		}
 
@@ -208,7 +208,7 @@ app.controller('WorkflowCtrl', ['$scope', '$interval', '$route', 'alert', 'api',
 	$scope.workflow = {}
 
 	$scope.uploader = new FileUploader({
-		 url: window.location.pathname + 'api/workflows/' + $route.current.params.id + '/upload'
+		 url: `${window.location.pathname}api/workflows/${$route.current.params.id}/upload`
 	})
 
 	$scope.uploader.onCompleteAll = function() {
