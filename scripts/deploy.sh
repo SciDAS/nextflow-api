@@ -5,7 +5,7 @@ IMAGE_NAME="bentsherman/nextflow-api"
 set -ex
 
 # remove data files
-rm -rf .nextflow* _workflows db.json
+rm -rf .nextflow* _trace _workflows db.json
 
 # build docker image
 docker build -t ${IMAGE_NAME} .
