@@ -1,3 +1,4 @@
+_trace
 _workflows
 
 helm/.helmignore
@@ -5,5 +6,6 @@ helm/.nextflow.log
 helm/.sops.yaml
 helm/templates/secret.yaml
 
+*.json
 .nextflow*
 *.pyc

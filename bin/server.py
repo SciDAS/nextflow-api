@@ -4,9 +4,11 @@ import bson
 import json
 import multiprocessing as mp
 import os
+import pandas as pd
 import shutil
 import signal
 import socket
+import subprocess
 import time
 import tornado
 import tornado.escape
@@ -382,13 +384,9 @@ class WorkflowLogHandler(tornado.web.RequestHandler):
 class WorkflowDownloadHandler(tornado.web.StaticFileHandler):
 
 	def parse_url_path(self, id):
-		# provide output file if path is specified
-		try:
-			filename = self.get_query_argument('path')
-
-		# otherwise provide the output data archive
-		except tornado.web.MissingArgumentError:
-			filename = '%s-output.tar.gz' % id
+		# provide output file if path is specified, otherwise output data archive
+		filename_default = '%s-output.tar.gz' % id
+		filename = self.get_query_argument('path', filename_default)
 
 		self.set_header('content-disposition', 'attachment; filename=\"%s\"' % filename)
 		return os.path.join(id, filename)
@@ -484,6 +482,62 @@ class TaskEditHandler(tornado.web.RequestHandler):
 
 
 
+class TaskCSVQueryHandler(tornado.web.RequestHandler):
+
+	async def post(self, pipeline):
+		# pipeline = self.get_query_argument('pipeline')
+		db = self.settings['db']
+
+		try:
+			# query tasks from database
+			tasks = await db.task_query_csv(pipeline)
+			tasks = [task['trace'] for task in tasks]
+
+			# separate tasks into dataframes by process
+			process_names = list(set([task['process'] for task in tasks]))
+			dfs = {}
+
+			for process in process_names:
+				dfs[process] = pd.DataFrame([task for task in tasks if task['process'] == process])
+
+			# change to trace directory
+			os.chdir(env.TRACE_DIR)
+
+			# save dataframes to csv files
+			for process in process_names:
+				filename = 'trace.%s.txt' % (process)
+				dfs[process].to_csv(filename, sep='\t', index=False)
+
+			# create zip archive of trace files
+			zipfile = 'trace.%s.zip' % (pipeline.replace('/', '_'))
+			files = ['trace.%s.txt' % (process) for process in process_names]
+
+			subprocess.run(['zip', zipfile] + files, check=True)
+			subprocess.run(['rm', '-f'] + files, check=True)
+
+			# return to working directory
+			os.chdir('..')
+
+			self.set_status(200)
+			self.write(message(200, 'Query was completed'))
+		except Exception as e:
+			self.set_status(404)
+			self.write(message(404, 'Failed to perform query'))
+			raise e
+
+
+
+class TaskCSVDownloadHandler(tornado.web.StaticFileHandler):
+
+	def parse_url_path(self, pipeline):
+		# get filename of trace archive
+		filename = 'trace.%s.zip' % (pipeline.replace('/', '_'))
+
+		self.set_header('content-disposition', 'attachment; filename=\"%s\"' % filename)
+		return filename
+
+
+
 if __name__ == '__main__':
 	# parse command-line options
 	tornado.options.define('backend', default='mongo', help='Database backend to use (json or mongo)')
@@ -493,7 +547,8 @@ if __name__ == '__main__':
 	tornado.options.define('port', default=8080)
 	tornado.options.parse_command_line()
 
-	# initialize workflow directory
+	# initialize auxiliary directories
+	os.makedirs(env.TRACE_DIR, exist_ok=True)
 	os.makedirs(env.WORKFLOWS_DIR, exist_ok=True)
 
 	# initialize api endpoints
@@ -509,6 +564,8 @@ if __name__ == '__main__':
 		(r'/api/workflows/([a-zA-Z0-9-]+)/download', WorkflowDownloadHandler, dict(path=env.WORKFLOWS_DIR)),
 		(r'/api/tasks', TaskQueryHandler),
 		(r'/api/tasks/([a-zA-Z0-9-]+)', TaskEditHandler),
+		(r'/api/tasks-csv/(.+)/download', TaskCSVDownloadHandler, dict(path=env.TRACE_DIR)),
+		(r'/api/tasks-csv/(.+)', TaskCSVQueryHandler),
 		(r'/(.*)', tornado.web.StaticFileHandler, dict(path='./client', default_filename='index.html'))
 	])
 

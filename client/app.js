@@ -150,6 +150,13 @@ app.service("api", ["$http", function($http) {
 				return res.data;
 			});
 	};
+
+	this.Task.query_csv = function(pipeline) {
+		return $http.post(window.location.pathname + "api/tasks-csv/" + pipeline)
+			.then(function(res) {
+				return res.data;
+			});
+	};
 }]);
 
 
@@ -334,6 +341,23 @@ app.controller("TasksCtrl", ["$scope", "alert", "api", function($scope, alert, a
 				$scope.tasks = tasks;
 			}, function() {
 				alert.error("Failed to query tasks.");
+			});
+	};
+
+	$scope.query_csv = function(pipeline) {
+		$scope.querying = true;
+
+		api.Task.query_csv(pipeline)
+			.then(function(tasks) {
+				$scope.querying = false;
+				$scope.query_success = pipeline;
+
+				alert.success("Query was completed.");
+			}, function() {
+				$scope.querying = false;
+				$scope.query_success = null;
+
+				alert.error("Failed to perform query.");
 			});
 	};
 

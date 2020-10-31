@@ -163,6 +163,20 @@ class JSONBackend(Backend):
 
 		return tasks
 
+	async def task_query_csv(self, pipeline):
+		self._lock.acquire()
+		self.load()
+
+		# find all runs of the given pipeline
+		run_ids = [t['runId'] for t in self._db['tasks'] if t['event'] == 'started' and t['metadata']['workflow']['projectName'] == pipeline]
+
+		# find all tasks associated with the given runs
+		tasks = [t for t in self._db['tasks'] if t['event'] == 'process_completed' and t['runId'] in run_ids]
+
+		self._lock.release()
+
+		return tasks
+
 	async def task_create(self, task):
 		self._lock.acquire()
 		self.load()
@@ -229,6 +243,21 @@ class MongoBackend(Backend):
 			.sort('utcTime', pymongo.DESCENDING) \
 			.skip(page * page_size) \
 			.to_list(length=page_size)
+
+	async def task_query_csv(self, pipeline):
+		# find all runs of the given pipeline
+		runs = await self._db.tasks \
+			.find({ 'event': 'started', 'metadata.workflow.projectName': pipeline }, { 'runId': 1 }) \
+			.to_list(length=None)
+
+		run_ids = [run['runId'] for run in runs]
+
+		# find all tasks associated with the given runs
+		tasks = await self._db.tasks \
+			.find({ 'event': 'process_completed', 'runId': { '$in': run_ids } }) \
+			.to_list(length=None)
+
+		return tasks
 
 	async def task_create(self, task):
 		return await self._db.tasks.insert_one(task)

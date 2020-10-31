@@ -3,12 +3,33 @@
 		<div class="card mb-4">
 			<h6 class="card-header">Tasks</h6>
 
-			<div class="card-body">
-				<div class="button-group">
-					<button class="btn btn-light" ng-disabled="page == 0" ng-click="page > 0 && query(page - 1)">newer</button>
-					<button class="btn btn-light" ng-click="query(page + 1)">older</button>
+			<form class="card-body" name="form">
+				<div class="form-group row">
+					<div class="col-sm-2">
+						<button class="btn btn-light" ng-disabled="page == 0" ng-click="page > 0 && query(page - 1)">newer</button>
+						<button class="btn btn-light" ng-click="query(page + 1)">older</button>
+					</div>
+					<div class="col-sm-6">
+						<input
+							class="form-control"
+							ng-class="{'is-invalid': form.pipeline.$touched && form.pipeline.$invalid}"
+							name="pipeline"
+							ng-model="query_pipeline"
+							required
+							placeholder="Pipeline"
+						/>
+					</div>
+					<div class="col-sm-2">
+						<button type="button" class="btn btn-block btn-outline-dark" ng-disabled="querying" ng-click="!querying && query_csv(query_pipeline)">
+							<span ng-show="querying" class="spinner-border spinner-border-sm"></span>
+							<span ng-show="!querying">Query</span>
+						</button>
+					</div>
+					<div class="col-sm-2" ng-show="query_success">
+						<a class="btn btn-block btn-outline-dark" ng-href="api/tasks-csv/{{query_success}}/download" download>Download</a>
+					</div>
 				</div>
-			</div>
+			</form>
 
 			<table class="table mb-0">
 				<th scope="col">ID</th>
