@@ -1,57 +1,57 @@
-"use strict";
+'use strict'
 
-const app = angular.module("app", [
-	"ngRoute",
-	"angularFileUpload"
-]);
-
-
-
-app.config(["$compileProvider", function($compileProvider) {
-	$compileProvider.debugInfoEnabled(false);
-}]);
+const app = angular.module('app', [
+	'ngRoute',
+	'angularFileUpload'
+])
 
 
 
-app.config(["$routeProvider", function($routeProvider) {
+app.config(['$compileProvider', function($compileProvider) {
+	$compileProvider.debugInfoEnabled(false)
+}])
+
+
+
+app.config(['$routeProvider', function($routeProvider) {
 	$routeProvider
-		.when("/", { redirectTo: "/workflows" })
-		.when("/workflows", {
-			templateUrl: "views/workflows.html",
-			controller: "WorkflowsCtrl"
+		.when('/', { redirectTo: '/workflows' })
+		.when('/workflows', {
+			templateUrl: 'views/workflows.html',
+			controller: 'WorkflowsCtrl'
 		})
-		.when("/workflows/:id", {
-			templateUrl: "views/workflow.html",
-			controller: "WorkflowCtrl"
+		.when('/workflows/:id', {
+			templateUrl: 'views/workflow.html',
+			controller: 'WorkflowCtrl'
 		})
-		.when("/tasks", {
-			templateUrl: "views/tasks.html",
-			controller: "TasksCtrl"
+		.when('/tasks', {
+			templateUrl: 'views/tasks.html',
+			controller: 'TasksCtrl'
 		})
-		.when("/tasks/:id", {
-			templateUrl: "views/task.html",
-			controller: "TaskCtrl"
+		.when('/tasks/:id', {
+			templateUrl: 'views/task.html',
+			controller: 'TaskCtrl'
 		})
-		.otherwise("/");
-}]);
+		.otherwise('/')
+}])
 
 
 
-app.service("alert", ["$interval", function($interval) {
-	this.alerts = [];
+app.service('alert', ['$interval', function($interval) {
+	this.alerts = []
 
-	const self = this;
-	let count = 0;
+	const self = this
+	let count = 0
 
 	const addAlert = function(type, header, message) {
-		let id = count;
+		let id = count
 		let promise = $interval(function() {
 			let index = self.alerts.findIndex(function(alert) {
-				return (alert.id === id);
-			});
+				return (alert.id === id)
+			})
 
-			self.alerts.splice(index, 1);
-		}, 10000, 1);
+			self.alerts.splice(index, 1)
+		}, 10000, 1)
 
 		self.alerts.push({
 			id: id,
@@ -59,36 +59,36 @@ app.service("alert", ["$interval", function($interval) {
 			header: header,
 			message: message,
 			promise: promise
-		});
-		count++;
-	};
+		})
+		count++
+	}
 
 	this.success = function(message) {
-		addAlert("success", null, message);
-	};
+		addAlert('success', null, message)
+	}
 
 	this.info = function(message) {
-		addAlert("info", null, message);
-	};
+		addAlert('info', null, message)
+	}
 
 	this.warning = function(message) {
-		addAlert("warning", null, message);
-	};
+		addAlert('warning', null, message)
+	}
 
 	this.error = function(message) {
-		addAlert("danger", "Error: ", message);
-	};
+		addAlert('danger', 'Error: ', message)
+	}
 
 	this.remove = function(index) {
-		$interval.cancel(self.alerts[index].promise);
+		$interval.cancel(self.alerts[index].promise)
 
-		self.alerts.splice(index, 1);
-	};
-}]);
+		self.alerts.splice(index, 1)
+	}
+}])
 
 
 
-app.service("api", ["$http", "$q", function($http, $q) {
+app.service('api', ['$http', '$q', function($http, $q) {
 	function httpRequest(method, url, params, data) {
 		return $http({
 			method: method,
@@ -96,277 +96,277 @@ app.service("api", ["$http", "$q", function($http, $q) {
 			params: params,
 			data: data
 		}).then(function(res) {
-			return res.data;
+			return res.data
 		}, function(res) {
-			return $q.reject(res.data);
-		});
-	};
+			return $q.reject(res.data)
+		})
+	}
 
-	this.Workflow = {};
+	this.Workflow = {}
 
 	this.Workflow.query = function(page) {
-		return httpRequest("get", "api/workflows", { page: page });
-	};
+		return httpRequest('get', 'api/workflows', { page: page })
+	}
 
 	this.Workflow.get = function(id) {
-		return httpRequest("get", "api/workflows/" + id);
-	};
+		return httpRequest('get', 'api/workflows/' + id)
+	}
 
 	this.Workflow.save = function(workflow) {
-		return httpRequest("post", "api/workflows/" + workflow._id, null, workflow);
-	};
+		return httpRequest('post', 'api/workflows/' + workflow._id, null, workflow)
+	}
 
 	this.Workflow.launch = function(id) {
-		return httpRequest("post", "api/workflows/" + id + "/launch");
-	};
+		return httpRequest('post', 'api/workflows/' + id + '/launch')
+	}
 
 	this.Workflow.resume = function(id) {
-		return httpRequest("post", "api/workflows/" + id + "/resume");
-	};
+		return httpRequest('post', 'api/workflows/' + id + '/resume')
+	}
 
 	this.Workflow.cancel = function(id) {
-		return httpRequest("post", "api/workflows/" + id + "/cancel");
-	};
+		return httpRequest('post', 'api/workflows/' + id + '/cancel')
+	}
 
 	this.Workflow.log = function(id) {
-		return httpRequest("get", "api/workflows/" + id + "/log");
-	};
+		return httpRequest('get', 'api/workflows/' + id + '/log')
+	}
 
 	this.Workflow.remove = function(id) {
-		return httpRequest("delete", "api/workflows/" + id);
-	};
+		return httpRequest('delete', 'api/workflows/' + id)
+	}
 
-	this.Task = {};
+	this.Task = {}
 
 	this.Task.query = function(page) {
-		return httpRequest("get", "api/tasks", { page: page });
-	};
+		return httpRequest('get', 'api/tasks', { page: page })
+	}
 
 	this.Task.get = function(id) {
-		return httpRequest("get", "api/tasks/" + id);
-	};
+		return httpRequest('get', 'api/tasks/' + id)
+	}
 
 	this.Task.query_csv = function(pipeline) {
-		return httpRequest("post", "api/tasks-csv/" + pipeline);
-	};
-}]);
+		return httpRequest('post', 'api/tasks-csv/' + pipeline)
+	}
+}])
 
 
 
-app.controller("MainCtrl", ["$scope", "alert", function($scope, alert) {
-	$scope.alert = alert;
-}]);
+app.controller('MainCtrl', ['$scope', 'alert', function($scope, alert) {
+	$scope.alert = alert
+}])
 
 
 
 const STATUS_COLORS = {
-	"nascent": "success",
-	"running": "warning",
-	"completed": "success",
-	"failed": "danger"
-};
+	'nascent': 'success',
+	'running': 'warning',
+	'completed': 'success',
+	'failed': 'danger'
+}
 
 
 
-app.controller("WorkflowsCtrl", ["$scope", "$route", "alert", "api", function($scope, $route, alert, api) {
-	$scope.STATUS_COLORS = STATUS_COLORS;
-	$scope.page = 0;
-	$scope.workflows = [];
+app.controller('WorkflowsCtrl', ['$scope', '$route', 'alert', 'api', function($scope, $route, alert, api) {
+	$scope.STATUS_COLORS = STATUS_COLORS
+	$scope.page = 0
+	$scope.workflows = []
 
 	$scope.query = function(page) {
 		api.Workflow.query(page)
 			.then(function(workflows) {
-				$scope.page = page;
-				$scope.workflows = workflows;
+				$scope.page = page
+				$scope.workflows = workflows
 			}, function() {
-				alert.error("Failed to query workflow instances.");
-			});
-	};
+				alert.error('Failed to query workflow instances.')
+			})
+	}
 
 	$scope.delete = function(w) {
-		if ( !confirm("Are you sure you want to delete \"" + w._id + "\"?") ) {
-			return;
+		if ( !confirm('Are you sure you want to delete \"' + w._id + '\"?') ) {
+			return
 		}
 
 		api.Workflow.remove(w._id)
 			.then(function() {
-				alert.success("Workflow instance deleted.");
-				$route.reload();
+				alert.success('Workflow instance deleted.')
+				$route.reload()
 			}, function() {
-				alert.error("Failed to delete workflow instance.");
-			});
-	};
+				alert.error('Failed to delete workflow instance.')
+			})
+	}
 
 	// initialize
-	$scope.query(0);
-}]);
+	$scope.query(0)
+}])
 
 
 
-app.controller("WorkflowCtrl", ["$scope", "$interval", "$route", "alert", "api", "FileUploader", function($scope, $interval, $route, alert, api, FileUploader) {
-	$scope.STATUS_COLORS = STATUS_COLORS;
-	$scope.workflow = {};
+app.controller('WorkflowCtrl', ['$scope', '$interval', '$route', 'alert', 'api', 'FileUploader', function($scope, $interval, $route, alert, api, FileUploader) {
+	$scope.STATUS_COLORS = STATUS_COLORS
+	$scope.workflow = {}
 
 	$scope.uploader = new FileUploader({
-		 url: window.location.pathname + "api/workflows/" + $route.current.params.id + "/upload"
-	});
+		 url: window.location.pathname + 'api/workflows/' + $route.current.params.id + '/upload'
+	})
 
 	$scope.uploader.onCompleteAll = function() {
-		alert.success("All input files uploaded.");
-		$scope.uploading = false;
-		$route.reload();
-	};
+		alert.success('All input files uploaded.')
+		$scope.uploading = false
+		$route.reload()
+	}
 
 	$scope.uploader.onErrorItem = function() {
-		alert.error("Failed to upload input files.");
-		$scope.uploading = false;
-	};
+		alert.error('Failed to upload input files.')
+		$scope.uploading = false
+	}
 
 	$scope.save = function(workflow) {
 		api.Workflow.save(workflow)
 			.then(function(res) {
-				alert.success("Workflow instance saved.");
-				$route.updateParams({ id: res._id });
+				alert.success('Workflow instance saved.')
+				$route.updateParams({ id: res._id })
 			}, function() {
-				alert.error("Failed to save workflow instance.");
-			});
-	};
+				alert.error('Failed to save workflow instance.')
+			})
+	}
 
 	$scope.upload = function() {
-		$scope.uploading = true;
-		$scope.uploader.uploadAll();
-	};
+		$scope.uploading = true
+		$scope.uploader.uploadAll()
+	}
 
 	$scope.launch = function(id) {
-		$scope.launching = true;
+		$scope.launching = true
 
 		api.Workflow.launch(id)
 			.then(function() {
-				alert.success("Workflow instance launched.");
-				$scope.workflow.status = "";
-				$scope.workflow.log = "";
-				$scope.launching = false;
-				$scope.fetchLog();
+				alert.success('Workflow instance launched.')
+				$scope.workflow.status = ''
+				$scope.workflow.log = ''
+				$scope.launching = false
+				$scope.fetchLog()
 			}, function() {
-				alert.error("Failed to launch workflow instance.");
-				$scope.launching = false;
-			});
-	};
+				alert.error('Failed to launch workflow instance.')
+				$scope.launching = false
+			})
+	}
 
 	$scope.resume = function(id) {
-		$scope.resuming = true;
+		$scope.resuming = true
 
 		api.Workflow.resume(id)
 			.then(function() {
-				alert.success("Workflow instance resumed.");
-				$scope.workflow.status = "";
-				$scope.workflow.log = "";
-				$scope.resuming = false;
-				$scope.fetchLog();
+				alert.success('Workflow instance resumed.')
+				$scope.workflow.status = ''
+				$scope.workflow.log = ''
+				$scope.resuming = false
+				$scope.fetchLog()
 			}, function() {
-				alert.error("Failed to resume workflow instance.");
-				$scope.resuming = false;
-			});
-	};
+				alert.error('Failed to resume workflow instance.')
+				$scope.resuming = false
+			})
+	}
 
 	$scope.cancel = function(id) {
-		$scope.cancelling = true;
+		$scope.cancelling = true
 
 		api.Workflow.cancel(id)
 			.then(function() {
-				alert.success("Workflow instance canceled.");
-				$scope.cancelling = false;
-				$route.reload();
+				alert.success('Workflow instance canceled.')
+				$scope.cancelling = false
+				$route.reload()
 			}, function() {
-				alert.error("Failed to cancel workflow instance.");
-				$scope.cancelling = false;
-			});
-	};
+				alert.error('Failed to cancel workflow instance.')
+				$scope.cancelling = false
+			})
+	}
 
 	$scope.fetchLog = function() {
 		if ( $scope.intervalPromise ) {
-			return;
+			return
 		}
 
 		$scope.intervalPromise = $interval(function() {
 			api.Workflow.log($scope.workflow._id)
 				.then(function(res) {
-					Object.assign($scope.workflow, res);
+					Object.assign($scope.workflow, res)
 
-					if ( res.status !== "running" ) {
-						$interval.cancel($scope.intervalPromise);
-						$scope.intervalPromise = undefined;
+					if ( res.status !== 'running' ) {
+						$interval.cancel($scope.intervalPromise)
+						$scope.intervalPromise = undefined
 					}
-				});
-		}, 2000, -1);
-	};
+				})
+		}, 2000, -1)
+	}
 
-	$scope.$on("$destroy", function() {
+	$scope.$on('$destroy', function() {
 		if ( angular.isDefined($scope.intervalPromise) ) {
-			$interval.cancel($scope.intervalPromise);
+			$interval.cancel($scope.intervalPromise)
 		}
-	});
+	})
 
 	// initialize
 	api.Workflow.get($route.current.params.id)
 		.then(function(workflow) {
-			$scope.workflow = workflow;
+			$scope.workflow = workflow
 
-			if ( $scope.workflow._id !== "0" ) {
-				$scope.fetchLog();
+			if ( $scope.workflow._id !== '0' ) {
+				$scope.fetchLog()
 			}
 		}, function() {
-			alert.error("Failed to load workflow.");
-		});
-}]);
+			alert.error('Failed to load workflow.')
+		})
+}])
 
 
 
-app.controller("TasksCtrl", ["$scope", "alert", "api", function($scope, alert, api) {
-	$scope.page = 0;
-	$scope.tasks = [];
+app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, api) {
+	$scope.page = 0
+	$scope.tasks = []
 
 	$scope.query = function(page) {
 		api.Task.query(page)
 			.then(function(tasks) {
-				$scope.page = page;
-				$scope.tasks = tasks;
+				$scope.page = page
+				$scope.tasks = tasks
 			}, function() {
-				alert.error("Failed to query tasks.");
-			});
-	};
+				alert.error('Failed to query tasks.')
+			})
+	}
 
 	$scope.query_csv = function(pipeline) {
-		$scope.querying = true;
+		$scope.querying = true
 
 		api.Task.query_csv(pipeline)
 			.then(function(tasks) {
-				$scope.querying = false;
-				$scope.query_success = pipeline;
+				$scope.querying = false
+				$scope.query_success = pipeline
 
-				alert.success("Query was completed.");
+				alert.success('Query was completed.')
 			}, function() {
-				$scope.querying = false;
-				$scope.query_success = null;
+				$scope.querying = false
+				$scope.query_success = null
 
-				alert.error("Failed to perform query.");
-			});
-	};
+				alert.error('Failed to perform query.')
+			})
+	}
 
 	// initialize
-	$scope.query(0);
-}]);
+	$scope.query(0)
+}])
 
 
 
-app.controller("TaskCtrl", ["$scope", "$route", "alert", "api", function($scope, $route, alert, api) {
-	$scope.task = {};
+app.controller('TaskCtrl', ['$scope', '$route', 'alert', 'api', function($scope, $route, alert, api) {
+	$scope.task = {}
 
 	// initialize
 	api.Task.get($route.current.params.id)
 		.then(function(task) {
-			$scope.task = task;
+			$scope.task = task
 		}, function() {
-			alert.error("Failed to load task.");
-		});
-}]);
+			alert.error('Failed to load task.')
+		})
+}])
