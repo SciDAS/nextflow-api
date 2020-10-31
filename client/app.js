@@ -88,74 +88,66 @@ app.service("alert", ["$interval", function($interval) {
 
 
 
-app.service("api", ["$http", function($http) {
+app.service("api", ["$http", "$q", function($http, $q) {
+	function httpRequest(method, url, params, data) {
+		return $http({
+			method: method,
+			url: window.location.pathname + url,
+			params: params,
+			data: data
+		}).then(function(res) {
+			return res.data;
+		}, function(res) {
+			return $q.reject(res.data);
+		});
+	};
+
 	this.Workflow = {};
 
 	this.Workflow.query = function(page) {
-		return $http.get(window.location.pathname + "api/workflows", { params: { page: page } })
-			.then(function(res) {
-				return res.data;
-			});
+		return httpRequest("get", "api/workflows", { page: page });
 	};
 
 	this.Workflow.get = function(id) {
-		return $http.get(window.location.pathname + "api/workflows/" + id)
-			.then(function(res) {
-				return res.data;
-			});
+		return httpRequest("get", "api/workflows/" + id);
 	};
 
 	this.Workflow.save = function(workflow) {
-		return $http.post(window.location.pathname + "api/workflows/" + workflow._id, workflow)
-			.then(function(res) {
-				return res.data;
-			});
+		return httpRequest("post", "api/workflows/" + workflow._id, null, workflow);
 	};
 
 	this.Workflow.launch = function(id) {
-		return $http.post(window.location.pathname + "api/workflows/" + id + "/launch");
+		return httpRequest("post", "api/workflows/" + id + "/launch");
 	};
 
 	this.Workflow.resume = function(id) {
-		return $http.post(window.location.pathname + "api/workflows/" + id + "/resume");
+		return httpRequest("post", "api/workflows/" + id + "/resume");
 	};
 
 	this.Workflow.cancel = function(id) {
-		return $http.post(window.location.pathname + "api/workflows/" + id + "/cancel");
+		return httpRequest("post", "api/workflows/" + id + "/cancel");
 	};
 
 	this.Workflow.log = function(id) {
-		return $http.get(window.location.pathname + "api/workflows/" + id + "/log")
-			.then(function(res) {
-				return res.data;
-			});
+		return httpRequest("get", "api/workflows/" + id + "/log");
 	};
 
 	this.Workflow.remove = function(id) {
-		return $http.delete(window.location.pathname + "api/workflows/" + id);
+		return httpRequest("delete", "api/workflows/" + id);
 	};
 
 	this.Task = {};
 
 	this.Task.query = function(page) {
-		return $http.get(window.location.pathname + "api/tasks", { params: { page: page } })
-			.then(function(res) {
-				return res.data;
-			});
+		return httpRequest("get", "api/tasks", { page: page });
 	};
 
 	this.Task.get = function(id) {
-		return $http.get(window.location.pathname + "api/tasks/" + id)
-			.then(function(res) {
-				return res.data;
-			});
+		return httpRequest("get", "api/tasks/" + id);
 	};
 
 	this.Task.query_csv = function(pipeline) {
-		return $http.post(window.location.pathname + "api/tasks-csv/" + pipeline)
-			.then(function(res) {
-				return res.data;
-			});
+		return httpRequest("post", "api/tasks-csv/" + pipeline);
 	};
 }]);
 

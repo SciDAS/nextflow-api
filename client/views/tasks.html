@@ -6,8 +6,8 @@
 			<form class="card-body" name="form">
 				<div class="form-group row">
 					<div class="col-sm-2">
-						<button class="btn btn-light" ng-disabled="page == 0" ng-click="page > 0 && query(page - 1)">newer</button>
-						<button class="btn btn-light" ng-click="query(page + 1)">older</button>
+						<button type="button" class="btn btn-light" ng-disabled="page == 0" ng-click="page > 0 && query(page - 1)">newer</button>
+						<button type="button" class="btn btn-light" ng-click="query(page + 1)">older</button>
 					</div>
 					<div class="col-sm-6">
 						<input
