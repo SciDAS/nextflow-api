@@ -17,7 +17,8 @@ RUN apt-get update -qq \
 		mongodb \
 		openjdk-8-jre \
 		python3.7 \
-		python3-pip
+		python3-pip \
+		zip
 
 # upgrade python3
 RUN rm /usr/bin/python3 && ln -s python3.7 /usr/bin/python3
