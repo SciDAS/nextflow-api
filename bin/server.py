@@ -485,11 +485,11 @@ class TaskEditHandler(tornado.web.RequestHandler):
 class TaskCSVQueryHandler(tornado.web.RequestHandler):
 
 	async def post(self, pipeline):
-		# pipeline = self.get_query_argument('pipeline')
 		db = self.settings['db']
 
 		try:
 			# query tasks from database
+			pipeline = pipeline.lower()
 			tasks = await db.task_query_csv(pipeline)
 			tasks = [task['trace'] for task in tasks]
 
