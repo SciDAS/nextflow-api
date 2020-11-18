@@ -78,7 +78,11 @@ def run_workflow(workflow, work_dir, resume):
 
 
 def save_output(workflow, output_dir):
-	return subprocess.Popen(['./scripts/kube-save.sh', workflow['_id'], output_dir])
+	return subprocess.Popen(
+		['./scripts/kube-save.sh', workflow['_id'], output_dir],
+		stdout=subprocess.PIPE,
+		stderr=subprocess.STDOUT
+	)
 
 
 
@@ -118,6 +122,9 @@ async def launch_async(db, workflow, resume):
 	# save output data
 	output_dir = os.path.join(env.WORKFLOWS_DIR, workflow['_id'], workflow['output_dir'])
 	proc = save_output(workflow, output_dir)
+
+	proc_out, _ = proc.communicate()
+	print(proc_out.decode('utf-8'))
 
 	if proc.wait() == 0:
 		print('%d: save output data completed' % (proc_pid))
