@@ -586,7 +586,7 @@ if __name__ == '__main__':
 			raise KeyError('Backend must be either \'json\' or \'mongo\'')
 
 		# start the event loop
-		print('The API is listening on http://0.0.0.0:8080', flush=True)
+		print('The API is listening on http://0.0.0.0:%d' % (tornado.options.options.port), flush=True)
 		tornado.ioloop.IOLoop.current().start()
 
 	except KeyboardInterrupt:
