@@ -465,6 +465,25 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 
 
 
+class TaskQueryPipelinesHandler(tornado.web.RequestHandler):
+
+	async def get(self):
+		db = self.settings['db']
+
+		try:
+			# query pipelines from database
+			pipelines = await db.task_query_pipelines()
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(pipelines))
+		except Exception as e:
+			self.set_status(404)
+			self.write(message(404, 'Failed to perform query'))
+			raise e
+
+
+
 class TaskEditHandler(tornado.web.RequestHandler):
 
 	async def get(self, id):
@@ -538,6 +557,34 @@ class TaskCSVDownloadHandler(tornado.web.StaticFileHandler):
 
 
 
+class ModelQueryTasksHandler(tornado.web.RequestHandler):
+
+	async def get(self, pipeline):
+		db = self.settings['db']
+
+		try:
+			# query tasks from database
+			pipeline = pipeline.lower()
+			tasks = await db.task_query_csv(pipeline)
+			tasks = [task['trace'] for task in tasks]
+
+			# separate tasks into dataframes by process
+			process_names = list(set([task['process'] for task in tasks]))
+			dfs = {}
+
+			for process in process_names:
+				dfs[process] = [task for task in tasks if task['process'] == process]
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(dfs))
+		except Exception as e:
+			self.set_status(404)
+			self.write(message(404, 'Failed to perform query'))
+			raise e
+
+
+
 if __name__ == '__main__':
 	# parse command-line options
 	tornado.options.define('backend', default='mongo', help='Database backend to use (json or mongo)')
@@ -563,9 +610,11 @@ if __name__ == '__main__':
 		(r'/api/workflows/([a-zA-Z0-9-]+)/log', WorkflowLogHandler),
 		(r'/api/workflows/([a-zA-Z0-9-]+)/download', WorkflowDownloadHandler, dict(path=env.WORKFLOWS_DIR)),
 		(r'/api/tasks', TaskQueryHandler),
+		(r'/api/tasks/pipelines', TaskQueryPipelinesHandler),
 		(r'/api/tasks/([a-zA-Z0-9-]+)', TaskEditHandler),
 		(r'/api/tasks-csv/(.+)/download', TaskCSVDownloadHandler, dict(path=env.TRACE_DIR)),
 		(r'/api/tasks-csv/(.+)', TaskCSVQueryHandler),
+		(r'/api/model/(.+)/query', ModelQueryTasksHandler),
 		(r'/(.*)', tornado.web.StaticFileHandler, dict(path='./client', default_filename='index.html'))
 	])
 

@@ -163,6 +163,18 @@ class JSONBackend(Backend):
 
 		return tasks
 
+	async def task_query_pipelines(self):
+		self._lock.acquire()
+		self.load()
+
+		# extract list of unique pipelines from all 'started' events
+		pipelines = [t['metadata']['workflow']['projectName'] for t in self._db['tasks'] if t['event'] == 'started']
+		pipelines = list(set(pipelines))
+
+		self._lock.release()
+
+		return pipelines
+
 	async def task_query_csv(self, pipeline):
 		self._lock.acquire()
 		self.load()
@@ -243,6 +255,18 @@ class MongoBackend(Backend):
 			.sort('utcTime', pymongo.DESCENDING) \
 			.skip(page * page_size) \
 			.to_list(length=page_size)
+
+	async def task_query_pipelines(self):
+		# find all 'started' events
+		tasks = await self._db.tasks \
+			.find({ 'event': 'started' }, { 'metadata.workflow.projectName': 1 }) \
+			.to_list(length=None)
+
+		# extract list of unique pipelines
+		pipelines = [t['metadata']['workflow']['projectName'] for t in tasks]
+		pipelines = list(set(pipelines))
+
+		return pipelines
 
 	async def task_query_csv(self, pipeline):
 		# find all runs of the given pipeline

@@ -32,6 +32,10 @@ app.config(['$routeProvider', function($routeProvider) {
 			templateUrl: 'views/task.html',
 			controller: 'TaskCtrl'
 		})
+		.when('/model', {
+			templateUrl: 'views/model.html',
+			controller: 'ModelCtrl'
+		})
 		.otherwise('/')
 }])
 
@@ -142,12 +146,22 @@ app.service('api', ['$http', '$q', function($http, $q) {
 		return httpRequest('get', 'api/tasks', { page: page })
 	}
 
+	this.Task.query_pipelines = function() {
+		return httpRequest('get', `api/tasks/pipelines`)
+	}
+
 	this.Task.get = function(id) {
 		return httpRequest('get', `api/tasks/${id}`)
 	}
 
 	this.Task.query_csv = function(pipeline) {
 		return httpRequest('post', `api/tasks-csv/${pipeline}`)
+	}
+
+	this.Model = {}
+
+	this.Model.query_tasks = function(pipeline) {
+		return httpRequest('get', `api/model/${pipeline}/query`)
 	}
 }])
 
@@ -326,7 +340,16 @@ app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 	$scope.page = 0
 	$scope.tasks = []
 
-	$scope.query = function(page) {
+	$scope.query_pipelines = function() {
+		api.Task.query_pipelines()
+			.then(function(pipelines) {
+				$scope.pipelines = pipelines
+			}, function() {
+				alert.error('Failed to query pipelines.')
+			})
+	}
+
+	$scope.query_tasks = function(page) {
 		api.Task.query(page)
 			.then(function(tasks) {
 				$scope.page = page
@@ -354,7 +377,8 @@ app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 	}
 
 	// initialize
-	$scope.query(0)
+	$scope.query_pipelines()
+	$scope.query_tasks(0)
 }])
 
 
@@ -369,4 +393,41 @@ app.controller('TaskCtrl', ['$scope', '$route', 'alert', 'api', function($scope,
 		}, function() {
 			alert.error('Failed to load task.')
 		})
+}])
+
+
+
+app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, api) {
+	$scope.query_pipelines = function() {
+		api.Task.query_pipelines()
+			.then(function(pipelines) {
+				$scope.pipelines = pipelines
+			}, function() {
+				alert.error('Failed to query pipelines.')
+			})
+	}
+
+	$scope.query_tasks = function(pipeline) {
+		api.Model.query_tasks(pipeline)
+			.then(function(data) {
+				let process_names = Object.keys(data)
+				let process_columns = process_names
+					.reduce(function(prev, process_name) {
+						let tasks = data[process_name]
+						prev[process_name] = (tasks.length > 0)
+							? Object.keys(tasks[0])
+							: []
+						return prev
+					}, {})
+
+				$scope.pipeline_data = data
+				$scope.process_names = process_names
+				$scope.process_columns = process_columns
+			}, function() {
+				alert.error('Failed to query pipeline tasks.')
+			})
+	}
+
+	// initialize
+	$scope.query_pipelines()
 }])

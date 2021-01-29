@@ -1,0 +1,61 @@
+<div class="row justify-content-center">
+	<div class="col-sm-6">
+		<div class="card mb-4">
+			<h6 class="card-header">Query Dataset</h6>
+
+			<div class="card-body" ng-hide="pipelines">
+				<div class="text-center">
+					<span class="spinner-border spinner-border-sm"></span>
+					<span>Querying pipelines...</span>
+				</div>
+			</div>
+
+			<form class="card-body" name="form-pipeline" ng-show="pipelines">
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">Pipeline</label>
+					<div class="col-sm-9">
+						<select class="form-control" ng-model="pipeline" ng-options="p for p in pipelines"></select>
+					</div>
+				</div>
+
+				<div class="text-center">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="querying" ng-click="!querying && query_tasks(pipeline)">
+						<span ng-show="querying" class="spinner-border spinner-border-sm"></span>
+						<span ng-show="!querying">Query</span>
+					</button>
+				</div>
+			</form>
+
+			<form class="card-body" name="form-model" ng-show="process_names">
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">Process</label>
+					<div class="col-sm-9">
+						<select class="form-control" ng-model="process_name" ng-options="p for p in process_names"></select>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="process_name">
+					<label class="col-sm-3 col-form-label">Inputs</label>
+					<div class="col-sm-9">
+						<select class="form-control" ng-model="model_inputs" ng-options="p for p in process_columns[process_name]" multiple size="10"></select>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="process_name">
+					<label class="col-sm-3 col-form-label">Output</label>
+					<div class="col-sm-9">
+						<select class="form-control" ng-model="model_output" ng-options="p for p in process_columns[process_name]"></select>
+					</div>
+				</div>
+			</form>
+		</div>
+
+		<div class="card mb-4" ng-show="pipeline_data">
+			<h6 class="card-header">Training Data</h6>
+
+			<div class="card-body">
+				<pre class="pre-scrollable border rounded p-2">{{pipeline_data | json}}</pre>
+			</div>
+		</div>
+	</div>
+</div>
