@@ -160,8 +160,8 @@ app.service('api', ['$http', '$q', function($http, $q) {
 
 	this.Model = {}
 
-	this.Model.query_tasks = function(pipeline) {
-		return httpRequest('get', `api/model/${pipeline}/query`)
+	this.Model.query_dataset = function(pipeline) {
+		return httpRequest('get', `api/model/${pipeline}/query-dataset`)
 	}
 
 	this.Model.train = function(pipeline, process_name, inputs, output) {
@@ -170,6 +170,14 @@ app.service('api', ['$http', '$q', function($http, $q) {
 			process_name,
 			inputs,
 			output
+		})
+	}
+
+	this.Model.predict = function(pipeline, process_name, inputs) {
+		return httpRequest('post', `api/model/${pipeline}/predict`, null, {
+			pipeline,
+			process_name,
+			inputs
 		})
 	}
 }])
@@ -416,10 +424,10 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 			})
 	}
 
-	$scope.query_tasks = function(pipeline) {
+	$scope.query_dataset = function(pipeline) {
 		$scope.querying = true
 
-		api.Model.query_tasks(pipeline)
+		api.Model.query_dataset(pipeline)
 			.then(function(data) {
 				let process_names = Object.keys(data)
 				let process_columns = process_names
@@ -446,12 +454,32 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 
 		api.Model.train(pipeline, process_name, inputs, output)
 			.then(function(results) {
+				let predict_inputs = inputs.reduce(function(prev, input) {
+					prev[input] = null
+					return prev
+				}, {})
+
 				$scope.training = false
 				$scope.train_results = results
-				alert.error('Model was trained.')
+				$scope.predict_inputs = predict_inputs
+				alert.success('Model was trained.')
 			}, function() {
 				$scope.training = false
 				alert.error('Failed to train model.')
+			})
+	}
+
+	$scope.predict = function(pipeline, process_name, inputs) {
+		$scope.predicting = true
+
+		api.Model.predict(pipeline, process_name, inputs)
+			.then(function(results) {
+				$scope.predicting = false
+				$scope.predict_results = results
+				alert.success('Performed model prediction.')
+			}, function() {
+				$scope.predicting = false
+				alert.error('Failed to perform model prediction.')
 			})
 	}
 

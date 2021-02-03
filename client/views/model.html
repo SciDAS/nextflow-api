@@ -19,14 +19,26 @@
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-disabled="querying" ng-click="!querying && query_tasks(pipeline)">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="querying" ng-click="!querying && query_dataset(pipeline)">
 						<span ng-show="querying" class="spinner-border spinner-border-sm"></span>
 						<span ng-show="!querying">Query</span>
 					</button>
 				</div>
 			</form>
+		</div>
 
-			<form class="card-body" name="form-model" ng-show="process_names">
+		<div class="card mb-4" ng-show="pipeline_data">
+			<h6 class="card-header">Training Data</h6>
+
+			<div class="card-body">
+				<pre class="pre-scrollable border rounded p-2">{{pipeline_data | json}}</pre>
+			</div>
+		</div>
+
+		<div class="card mb-4" ng-show="process_names">
+			<h6 class="card-header">Train Model</h6>
+
+			<form class="card-body" name="form-model">
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Process</label>
 					<div class="col-sm-9">
@@ -57,19 +69,39 @@
 			</form>
 		</div>
 
-		<div class="card mb-4" ng-show="pipeline_data">
-			<h6 class="card-header">Training Data</h6>
-
-			<div class="card-body">
-				<pre class="pre-scrollable border rounded p-2">{{pipeline_data | json}}</pre>
-			</div>
-		</div>
-
 		<div class="card mb-4" ng-show="train_results">
 			<h6 class="card-header">Training Results</h6>
 
 			<div class="card-body">
 				<pre class="pre-scrollable border rounded p-2">{{train_results | json}}</pre>
+			</div>
+		</div>
+
+		<div class="card mb-4" ng-show="predict_inputs">
+			<h6 class="card-header">Predict</h6>
+
+			<form class="card-body" name="form-model">
+				<div class="form-group row" ng-repeat="(key, value) in predict_inputs">
+					<label class="col-sm-3 col-form-label">{{key}}</label>
+					<div class="col-sm-9">
+						<input class="form-control" ng-model="predict_inputs[key]"/>
+					</div>
+				</div>
+
+				<div class="text-center">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="predicting" ng-click="!predicting && predict(pipeline, process_name, predict_inputs)">
+						<span ng-show="predicting" class="spinner-border spinner-border-sm"></span>
+						<span ng-show="!predicting">Predict</span>
+					</button>
+				</div>
+			</form>
+		</div>
+
+		<div class="card mb-4" ng-show="predict_results">
+			<h6 class="card-header">Prediction Results</h6>
+
+			<div class="card-body">
+				<pre class="pre-scrollable border rounded p-2">{{predict_results | json}}</pre>
 			</div>
 		</div>
 	</div>

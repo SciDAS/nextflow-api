@@ -1,10 +1,8 @@
-import argparse
 import json
 import numpy as np
 import os
 import pandas as pd
 import pickle
-import sklearn.ensemble
 import sklearn.metrics
 import sklearn.model_selection
 import sklearn.pipeline
@@ -173,4 +171,35 @@ def train(df, args):
 	# return results
 	return {
 		'mape': scores.mean()
+	}
+
+
+
+def predict(args):
+	# load model
+	f = open('%s/%s.pkl' % (env.MODELS_DIR, args['model_name']), 'rb')
+	model = pickle.load(f)
+
+	# load model configuration
+	f = open('%s/%s.json' % (env.MODELS_DIR, args['model_name']), 'r')
+	config = json.load(f)
+
+	# parse inputs
+	x_input = [args['inputs'][column] for column in config['inputs']]
+
+	# perform inference
+	X = np.array([x_input])
+	y = model.predict(X)
+
+	# apply transforms to output if specified
+	for transform in config['output-transforms']:
+		try:
+			t = utils.transforms[transform]
+			y = t.inverse_transform(y)
+		except:
+			raise KeyError('error: output transform %s not recognized' % (transform))
+
+	# return results
+	return {
+		'output': float(y)
 	}
