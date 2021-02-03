@@ -19,6 +19,7 @@ import tornado.web
 
 import backend
 import env
+import model as Model
 import workflow as Workflow
 
 
@@ -557,7 +558,7 @@ class TaskCSVDownloadHandler(tornado.web.StaticFileHandler):
 
 
 
-class ModelQueryTasksHandler(tornado.web.RequestHandler):
+class ModelQueryDatasetHandler(tornado.web.RequestHandler):
 
 	async def get(self, pipeline):
 		db = self.settings['db']
@@ -585,6 +586,37 @@ class ModelQueryTasksHandler(tornado.web.RequestHandler):
 
 
 
+class ModelTrainHandler(tornado.web.RequestHandler):
+
+	async def post(self, pipeline):
+		db = self.settings['db']
+
+		try:
+			# parse args from request body
+			args = tornado.escape.json_decode(self.request.body)
+			args['model_name'] = '%s.%s' % (args['pipeline'].replace('/', '__'), args['process_name'])
+
+			# query task dataset from database
+			pipeline = pipeline.lower()
+			tasks = await db.task_query_csv(pipeline)
+			tasks = [task['trace'] for task in tasks]
+			tasks = [task for task in tasks if task['process'] == args['process_name']]
+
+			df = pd.DataFrame(tasks)
+
+			# train model
+			results = Model.train(df, args)
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(results))
+		except Exception as e:
+			self.set_status(404)
+			self.write(message(404, 'Failed to train model'))
+			raise e
+
+
+
 if __name__ == '__main__':
 	# parse command-line options
 	tornado.options.define('backend', default='mongo', help='Database backend to use (json or mongo)')
@@ -595,6 +627,7 @@ if __name__ == '__main__':
 	tornado.options.parse_command_line()
 
 	# initialize auxiliary directories
+	os.makedirs(env.MODELS_DIR, exist_ok=True)
 	os.makedirs(env.TRACE_DIR, exist_ok=True)
 	os.makedirs(env.WORKFLOWS_DIR, exist_ok=True)
 
@@ -614,7 +647,8 @@ if __name__ == '__main__':
 		(r'/api/tasks/([a-zA-Z0-9-]+)', TaskEditHandler),
 		(r'/api/tasks-csv/(.+)/download', TaskCSVDownloadHandler, dict(path=env.TRACE_DIR)),
 		(r'/api/tasks-csv/(.+)', TaskCSVQueryHandler),
-		(r'/api/model/(.+)/query', ModelQueryTasksHandler),
+		(r'/api/model/(.+)/query', ModelQueryDatasetHandler),
+		(r'/api/model/(.+)/train', ModelTrainHandler),
 		(r'/(.*)', tornado.web.StaticFileHandler, dict(path='./client', default_filename='index.html'))
 	])
 

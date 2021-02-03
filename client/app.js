@@ -163,6 +163,15 @@ app.service('api', ['$http', '$q', function($http, $q) {
 	this.Model.query_tasks = function(pipeline) {
 		return httpRequest('get', `api/model/${pipeline}/query`)
 	}
+
+	this.Model.train = function(pipeline, process_name, inputs, output) {
+		return httpRequest('post', `api/model/${pipeline}/train`, null, {
+			pipeline,
+			process_name,
+			inputs,
+			output
+		})
+	}
 }])
 
 
@@ -408,6 +417,8 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 	}
 
 	$scope.query_tasks = function(pipeline) {
+		$scope.querying = true
+
 		api.Model.query_tasks(pipeline)
 			.then(function(data) {
 				let process_names = Object.keys(data)
@@ -420,11 +431,27 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 						return prev
 					}, {})
 
+				$scope.querying = false
 				$scope.pipeline_data = data
 				$scope.process_names = process_names
 				$scope.process_columns = process_columns
 			}, function() {
+				$scope.querying = false
 				alert.error('Failed to query pipeline tasks.')
+			})
+	}
+
+	$scope.train = function(pipeline, process_name, inputs, output) {
+		$scope.training = true
+
+		api.Model.train(pipeline, process_name, inputs, output)
+			.then(function(results) {
+				$scope.training = false
+				$scope.train_results = results
+				alert.error('Model was trained.')
+			}, function() {
+				$scope.training = false
+				alert.error('Failed to train model.')
 			})
 	}
 
