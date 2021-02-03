@@ -430,14 +430,12 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 		api.Model.query_dataset(pipeline)
 			.then(function(data) {
 				let process_names = Object.keys(data)
-				let process_columns = process_names
-					.reduce(function(prev, process_name) {
-						let tasks = data[process_name]
-						prev[process_name] = (tasks.length > 0)
-							? Object.keys(tasks[0])
-							: []
-						return prev
-					}, {})
+				let process_columns = process_names.reduce((prev, process_name) => {
+					let tasks = data[process_name]
+					let columns = new Set(tasks.reduce((p, t) => p.concat(Object.keys(t)), []))
+					prev[process_name] = Array.from(columns)
+					return prev
+				}, {})
 
 				$scope.querying = false
 				$scope.pipeline_data = data
@@ -454,7 +452,7 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 
 		api.Model.train(pipeline, process_name, inputs, output)
 			.then(function(results) {
-				let predict_inputs = inputs.reduce(function(prev, input) {
+				let predict_inputs = inputs.reduce((prev, input) => {
 					prev[input] = null
 					return prev
 				}, {})
