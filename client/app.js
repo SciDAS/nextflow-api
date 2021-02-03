@@ -150,12 +150,12 @@ app.service('api', ['$http', '$q', function($http, $q) {
 		return httpRequest('get', `api/tasks/pipelines`)
 	}
 
-	this.Task.get = function(id) {
-		return httpRequest('get', `api/tasks/${id}`)
+	this.Task.query_pipeline = function(pipeline) {
+		return httpRequest('post', `api/tasks/pipelines/${pipeline}`)
 	}
 
-	this.Task.query_csv = function(pipeline) {
-		return httpRequest('post', `api/tasks-csv/${pipeline}`)
+	this.Task.get = function(id) {
+		return httpRequest('get', `api/tasks/${id}`)
 	}
 
 	this.Model = {}
@@ -366,6 +366,23 @@ app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 			})
 	}
 
+	$scope.query_pipeline = function(pipeline) {
+		$scope.querying = true
+
+		api.Task.query_pipeline(pipeline)
+			.then(function(tasks) {
+				$scope.querying = false
+				$scope.query_success = true
+
+				alert.success('Query was completed.')
+			}, function() {
+				$scope.querying = false
+				$scope.query_success = false
+
+				alert.error('Failed to perform query.')
+			})
+	}
+
 	$scope.query_tasks = function(page) {
 		api.Task.query(page)
 			.then(function(tasks) {
@@ -373,23 +390,6 @@ app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 				$scope.tasks = tasks
 			}, function() {
 				alert.error('Failed to query tasks.')
-			})
-	}
-
-	$scope.query_csv = function(pipeline) {
-		$scope.querying = true
-
-		api.Task.query_csv(pipeline)
-			.then(function(tasks) {
-				$scope.querying = false
-				$scope.query_success = pipeline
-
-				alert.success('Query was completed.')
-			}, function() {
-				$scope.querying = false
-				$scope.query_success = null
-
-				alert.error('Failed to perform query.')
 			})
 	}
 

@@ -13,13 +13,13 @@
 						<select class="form-control" ng-model="pipeline" ng-options="p for p in pipelines" required></select>
 					</div>
 					<div class="col-sm-2" ng-show="pipelines">
-						<button type="button" class="btn btn-block btn-outline-dark" ng-disabled="querying" ng-click="!querying && query_csv(pipeline)">
+						<button type="button" class="btn btn-block btn-outline-dark" ng-disabled="querying" ng-click="!querying && query_pipeline(pipeline)">
 							<span ng-show="querying" class="spinner-border spinner-border-sm"></span>
 							<span ng-show="!querying">Query</span>
 						</button>
 					</div>
 					<div class="col-sm-2" ng-show="query_success">
-						<a class="btn btn-block btn-outline-dark" ng-href="api/tasks-csv/{{query_success}}/download" download>Download</a>
+						<a class="btn btn-block btn-outline-dark" ng-href="api/tasks/pipelines/{{pipeline}}/download" download>Download</a>
 					</div>
 				</div>
 			</form>

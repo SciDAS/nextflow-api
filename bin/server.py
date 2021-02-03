@@ -485,24 +485,7 @@ class TaskQueryPipelinesHandler(tornado.web.RequestHandler):
 
 
 
-class TaskEditHandler(tornado.web.RequestHandler):
-
-	async def get(self, id):
-		db = self.settings['db']
-
-		try:
-			task = await db.task_get(id)
-
-			self.set_status(200)
-			self.set_header('content-type', 'application/json')
-			self.write(tornado.escape.json_encode(task))
-		except:
-			self.set_status(404)
-			self.write(message(404, 'Failed to get task \"%s\"' % id))
-
-
-
-class TaskCSVQueryHandler(tornado.web.RequestHandler):
+class TaskQueryPipelineHandler(tornado.web.RequestHandler):
 
 	async def post(self, pipeline):
 		db = self.settings['db']
@@ -510,7 +493,7 @@ class TaskCSVQueryHandler(tornado.web.RequestHandler):
 		try:
 			# query tasks from database
 			pipeline = pipeline.lower()
-			tasks = await db.task_query_csv(pipeline)
+			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
 
 			# separate tasks into dataframes by process
@@ -529,7 +512,7 @@ class TaskCSVQueryHandler(tornado.web.RequestHandler):
 				dfs[process].to_csv(filename, sep='\t', index=False)
 
 			# create zip archive of trace files
-			zipfile = 'trace.%s.zip' % (pipeline.replace('/', '_'))
+			zipfile = 'trace.%s.zip' % (pipeline.replace('/', '__'))
 			files = ['trace.%s.txt' % (process) for process in process_names]
 
 			subprocess.run(['zip', zipfile] + files, check=True)
@@ -547,14 +530,31 @@ class TaskCSVQueryHandler(tornado.web.RequestHandler):
 
 
 
-class TaskCSVDownloadHandler(tornado.web.StaticFileHandler):
+class TaskDownloadHandler(tornado.web.StaticFileHandler):
 
 	def parse_url_path(self, pipeline):
 		# get filename of trace archive
-		filename = 'trace.%s.zip' % (pipeline.replace('/', '_'))
+		filename = 'trace.%s.zip' % (pipeline.replace('/', '__'))
 
 		self.set_header('content-disposition', 'attachment; filename=\"%s\"' % filename)
 		return filename
+
+
+
+class TaskEditHandler(tornado.web.RequestHandler):
+
+	async def get(self, id):
+		db = self.settings['db']
+
+		try:
+			task = await db.task_get(id)
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(task))
+		except:
+			self.set_status(404)
+			self.write(message(404, 'Failed to get task \"%s\"' % id))
 
 
 
@@ -667,9 +667,9 @@ if __name__ == '__main__':
 		(r'/api/workflows/([a-zA-Z0-9-]+)/download', WorkflowDownloadHandler, dict(path=env.WORKFLOWS_DIR)),
 		(r'/api/tasks', TaskQueryHandler),
 		(r'/api/tasks/pipelines', TaskQueryPipelinesHandler),
+		(r'/api/tasks/pipelines/(.+)/download', TaskDownloadHandler, dict(path=env.TRACE_DIR)),
+		(r'/api/tasks/pipelines/(.+)', TaskQueryPipelineHandler),
 		(r'/api/tasks/([a-zA-Z0-9-]+)', TaskEditHandler),
-		(r'/api/tasks-csv/(.+)/download', TaskCSVDownloadHandler, dict(path=env.TRACE_DIR)),
-		(r'/api/tasks-csv/(.+)', TaskCSVQueryHandler),
 		(r'/api/model/(.+)/query-dataset', ModelQueryDatasetHandler),
 		(r'/api/model/(.+)/train', ModelTrainHandler),
 		(r'/api/model/(.+)/predict', ModelPredictHandler),

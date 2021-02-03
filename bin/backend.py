@@ -175,7 +175,7 @@ class JSONBackend(Backend):
 
 		return pipelines
 
-	async def task_query_csv(self, pipeline):
+	async def task_query_pipeline(self, pipeline):
 		self._lock.acquire()
 		self.load()
 
@@ -268,7 +268,7 @@ class MongoBackend(Backend):
 
 		return pipelines
 
-	async def task_query_csv(self, pipeline):
+	async def task_query_pipeline(self, pipeline):
 		# find all runs of the given pipeline
 		runs = await self._db.tasks \
 			.find({ 'event': 'started', 'metadata.workflow.projectName': pipeline }, { 'runId': 1 }) \
