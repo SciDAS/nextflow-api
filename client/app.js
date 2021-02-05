@@ -155,7 +155,11 @@ app.service('api', ['$http', '$q', function($http, $q) {
 	}
 
 	this.Task.query_pipeline = function(pipeline) {
-		return httpRequest('post', `api/tasks/pipelines/${pipeline}`)
+		return httpRequest('get', `api/tasks/pipelines/${pipeline}`)
+	}
+
+	this.Task.archive = function(pipeline) {
+		return httpRequest('get', `api/tasks/archive/${pipeline}`)
 	}
 
 	this.Task.get = function(id) {
@@ -163,7 +167,7 @@ app.service('api', ['$http', '$q', function($http, $q) {
 	}
 
 	this.Task.visualize = function(pipeline, process_name, args) {
-		return httpRequest('post', `api/tasks/visualize/${pipeline}`, null, {
+		return httpRequest('post', `api/tasks/visualize`, null, {
 			pipeline,
 			process_name,
 			args
@@ -172,27 +176,23 @@ app.service('api', ['$http', '$q', function($http, $q) {
 
 	this.Model = {}
 
-	this.Model.query_dataset = function(pipeline) {
-		return httpRequest('get', `api/model/${pipeline}/query-dataset`)
-	}
-
-	this.Model.train = function(pipeline, process_name, model) {
-		return httpRequest('post', `api/model/${pipeline}/train`, null, {
+	this.Model.train = function(pipeline, process_name, args) {
+		return httpRequest('post', `api/model/train`, null, {
 			pipeline,
 			process_name,
-			model
+			args
 		})
 	}
 
 	this.Model.get_config = function(pipeline, process_name) {
-		return httpRequest('post', `api/model/${pipeline}/config`, null, {
+		return httpRequest('get', `api/model/config`, {
 			pipeline,
 			process_name
 		})
 	}
 
 	this.Model.predict = function(pipeline, process_name, inputs) {
-		return httpRequest('post', `api/model/${pipeline}/predict`, null, {
+		return httpRequest('post', `api/model/predict`, null, {
 			pipeline,
 			process_name,
 			inputs
@@ -384,23 +384,6 @@ app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 			})
 	}
 
-	$scope.query_pipeline = function(pipeline) {
-		$scope.querying = true
-
-		api.Task.query_pipeline(pipeline)
-			.then(function(tasks) {
-				$scope.querying = false
-				$scope.query_success = true
-
-				alert.success('Query was completed.')
-			}, function() {
-				$scope.querying = false
-				$scope.query_success = false
-
-				alert.error('Failed to perform query.')
-			})
-	}
-
 	$scope.query_tasks = function(page) {
 		api.Task.query(page)
 			.then(function(tasks) {
@@ -408,6 +391,23 @@ app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 				$scope.tasks = tasks
 			}, function() {
 				alert.error('Failed to query tasks.')
+			})
+	}
+
+	$scope.archive = function(pipeline) {
+		$scope.archiving = true
+
+		api.Task.query_pipeline(pipeline, true)
+			.then(function() {
+				$scope.archiving = false
+				$scope.archive_success = true
+
+				alert.success('Archive was created.')
+			}, function() {
+				$scope.archiving = false
+				$scope.archive_success = false
+
+				alert.error('Failed to create archive.')
 			})
 	}
 
@@ -450,7 +450,7 @@ app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, ale
 	$scope.query_dataset = function(pipeline) {
 		$scope.querying = true
 
-		api.Model.query_dataset(pipeline)
+		api.Task.query_pipeline(pipeline)
 			.then(function(data) {
 				let process_names = Object.keys(data)
 				let process_columns = process_names.reduce((prev, process_name) => {
@@ -516,7 +516,7 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 	$scope.query_dataset = function(pipeline) {
 		$scope.querying = true
 
-		api.Model.query_dataset(pipeline)
+		api.Task.query_pipeline(pipeline)
 			.then(function(data) {
 				let process_names = Object.keys(data)
 				let process_columns = process_names.reduce((prev, process_name) => {
@@ -536,10 +536,10 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 			})
 	}
 
-	$scope.train = function(pipeline, process_name, model) {
+	$scope.train = function(pipeline, process_name, args) {
 		$scope.training = true
 
-		api.Model.train(pipeline, process_name, model)
+		api.Model.train(pipeline, process_name, args)
 			.then(function(results) {
 				$scope.training = false
 				$scope.train.results = results

@@ -489,7 +489,35 @@ class TaskQueryPipelinesHandler(tornado.web.RequestHandler):
 
 class TaskQueryPipelineHandler(tornado.web.RequestHandler):
 
-	async def post(self, pipeline):
+	async def get(self, pipeline):
+		db = self.settings['db']
+
+		try:
+			# query tasks from database
+			pipeline = pipeline.lower()
+			tasks = await db.task_query_pipeline(pipeline)
+			tasks = [task['trace'] for task in tasks]
+
+			# separate tasks into dataframes by process
+			process_names = list(set([task['process'] for task in tasks]))
+			dfs = {}
+
+			for process in process_names:
+				dfs[process] = [task for task in tasks if task['process'] == process]
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(dfs))
+		except Exception as e:
+			self.set_status(404)
+			self.write(message(404, 'Failed to perform query'))
+			raise e
+
+
+
+class TaskArchiveHandler(tornado.web.RequestHandler):
+
+	async def get(self, pipeline):
 		db = self.settings['db']
 
 		try:
@@ -524,15 +552,15 @@ class TaskQueryPipelineHandler(tornado.web.RequestHandler):
 			os.chdir('..')
 
 			self.set_status(200)
-			self.write(message(200, 'Query was completed'))
+			self.write(message(200, 'Archive was created'))
 		except Exception as e:
 			self.set_status(404)
-			self.write(message(404, 'Failed to perform query'))
+			self.write(message(404, 'Failed to create archive'))
 			raise e
 
 
 
-class TaskQueryDownloadHandler(tornado.web.StaticFileHandler):
+class TaskArchiveDownloadHandler(tornado.web.StaticFileHandler):
 
 	def parse_url_path(self, pipeline):
 		# get filename of trace archive
@@ -545,7 +573,7 @@ class TaskQueryDownloadHandler(tornado.web.StaticFileHandler):
 
 class TaskVisualizeHandler(tornado.web.RequestHandler):
 
-	async def post(self, pipeline):
+	async def post(self):
 		db = self.settings['db']
 
 		try:
@@ -553,7 +581,7 @@ class TaskVisualizeHandler(tornado.web.RequestHandler):
 			data = tornado.escape.json_decode(self.request.body)
 
 			# query task dataset from database
-			pipeline = pipeline.lower()
+			pipeline = data['pipeline'].lower()
 			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
 			tasks = [task for task in tasks if task['process'] == data['process_name']]
@@ -598,37 +626,9 @@ class TaskEditHandler(tornado.web.RequestHandler):
 
 
 
-class ModelQueryDatasetHandler(tornado.web.RequestHandler):
-
-	async def get(self, pipeline):
-		db = self.settings['db']
-
-		try:
-			# query tasks from database
-			pipeline = pipeline.lower()
-			tasks = await db.task_query_pipeline(pipeline)
-			tasks = [task['trace'] for task in tasks]
-
-			# separate tasks into dataframes by process
-			process_names = list(set([task['process'] for task in tasks]))
-			dfs = {}
-
-			for process in process_names:
-				dfs[process] = [task for task in tasks if task['process'] == process]
-
-			self.set_status(200)
-			self.set_header('content-type', 'application/json')
-			self.write(tornado.escape.json_encode(dfs))
-		except Exception as e:
-			self.set_status(404)
-			self.write(message(404, 'Failed to perform query'))
-			raise e
-
-
-
 class ModelTrainHandler(tornado.web.RequestHandler):
 
-	async def post(self, pipeline):
+	async def post(self):
 		db = self.settings['db']
 
 		try:
@@ -636,7 +636,7 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 			data = tornado.escape.json_decode(self.request.body)
 
 			# query task dataset from database
-			pipeline = pipeline.lower()
+			pipeline = data['pipeline'].lower()
 			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
 			tasks = [task for task in tasks if task['process'] == data['process_name']]
@@ -644,7 +644,7 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 			df = pd.DataFrame(tasks)
 
 			# prepare training args
-			args = data['model']
+			args = data['args']
 			args['inputs'] = [{ 'name': v, 'transforms': [] } for v in args['inputs']]
 			args['output'] = { 'name': args['output'], 'transforms': [] }
 			args['hidden_layer_sizes'] = [int(v) for v in args['hidden_layer_sizes'].split(' ')]
@@ -665,17 +665,19 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 
 class ModelConfigHandler(tornado.web.RequestHandler):
 
-	async def post(self, pipeline):
+	async def get(self):
 		db = self.settings['db']
 
 		try:
 			# parse request body
-			data = tornado.escape.json_decode(self.request.body)
-			data['model_name'] = '%s.%s' % (data['pipeline'].replace('/', '__'), data['process_name'])
+			pipeline = self.get_argument('pipeline', default=None)
+			process_name = self.get_argument('process_name', default=None)
 
 			# get model config file
-			f = open('%s/%s.json' % (env.MODELS_DIR, data['model_name']), 'r')
-			config = json.load(f)
+			filename = '%s/%s.%s.json' % (env.MODELS_DIR, pipeline.lower().replace('/', '__'), process_name)
+
+			with open(filename, 'r') as f:
+				config = json.load(f)
 
 			self.set_status(200)
 			self.set_header('content-type', 'application/json')
@@ -689,16 +691,17 @@ class ModelConfigHandler(tornado.web.RequestHandler):
 
 class ModelPredictHandler(tornado.web.RequestHandler):
 
-	async def post(self, pipeline):
+	async def post(self):
 		db = self.settings['db']
 
 		try:
-			# parse args from request body
-			args = tornado.escape.json_decode(self.request.body)
-			args['model_name'] = '%s.%s' % (args['pipeline'].replace('/', '__'), args['process_name'])
+			# parse request body
+			data = tornado.escape.json_decode(self.request.body)
+			data['pipeline'] = data['pipeline'].lower()
+			data['model_name'] = '%s.%s' % (data['pipeline'].replace('/', '__'), data['process_name'])
 
 			# perform model prediction
-			results = Model.predict(args)
+			results = Model.predict(data)
 
 			self.set_status(200)
 			self.set_header('content-type', 'application/json')
@@ -737,14 +740,14 @@ if __name__ == '__main__':
 		(r'/api/workflows/([a-zA-Z0-9-]+)/download', WorkflowDownloadHandler, dict(path=env.WORKFLOWS_DIR)),
 		(r'/api/tasks', TaskQueryHandler),
 		(r'/api/tasks/pipelines', TaskQueryPipelinesHandler),
-		(r'/api/tasks/pipelines/(.+)/download', TaskQueryDownloadHandler, dict(path=env.TRACE_DIR)),
 		(r'/api/tasks/pipelines/(.+)', TaskQueryPipelineHandler),
-		(r'/api/tasks/visualize/(.+)', TaskVisualizeHandler),
+		(r'/api/tasks/archive/(.+)/download', TaskArchiveDownloadHandler, dict(path=env.TRACE_DIR)),
+		(r'/api/tasks/archive/(.+)', TaskArchiveHandler),
+		(r'/api/tasks/visualize', TaskVisualizeHandler),
 		(r'/api/tasks/([a-zA-Z0-9-]+)', TaskEditHandler),
-		(r'/api/model/(.+)/query-dataset', ModelQueryDatasetHandler),
-		(r'/api/model/(.+)/train', ModelTrainHandler),
-		(r'/api/model/(.+)/config', ModelConfigHandler),
-		(r'/api/model/(.+)/predict', ModelPredictHandler),
+		(r'/api/model/train', ModelTrainHandler),
+		(r'/api/model/config', ModelConfigHandler),
+		(r'/api/model/predict', ModelPredictHandler),
 		(r'/(.*)', tornado.web.StaticFileHandler, dict(path='./client', default_filename='index.html'))
 	])
 
