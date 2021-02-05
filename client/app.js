@@ -172,6 +172,13 @@ app.service('api', ['$http', '$q', function($http, $q) {
 		})
 	}
 
+	this.Model.get_config = function(pipeline, process_name) {
+		return httpRequest('post', `api/model/${pipeline}/config`, null, {
+			pipeline,
+			process_name
+		})
+	}
+
 	this.Model.predict = function(pipeline, process_name, inputs) {
 		return httpRequest('post', `api/model/${pipeline}/predict`, null, {
 			pipeline,
@@ -422,6 +429,9 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 		epochs: 200
 	}
 
+	$scope.train = {}
+	$scope.predict = {}
+
 	$scope.query_pipelines = function() {
 		api.Task.query_pipelines()
 			.then(function(pipelines) {
@@ -459,18 +469,22 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 
 		api.Model.train(pipeline, process_name, model)
 			.then(function(results) {
-				let predict_inputs = model.inputs.reduce((prev, input) => {
-					prev[input] = null
-					return prev
-				}, {})
-
 				$scope.training = false
-				$scope.train_results = results
-				$scope.predict_inputs = predict_inputs
+				$scope.train.results = results
 				alert.success('Model was trained.')
 			}, function() {
 				$scope.training = false
 				alert.error('Failed to train model.')
+			})
+	}
+
+	$scope.get_config = function(pipeline, process_name) {
+		api.Model.get_config(pipeline, process_name)
+			.then(function(config) {
+				$scope.config = config
+				$scope.predict.inputs = config.inputs
+			}, function() {
+				alert.error('Failed to get model config.')
 			})
 	}
 
@@ -480,7 +494,7 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 		api.Model.predict(pipeline, process_name, inputs)
 			.then(function(results) {
 				$scope.predicting = false
-				$scope.predict_results = results
+				$scope.predict.results = results
 				alert.success('Performed model prediction.')
 			}, function() {
 				$scope.predicting = false

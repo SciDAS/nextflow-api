@@ -42,25 +42,25 @@
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Process</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="process_name" ng-options="p for p in process_names"></select>
+						<select class="form-control" ng-model="train.process_name" ng-options="p for p in process_names"></select>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Inputs</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="model.inputs" ng-options="p for p in process_columns[process_name]" multiple size="10"></select>
+						<select class="form-control" ng-model="model.inputs" ng-options="p for p in process_columns[train.process_name]" multiple size="10"></select>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Output</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="model.output" ng-options="p for p in process_columns[process_name]"></select>
+						<select class="form-control" ng-model="model.output" ng-options="p for p in process_columns[train.process_name]"></select>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Scaler</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="model.scaler" ng-options="v for v in ['maxabs', 'minmax', 'standard']">
@@ -69,14 +69,14 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Hidden Layers</label>
 					<div class="col-sm-9">
 						<input class="form-control" ng-model="model.hidden_layer_sizes" ng-pattern="/[\d\s]*/"/>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Epochs</label>
 					<div class="col-sm-9">
 						<input class="form-control" type="number" ng-model="model.epochs"/>
@@ -84,7 +84,7 @@
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-disabled="training" ng-click="!training && train(pipeline, process_name, model)">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="training" ng-click="!training && train(pipeline, train.process_name, model)">
 						<span ng-show="training" class="spinner-border spinner-border-sm"></span>
 						<span ng-show="!training">Train</span>
 					</button>
@@ -92,27 +92,45 @@
 			</form>
 		</div>
 
-		<div class="card mb-4" ng-show="train_results">
+		<div class="card mb-4" ng-show="train.results">
 			<h6 class="card-header">Training Results</h6>
 
 			<div class="card-body">
-				<pre class="pre-scrollable border rounded p-2">{{train_results | json}}</pre>
+				<pre class="pre-scrollable border rounded p-2">{{train.results | json}}</pre>
 			</div>
 		</div>
 
-		<div class="card mb-4" ng-show="predict_inputs">
+		<div class="card mb-4" ng-show="process_names">
 			<h6 class="card-header">Predict</h6>
 
-			<form class="card-body" name="form-predict">
-				<div class="form-group row" ng-repeat="(key, value) in predict_inputs">
-					<label class="col-sm-3 col-form-label">{{key}}</label>
+			<form class="card-body" name="form-get-config">
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">Process</label>
 					<div class="col-sm-9">
-						<input class="form-control" ng-model="predict_inputs[key]"/>
+						<select class="form-control" ng-model="predict.process_name" ng-options="p for p in process_names"></select>
 					</div>
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-disabled="predicting" ng-click="!predicting && predict(pipeline, process_name, predict_inputs)">
+					<button type="button" class="btn btn-outline-dark" ng-click="get_config(pipeline, predict.process_name)">
+						<span>Get Config</span>
+					</button>
+				</div>
+			</form>
+
+			<form class="card-body" name="form-predict">
+				<div class="form-group row" ng-repeat="input in predict.inputs">
+					<label class="col-sm-3 col-form-label">{{input.name}}</label>
+					<div class="col-sm-9" ng-show="input.categories">
+						<select class="form-control" ng-model="input.value" ng-options="v for v in input.categories"></select>
+					</div>
+					<div class="col-sm-9" ng-hide="input.categories">
+						<input class="form-control" ng-model="input.value"/>
+					</div>
+				</div>
+
+				<div class="text-center">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="predicting" ng-click="!predicting && predict(pipeline, predict.process_name, predict.inputs)">
 						<span ng-show="predicting" class="spinner-border spinner-border-sm"></span>
 						<span ng-show="!predicting">Predict</span>
 					</button>
@@ -120,11 +138,11 @@
 			</form>
 		</div>
 
-		<div class="card mb-4" ng-show="predict_results">
+		<div class="card mb-4" ng-show="predict.results">
 			<h6 class="card-header">Prediction Results</h6>
 
 			<div class="card-body">
-				<pre class="pre-scrollable border rounded p-2">{{predict_results | json}}</pre>
+				<pre class="pre-scrollable border rounded p-2">{{predict.results | json}}</pre>
 			</div>
 		</div>
 	</div>

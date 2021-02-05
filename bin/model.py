@@ -14,9 +14,8 @@ import utils
 
 
 
-def parse_transforms(arg):
-	tokens = arg.split(':')
-	return { 'name': tokens[0], 'transforms': tokens[1:] }
+def is_categorical(df, column):
+	return column != None and df[column].dtype.kind in 'OSUV'
 
 
 
@@ -93,27 +92,28 @@ def train(df, args):
 
 	args = {**defaults, **args}
 
-	# parse input and output transforms
-	inputs = [parse_transforms(arg) for arg in args['inputs']]
-	output = parse_transforms(args['output'])
-
 	# select only tasks that completed successfully
 	df = df[df['exit'] == 0]
 
 	# extract input/output data from trace data
 	try:
-		X = df[[c['name'] for c in inputs]]
-		y = df[output['name']]
+		X = df[[c['name'] for c in args['inputs']]]
+		y = df[args['output']['name']]
 	except KeyError:
 		raise KeyError('error: one or more input/output variables are not in the dataset')
 
 	# one-hot encode categorical inputs
-	onehot_columns = [c['name'] for c in inputs if 'onehot' in c['transforms']]
+	onehot_columns = []
+
+	for c in args['inputs']:
+		if is_categorical(X, c['name']):
+			c['categories'] = X[c['name']].unique().tolist()
+			onehot_columns.append(c['name'])
 
 	X = pd.get_dummies(X, columns=onehot_columns, drop_first=False)
 
-	# apply transforms to output
-	for transform in output['transforms']:
+	# apply output transforms
+	for transform in args['output']['transforms']:
 		try:
 			t = utils.transforms[transform]
 			y = t.transform(y)
@@ -140,8 +140,9 @@ def train(df, args):
 
 	# create model configuration
 	config = {
-		'inputs': list(X.columns),
-		'output-transforms': output['transforms']
+		'inputs': args['inputs'],
+		'output': args['output'],
+		'columns': list(X.columns)
 	}
 
 	# train and evaluate model
@@ -186,14 +187,23 @@ def predict(args):
 	config = json.load(f)
 
 	# parse inputs
-	x_input = [args['inputs'][column] for column in config['inputs']]
+	inputs = {}
+
+	for column in args['inputs']:
+		if 'categories' in column:
+			for v in column['categories']:
+				inputs['%s_%s' % (column['name'], v)] = (v == column['value'])
+		else:
+			inputs[column['name']] = column['value']
+
+	inputs = [float(inputs[c]) for c in config['columns']]
 
 	# perform inference
-	X = np.array([x_input])
+	X = np.array([inputs])
 	y = model.predict(X)
 
 	# apply transforms to output if specified
-	for transform in config['output-transforms']:
+	for transform in config['output']['transforms']:
 		try:
 			t = utils.transforms[transform]
 			y = t.inverse_transform(y)
@@ -202,5 +212,5 @@ def predict(args):
 
 	# return results
 	return {
-		'output': float(y)
+		config['output']['name']: float(y)
 	}

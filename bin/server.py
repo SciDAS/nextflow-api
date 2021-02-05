@@ -605,6 +605,8 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 
 			# prepare training args
 			args = data['model']
+			args['inputs'] = [{ 'name': v, 'transforms': [] } for v in args['inputs']]
+			args['output'] = { 'name': args['output'], 'transforms': [] }
 			args['hidden_layer_sizes'] = [int(v) for v in args['hidden_layer_sizes'].split(' ')]
 			args['model_name'] = '%s.%s' % (pipeline.replace('/', '__'), data['process_name'])
 
@@ -617,6 +619,30 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 		except Exception as e:
 			self.set_status(404)
 			self.write(message(404, 'Failed to train model'))
+			raise e
+
+
+
+class ModelConfigHandler(tornado.web.RequestHandler):
+
+	async def post(self, pipeline):
+		db = self.settings['db']
+
+		try:
+			# parse request body
+			data = tornado.escape.json_decode(self.request.body)
+			data['model_name'] = '%s.%s' % (data['pipeline'].replace('/', '__'), data['process_name'])
+
+			# get model config file
+			f = open('%s/%s.json' % (env.MODELS_DIR, data['model_name']), 'r')
+			config = json.load(f)
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(config))
+		except Exception as e:
+			self.set_status(404)
+			self.write(message(404, 'Failed to get model config'))
 			raise e
 
 
@@ -676,6 +702,7 @@ if __name__ == '__main__':
 		(r'/api/tasks/([a-zA-Z0-9-]+)', TaskEditHandler),
 		(r'/api/model/(.+)/query-dataset', ModelQueryDatasetHandler),
 		(r'/api/model/(.+)/train', ModelTrainHandler),
+		(r'/api/model/(.+)/config', ModelConfigHandler),
 		(r'/api/model/(.+)/predict', ModelPredictHandler),
 		(r'/(.*)', tornado.web.StaticFileHandler, dict(path='./client', default_filename='index.html'))
 	])
