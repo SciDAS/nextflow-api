@@ -99,8 +99,8 @@ def train(df, args):
 	try:
 		X = df[[c['name'] for c in args['inputs']]]
 		y = df[args['output']['name']]
-	except KeyError:
-		raise KeyError('error: one or more input/output variables are not in the dataset')
+	except:
+		raise RuntimeError('error: one or more input/output variables are not in the dataset')
 
 	# one-hot encode categorical inputs
 	onehot_columns = []
@@ -118,7 +118,7 @@ def train(df, args):
 			t = utils.transforms[transform]
 			y = t.transform(y)
 		except:
-			raise KeyError('error: output transform %s not recognized' % (transform))
+			raise RuntimeError('error: output transform %s not recognized' % (transform))
 
 	# select scaler
 	if args['scaler'] != None:
@@ -208,7 +208,7 @@ def predict(args):
 			t = utils.transforms[transform]
 			y = t.inverse_transform(y)
 		except:
-			raise KeyError('error: output transform %s not recognized' % (transform))
+			raise RuntimeError('error: output transform %s not recognized' % (transform))
 
 	# return results
 	return {

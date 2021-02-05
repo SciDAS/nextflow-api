@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import base64
 import bson
 import json
 import multiprocessing as mp
@@ -20,6 +21,7 @@ import tornado.web
 import backend
 import env
 import model as Model
+import visualizer as Visualizer
 import workflow as Workflow
 
 
@@ -530,7 +532,7 @@ class TaskQueryPipelineHandler(tornado.web.RequestHandler):
 
 
 
-class TaskDownloadHandler(tornado.web.StaticFileHandler):
+class TaskQueryDownloadHandler(tornado.web.StaticFileHandler):
 
 	def parse_url_path(self, pipeline):
 		# get filename of trace archive
@@ -538,6 +540,44 @@ class TaskDownloadHandler(tornado.web.StaticFileHandler):
 
 		self.set_header('content-disposition', 'attachment; filename=\"%s\"' % filename)
 		return filename
+
+
+
+class TaskVisualizeHandler(tornado.web.RequestHandler):
+
+	async def post(self, pipeline):
+		db = self.settings['db']
+
+		try:
+			# parse request body
+			data = tornado.escape.json_decode(self.request.body)
+
+			# query task dataset from database
+			pipeline = pipeline.lower()
+			tasks = await db.task_query_pipeline(pipeline)
+			tasks = [task['trace'] for task in tasks]
+			tasks = [task for task in tasks if task['process'] == data['process_name']]
+
+			df = pd.DataFrame(tasks)
+
+			# prepare visualizer args
+			args = data['args']
+			args['plot_name'] = str(bson.ObjectId())
+
+			# create visualization
+			outfile = Visualizer.visualize(df, args)
+
+			# encode image file into base64
+			with open(outfile, 'rb') as f:
+				image_data = base64.b64encode(f.read()).decode('utf-8')
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(image_data))
+		except Exception as e:
+			self.set_status(404)
+			self.write(message(404, 'Failed to visualize data'))
+			raise e
 
 
 
@@ -697,8 +737,9 @@ if __name__ == '__main__':
 		(r'/api/workflows/([a-zA-Z0-9-]+)/download', WorkflowDownloadHandler, dict(path=env.WORKFLOWS_DIR)),
 		(r'/api/tasks', TaskQueryHandler),
 		(r'/api/tasks/pipelines', TaskQueryPipelinesHandler),
-		(r'/api/tasks/pipelines/(.+)/download', TaskDownloadHandler, dict(path=env.TRACE_DIR)),
+		(r'/api/tasks/pipelines/(.+)/download', TaskQueryDownloadHandler, dict(path=env.TRACE_DIR)),
 		(r'/api/tasks/pipelines/(.+)', TaskQueryPipelineHandler),
+		(r'/api/tasks/visualize/(.+)', TaskVisualizeHandler),
 		(r'/api/tasks/([a-zA-Z0-9-]+)', TaskEditHandler),
 		(r'/api/model/(.+)/query-dataset', ModelQueryDatasetHandler),
 		(r'/api/model/(.+)/train', ModelTrainHandler),

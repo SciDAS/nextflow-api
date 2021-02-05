@@ -32,6 +32,10 @@ app.config(['$routeProvider', function($routeProvider) {
 			templateUrl: 'views/task.html',
 			controller: 'TaskCtrl'
 		})
+		.when('/visualizer', {
+			templateUrl: 'views/visualizer.html',
+			controller: 'VisualizerCtrl'
+		})
 		.when('/model', {
 			templateUrl: 'views/model.html',
 			controller: 'ModelCtrl'
@@ -156,6 +160,14 @@ app.service('api', ['$http', '$q', function($http, $q) {
 
 	this.Task.get = function(id) {
 		return httpRequest('get', `api/tasks/${id}`)
+	}
+
+	this.Task.visualize = function(pipeline, process_name, args) {
+		return httpRequest('post', `api/tasks/visualize/${pipeline}`, null, {
+			pipeline,
+			process_name,
+			args
+		})
 	}
 
 	this.Model = {}
@@ -416,6 +428,66 @@ app.controller('TaskCtrl', ['$scope', '$route', 'alert', 'api', function($scope,
 		}, function() {
 			alert.error('Failed to load task.')
 		})
+}])
+
+
+
+app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, alert, api) {
+	$scope.args = {
+		height: 3,
+		aspect: 1
+	}
+
+	$scope.query_pipelines = function() {
+		api.Task.query_pipelines()
+			.then(function(pipelines) {
+				$scope.pipelines = pipelines
+			}, function() {
+				alert.error('Failed to query pipelines.')
+			})
+	}
+
+	$scope.query_dataset = function(pipeline) {
+		$scope.querying = true
+
+		api.Model.query_dataset(pipeline)
+			.then(function(data) {
+				let process_names = Object.keys(data)
+				let process_columns = process_names.reduce((prev, process_name) => {
+					let tasks = data[process_name]
+					let columns = new Set(tasks.reduce((p, t) => p.concat(Object.keys(t)), []))
+					prev[process_name] = Array.from(columns)
+					return prev
+				}, {})
+
+				$scope.querying = false
+				$scope.pipeline_data = data
+				$scope.process_names = process_names
+				$scope.process_columns = process_columns
+			}, function() {
+				$scope.querying = false
+				alert.error('Failed to query pipeline tasks.')
+			})
+	}
+
+	$scope.visualize = function(pipeline, process_name, args) {
+		$scope.visualizing = true
+
+		api.Task.visualize(pipeline, process_name, args)
+			.then(function(image_data) {
+				$scope.visualizing = false
+				$scope.visualize_success = true
+				$scope.image_data = image_data
+				alert.success('Visualiation was created.')
+			}, function() {
+				$scope.visualizing = false
+				$scope.visualize_success = false
+				alert.error('Failed to visualize data.')
+			})
+	}
+
+	// initialize
+	$scope.query_pipelines()
 }])
 
 
