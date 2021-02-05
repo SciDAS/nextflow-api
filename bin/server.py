@@ -653,6 +653,25 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 			# train model
 			results = Model.train(df, args)
 
+			# visualize training results
+			df = pd.DataFrame()
+			df['y_true'] = results['y_true']
+			df['y_test'] = results['y_test']
+
+			outfile = Visualizer.visualize(df, {
+				'xaxis': 'y_true',
+				'yaxis': 'y_test',
+				'plot_name': str(bson.ObjectId())
+			})
+
+			# encode image file into base64
+			with open(outfile, 'rb') as f:
+				results['scatterplot'] = base64.b64encode(f.read()).decode('utf-8')
+
+			# remove extra fields from results
+			del results['y_true']
+			del results['y_test']
+
 			self.set_status(200)
 			self.set_header('content-type', 'application/json')
 			self.write(tornado.escape.json_encode(results))

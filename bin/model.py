@@ -146,12 +146,7 @@ def train(df, args):
 	}
 
 	# train and evaluate model
-	print('training model')
-
 	scores = evaluate_cv(model, X, y, cv=args['cv'])
-
-	# save trained model
-	print('saving model to file')
 
 	# train model on full dataset
 	model.fit(X, y)
@@ -172,6 +167,8 @@ def train(df, args):
 
 	# return results
 	return {
+		'y_true': y,
+		'y_test': model.predict(X),
 		'mape': scores.mean()
 	}
 

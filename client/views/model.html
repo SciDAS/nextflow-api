@@ -88,7 +88,16 @@
 			<h6 class="card-header">Training Results</h6>
 
 			<div class="card-body">
-				<pre class="pre-scrollable border rounded p-2">{{train.results | json}}</pre>
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">MAPE</label>
+					<div class="col-sm-9">
+						<p class="form-control-plaintext">{{train.results.mape | number:3}} %</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="card-body text-center">
+				<img ng-src="data:image/png;base64,{{train.results.scatterplot}}"/>
 			</div>
 		</div>
 
