@@ -164,12 +164,11 @@ app.service('api', ['$http', '$q', function($http, $q) {
 		return httpRequest('get', `api/model/${pipeline}/query-dataset`)
 	}
 
-	this.Model.train = function(pipeline, process_name, inputs, output) {
+	this.Model.train = function(pipeline, process_name, model) {
 		return httpRequest('post', `api/model/${pipeline}/train`, null, {
 			pipeline,
 			process_name,
-			inputs,
-			output
+			model
 		})
 	}
 
@@ -415,6 +414,14 @@ app.controller('TaskCtrl', ['$scope', '$route', 'alert', 'api', function($scope,
 
 
 app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, api) {
+	$scope.model = {
+		inputs: [],
+		output: null,
+		scaler: 'maxabs',
+		hidden_layer_sizes: '128 128 128',
+		epochs: 200
+	}
+
 	$scope.query_pipelines = function() {
 		api.Task.query_pipelines()
 			.then(function(pipelines) {
@@ -447,12 +454,12 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 			})
 	}
 
-	$scope.train = function(pipeline, process_name, inputs, output) {
+	$scope.train = function(pipeline, process_name, model) {
 		$scope.training = true
 
-		api.Model.train(pipeline, process_name, inputs, output)
+		api.Model.train(pipeline, process_name, model)
 			.then(function(results) {
-				let predict_inputs = inputs.reduce((prev, input) => {
+				let predict_inputs = model.inputs.reduce((prev, input) => {
 					prev[input] = null
 					return prev
 				}, {})

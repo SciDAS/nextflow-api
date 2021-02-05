@@ -10,7 +10,7 @@
 				</div>
 			</div>
 
-			<form class="card-body" name="form-pipeline" ng-show="pipelines">
+			<form class="card-body" name="form-query" ng-show="pipelines">
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Pipeline</label>
 					<div class="col-sm-9">
@@ -38,7 +38,7 @@
 		<div class="card mb-4" ng-show="process_names">
 			<h6 class="card-header">Train Model</h6>
 
-			<form class="card-body" name="form-model">
+			<form class="card-body" name="form-train">
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Process</label>
 					<div class="col-sm-9">
@@ -49,19 +49,42 @@
 				<div class="form-group row" ng-show="process_name">
 					<label class="col-sm-3 col-form-label">Inputs</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="model_inputs" ng-options="p for p in process_columns[process_name]" multiple size="10"></select>
+						<select class="form-control" ng-model="model.inputs" ng-options="p for p in process_columns[process_name]" multiple size="10"></select>
 					</div>
 				</div>
 
 				<div class="form-group row" ng-show="process_name">
 					<label class="col-sm-3 col-form-label">Output</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="model_output" ng-options="p for p in process_columns[process_name]"></select>
+						<select class="form-control" ng-model="model.output" ng-options="p for p in process_columns[process_name]"></select>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="process_name">
+					<label class="col-sm-3 col-form-label">Scaler</label>
+					<div class="col-sm-9">
+						<select class="form-control" ng-model="model.scaler" ng-options="v for v in ['maxabs', 'minmax', 'standard']">
+							<option></option>
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="process_name">
+					<label class="col-sm-3 col-form-label">Hidden Layers</label>
+					<div class="col-sm-9">
+						<input class="form-control" ng-model="model.hidden_layer_sizes" ng-pattern="/[\d\s]*/"/>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="process_name">
+					<label class="col-sm-3 col-form-label">Epochs</label>
+					<div class="col-sm-9">
+						<input class="form-control" type="number" ng-model="model.epochs"/>
 					</div>
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-disabled="training" ng-click="!training && train(pipeline, process_name, model_inputs, model_output)">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="training" ng-click="!training && train(pipeline, process_name, model)">
 						<span ng-show="training" class="spinner-border spinner-border-sm"></span>
 						<span ng-show="!training">Train</span>
 					</button>
@@ -80,7 +103,7 @@
 		<div class="card mb-4" ng-show="predict_inputs">
 			<h6 class="card-header">Predict</h6>
 
-			<form class="card-body" name="form-model">
+			<form class="card-body" name="form-predict">
 				<div class="form-group row" ng-repeat="(key, value) in predict_inputs">
 					<label class="col-sm-3 col-form-label">{{key}}</label>
 					<div class="col-sm-9">

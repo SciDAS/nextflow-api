@@ -566,7 +566,7 @@ class ModelQueryDatasetHandler(tornado.web.RequestHandler):
 		try:
 			# query tasks from database
 			pipeline = pipeline.lower()
-			tasks = await db.task_query_csv(pipeline)
+			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
 
 			# separate tasks into dataframes by process
@@ -592,17 +592,21 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 		db = self.settings['db']
 
 		try:
-			# parse args from request body
-			args = tornado.escape.json_decode(self.request.body)
-			args['model_name'] = '%s.%s' % (args['pipeline'].replace('/', '__'), args['process_name'])
+			# parse request body
+			data = tornado.escape.json_decode(self.request.body)
 
 			# query task dataset from database
 			pipeline = pipeline.lower()
-			tasks = await db.task_query_csv(pipeline)
+			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
-			tasks = [task for task in tasks if task['process'] == args['process_name']]
+			tasks = [task for task in tasks if task['process'] == data['process_name']]
 
 			df = pd.DataFrame(tasks)
+
+			# prepare training args
+			args = data['model']
+			args['hidden_layer_sizes'] = [int(v) for v in args['hidden_layer_sizes'].split(' ')]
+			args['model_name'] = '%s.%s' % (pipeline.replace('/', '__'), data['process_name'])
 
 			# train model
 			results = Model.train(df, args)

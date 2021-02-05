@@ -20,7 +20,7 @@ def parse_transforms(arg):
 
 
 
-def create_mlp(input_shape, hidden_layer_sizes=[10], activation='relu'):
+def create_mlp(input_shape, hidden_layer_sizes=[], activation='relu', batch_size=32, epochs=200):
 	def build_fn():
 		# create a 3-layer neural network
 		x_input = keras.Input(shape=input_shape)
@@ -40,8 +40,8 @@ def create_mlp(input_shape, hidden_layer_sizes=[10], activation='relu'):
 
 	return utils.KerasRegressor(
 		build_fn=build_fn,
-		batch_size=32,
-		epochs=200,
+		batch_size=batch_size,
+		epochs=epochs,
 		validation_split=0.1,
 		verbose=False
 	)
@@ -87,7 +87,8 @@ def train(df, args):
 	defaults = {
 		'scaler': 'maxabs',
 		'cv': 5,
-		'hidden_layer_sizes': [128, 128, 128]
+		'hidden_layer_sizes': [128, 128, 128],
+		'epochs': 200
 	}
 
 	args = {**defaults, **args}
@@ -129,7 +130,7 @@ def train(df, args):
 		Scaler = scalers[args['scaler']]
 
 	# create regressor
-	regressor = create_mlp(X.shape[1], hidden_layer_sizes=args['hidden_layer_sizes'])
+	regressor = create_mlp(X.shape[1], hidden_layer_sizes=args['hidden_layer_sizes'], epochs=args['epochs'])
 
 	# create model
 	model = sklearn.pipeline.Pipeline([
