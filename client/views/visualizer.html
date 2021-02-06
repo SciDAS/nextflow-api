@@ -41,8 +41,14 @@
 				<div class="form-group row" ng-show="process_name">
 					<label class="col-sm-3 col-form-label">Plot Type</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.plot_type" ng-options="v for v in ['hist', 'count', 'scatter', 'ct', 'bar', 'point']">
+						<select class="form-control" ng-model="args.plot_type">
 							<option></option>
+							<option value="hist">Histogram</option>
+							<option value="count">Count Plot</option>
+							<option value="scatter">Scatter Plot</option>
+							<option value="ct">Contingency Table</option>
+							<option value="bar">Bar Plot</option>
+							<option value="point">Point Plot</option>
 						</select>
 					</div>
 				</div>
@@ -87,6 +93,13 @@
 						<select class="form-control" ng-model="args.hue" ng-options="p for p in process_columns[process_name]">
 							<option></option>
 						</select>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="process_name">
+					<label class="col-sm-3 col-form-label">Selectors</label>
+					<div class="col-sm-9">
+						<input class="form-control" ng-model="args.selectors"/>
 					</div>
 				</div>
 

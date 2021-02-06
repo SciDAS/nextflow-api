@@ -14,6 +14,11 @@ import utils
 
 
 
+def select_rows_by_values(df, column, values):
+	return pd.DataFrame().append([df[df[column].astype(str) == v] for v in values], sort=False)
+
+
+
 def is_categorical(df, column):
 	return column != None and df[column].dtype.kind in 'OSUV'
 
@@ -84,6 +89,7 @@ def evaluate_cv(model, X, y, cv=5):
 
 def train(df, args):
 	defaults = {
+		'selectors': [],
 		'scaler': 'maxabs',
 		'cv': 5,
 		'hidden_layer_sizes': [128, 128, 128],
@@ -92,8 +98,15 @@ def train(df, args):
 
 	args = {**defaults, **args}
 
-	# select only tasks that completed successfully
-	df = df[df['exit'] == 0]
+	# apply selectorss to dataframe
+	for selector in args['selectors']:
+		# parse column and selected values
+		column, values = selector.split('=')
+		values = values.split(',')
+
+		# select rows from dataframe
+		if values != None and len(values) > 0:
+			df = select_rows_by_values(df, column, values)
 
 	# extract input/output data from trace data
 	try:

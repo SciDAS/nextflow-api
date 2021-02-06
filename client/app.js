@@ -434,6 +434,7 @@ app.controller('TaskCtrl', ['$scope', '$route', 'alert', 'api', function($scope,
 
 app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, alert, api) {
 	$scope.args = {
+		selectors: 'exit=0',
 		height: 3,
 		aspect: 1
 	}
@@ -493,9 +494,10 @@ app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, ale
 
 
 app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, api) {
-	$scope.model = {
+	$scope.args = {
 		inputs: [],
 		output: null,
+		selectors: 'exit=0',
 		scaler: 'maxabs',
 		hidden_layer_sizes: '128 128 128',
 		epochs: 200

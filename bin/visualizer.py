@@ -56,7 +56,7 @@ def visualize(data, args):
 		'row': None,
 		'col': None,
 		'hue': None,
-		'select': [],
+		'selectors': [],
 		'sharex': False,
 		'sharey': False,
 		'height': 3,
@@ -88,10 +88,10 @@ def visualize(data, args):
 		# remove rows which have missing values in column
 		data = data[~data[column].isna()]
 
-	# apply selects to dataframe
-	for select in args['select']:
+	# apply selectorss to dataframe
+	for selector in args['selectors']:
 		# parse column and selected values
-		column, values = select.split('=')
+		column, values = selector.split('=')
 		values = values.split(',')
 
 		# select rows from dataframe

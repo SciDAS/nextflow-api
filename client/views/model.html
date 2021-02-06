@@ -41,21 +41,28 @@
 				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Inputs</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="model.inputs" ng-options="p for p in process_columns[train.process_name]" multiple size="10"></select>
+						<select class="form-control" ng-model="args.inputs" ng-options="p for p in process_columns[train.process_name]" multiple size="10"></select>
 					</div>
 				</div>
 
 				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Output</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="model.output" ng-options="p for p in process_columns[train.process_name]"></select>
+						<select class="form-control" ng-model="args.output" ng-options="p for p in process_columns[train.process_name]"></select>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="train.process_name">
+					<label class="col-sm-3 col-form-label">Selectors</label>
+					<div class="col-sm-9">
+						<input class="form-control" ng-model="args.selectors"/>
 					</div>
 				</div>
 
 				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Scaler</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="model.scaler" ng-options="v for v in ['maxabs', 'minmax', 'standard']">
+						<select class="form-control" ng-model="args.scaler" ng-options="v for v in ['maxabs', 'minmax', 'standard']">
 							<option></option>
 						</select>
 					</div>
@@ -64,19 +71,19 @@
 				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Hidden Layers</label>
 					<div class="col-sm-9">
-						<input class="form-control" ng-model="model.hidden_layer_sizes" ng-pattern="/[\d\s]*/"/>
+						<input class="form-control" ng-model="args.hidden_layer_sizes" ng-pattern="/[\d\s]*/"/>
 					</div>
 				</div>
 
 				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Epochs</label>
 					<div class="col-sm-9">
-						<input class="form-control" type="number" ng-model="model.epochs"/>
+						<input class="form-control" type="number" ng-model="args.epochs"/>
 					</div>
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-disabled="training" ng-click="!training && train(pipeline, train.process_name, model)">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="training" ng-click="!training && train(pipeline, train.process_name, args)">
 						<span ng-show="training" class="spinner-border spinner-border-sm"></span>
 						<span ng-show="!training">Train</span>
 					</button>

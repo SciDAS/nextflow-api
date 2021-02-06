@@ -592,6 +592,11 @@ class TaskVisualizeHandler(tornado.web.RequestHandler):
 			args = data['args']
 			args['plot_name'] = str(bson.ObjectId())
 
+			if args['selectors'] == '':
+				args['selectors'] = []
+			else:
+				args['selectors'] = args['selectors'].split(' ')
+
 			# create visualization
 			outfile = Visualizer.visualize(df, args)
 
@@ -649,6 +654,11 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 			args['output'] = { 'name': args['output'], 'transforms': [] }
 			args['hidden_layer_sizes'] = [int(v) for v in args['hidden_layer_sizes'].split(' ')]
 			args['model_name'] = '%s.%s' % (pipeline.replace('/', '__'), data['process_name'])
+
+			if args['selectors'] == '':
+				args['selectors'] = []
+			else:
+				args['selectors'] = args['selectors'].split(' ')
 
 			# train model
 			results = Model.train(df, args)
