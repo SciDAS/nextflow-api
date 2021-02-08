@@ -141,7 +141,9 @@ def train(df, args):
 	if args['output_transform'] != None:
 		try:
 			t = utils.transforms[args['output_transform']]
+			y = y.to_numpy().reshape(-1, 1)
 			y = t.transform(y)
+			y = y.reshape(-1)
 		except:
 			raise RuntimeError('error: output transform %s not recognized' % (args['output_transform']))
 
@@ -219,7 +221,9 @@ def predict(model_name, inputs):
 	if args['output_transform'] != None:
 		try:
 			t = utils.transforms[args['output_transform']]
+			y = y.reshape(-1, 1)
 			y = t.inverse_transform(y)
+			y = y.reshape(-1)
 		except:
 			raise RuntimeError('error: output transform %s not recognized' % (args['output_transform']))
 
