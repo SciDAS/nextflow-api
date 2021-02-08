@@ -730,7 +730,7 @@ class ModelPredictHandler(tornado.web.RequestHandler):
 			data['model_name'] = '%s.%s' % (data['pipeline'].replace('/', '__'), data['process_name'])
 
 			# perform model prediction
-			results = Model.predict(data)
+			results = Model.predict(data['model_name'], data['inputs'])
 
 			self.set_status(200)
 			self.set_header('content-type', 'application/json')

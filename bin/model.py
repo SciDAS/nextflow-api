@@ -151,12 +151,8 @@ def train(df, args):
 		('regressor', regressor)
 	])
 
-	# create model configuration
-	config = {
-		'inputs': args['inputs'],
-		'output': args['output'],
-		'columns': list(X.columns)
-	}
+	# save order of input columns
+	args['columns'] = list(X.columns)
 
 	# train and evaluate model
 	scores = evaluate_cv(model, X, y, cv=args['cv'])
@@ -174,9 +170,9 @@ def train(df, args):
 	f = open('%s/%s.pkl' % (env.MODELS_DIR, args['model_name']), 'wb')
 	pickle.dump(model, f)
 
-	# save model configuration
+	# save args to file
 	f = open('%s/%s.json' % (env.MODELS_DIR, args['model_name']), 'w')
-	json.dump(config, f)
+	json.dump(args, f)
 
 	# return results
 	return {
@@ -187,33 +183,33 @@ def train(df, args):
 
 
 
-def predict(args):
+def predict(model_name, inputs):
 	# load model
-	f = open('%s/%s.pkl' % (env.MODELS_DIR, args['model_name']), 'rb')
+	f = open('%s/%s.pkl' % (env.MODELS_DIR, model_name), 'rb')
 	model = pickle.load(f)
 
 	# load model configuration
-	f = open('%s/%s.json' % (env.MODELS_DIR, args['model_name']), 'r')
-	config = json.load(f)
+	f = open('%s/%s.json' % (env.MODELS_DIR, model_name), 'r')
+	args = json.load(f)
 
 	# parse inputs
-	inputs = {}
+	x_input = {}
 
-	for column in args['inputs']:
+	for column in inputs:
 		if 'categories' in column:
 			for v in column['categories']:
-				inputs['%s_%s' % (column['name'], v)] = (v == column['value'])
+				x_input['%s_%s' % (column['name'], v)] = (v == column['value'])
 		else:
-			inputs[column['name']] = column['value']
+			x_input[column['name']] = column['value']
 
-	inputs = [float(inputs[c]) for c in config['columns']]
+	x_input = [float(x_input[c]) for c in args['columns']]
 
 	# perform inference
-	X = np.array([inputs])
+	X = np.array([x_input])
 	y = model.predict(X)
 
 	# apply transforms to output if specified
-	for transform in config['output']['transforms']:
+	for transform in args['output']['transforms']:
 		try:
 			t = utils.transforms[transform]
 			y = t.inverse_transform(y)
@@ -222,5 +218,5 @@ def predict(args):
 
 	# return results
 	return {
-		config['output']['name']: float(y)
+		args['output']['name']: float(y)
 	}
