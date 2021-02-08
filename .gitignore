@@ -1,3 +1,4 @@
+_models
 _trace
 _workflows
 
@@ -8,4 +9,5 @@ helm/templates/secret.yaml
 
 *.json
 .nextflow*
+*.pkl
 *.pyc

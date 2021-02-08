@@ -90,7 +90,7 @@ def evaluate_cv(model, X, y, cv=5):
 def train(df, args):
 	defaults = {
 		'selectors': [],
-		'scaler': 'maxabs',
+		'input_transform': 'maxabs',
 		'cv': 5,
 		'hidden_layer_sizes': [128, 128, 128],
 		'epochs': 200
@@ -111,7 +111,7 @@ def train(df, args):
 	# extract input/output data from trace data
 	try:
 		X = df[[c['name'] for c in args['inputs']]]
-		y = df[args['output']['name']]
+		y = df[args['output']]
 	except:
 		raise RuntimeError('error: one or more input/output variables are not in the dataset')
 
@@ -125,22 +125,25 @@ def train(df, args):
 
 	X = pd.get_dummies(X, columns=onehot_columns, drop_first=False)
 
-	# apply output transforms
-	for transform in args['output']['transforms']:
+	# select input transform
+	if args['input_transform'] != None:
 		try:
-			t = utils.transforms[transform]
+			scalers = {
+				'maxabs': sklearn.preprocessing.MaxAbsScaler,
+				'minmax': sklearn.preprocessing.MinMaxScaler,
+				'standard': sklearn.preprocessing.StandardScaler
+			}
+			Scaler = scalers[args['input_transform']]
+		except:
+			raise RuntimeError('error input transform %s not recognized' % (args['input_transform']))
+
+	# apply output transforms
+	if args['output_transform'] != None:
+		try:
+			t = utils.transforms[args['output_transform']]
 			y = t.transform(y)
 		except:
-			raise RuntimeError('error: output transform %s not recognized' % (transform))
-
-	# select scaler
-	if args['scaler'] != None:
-		scalers = {
-			'maxabs': sklearn.preprocessing.MaxAbsScaler,
-			'minmax': sklearn.preprocessing.MinMaxScaler,
-			'standard': sklearn.preprocessing.StandardScaler
-		}
-		Scaler = scalers[args['scaler']]
+			raise RuntimeError('error: output transform %s not recognized' % (args['output_transform']))
 
 	# create regressor
 	regressor = create_mlp(X.shape[1], hidden_layer_sizes=args['hidden_layer_sizes'], epochs=args['epochs'])
@@ -192,15 +195,19 @@ def predict(model_name, inputs):
 	f = open('%s/%s.json' % (env.MODELS_DIR, model_name), 'r')
 	args = json.load(f)
 
-	# parse inputs
+	# copy input values into input args
+	for c in args['inputs']:
+		c['value'] = inputs[c['name']]
+
+	# copy input values into ordered array
 	x_input = {}
 
-	for column in inputs:
-		if 'categories' in column:
-			for v in column['categories']:
-				x_input['%s_%s' % (column['name'], v)] = (v == column['value'])
+	for c in args['inputs']:
+		if 'categories' in c:
+			for v in c['categories']:
+				x_input['%s_%s' % (c['name'], v)] = (v == c['value'])
 		else:
-			x_input[column['name']] = column['value']
+			x_input[c['name']] = c['value']
 
 	x_input = [float(x_input[c]) for c in args['columns']]
 
@@ -208,15 +215,15 @@ def predict(model_name, inputs):
 	X = np.array([x_input])
 	y = model.predict(X)
 
-	# apply transforms to output if specified
-	for transform in args['output']['transforms']:
+	# apply output transform if specified
+	if args['output_transform'] != None:
 		try:
-			t = utils.transforms[transform]
+			t = utils.transforms[args['output_transform']]
 			y = t.inverse_transform(y)
 		except:
-			raise RuntimeError('error: output transform %s not recognized' % (transform))
+			raise RuntimeError('error: output transform %s not recognized' % (args['output_transform']))
 
 	# return results
 	return {
-		args['output']['name']: float(y)
+		args['output']: float(y)
 	}

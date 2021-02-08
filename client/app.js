@@ -497,8 +497,9 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 	$scope.args = {
 		inputs: [],
 		output: null,
+		input_transform: 'maxabs',
+		output_transform: null,
 		selectors: 'exit=0',
-		scaler: 'maxabs',
 		hidden_layer_sizes: '128 128 128',
 		epochs: 200
 	}

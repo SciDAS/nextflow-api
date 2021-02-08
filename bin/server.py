@@ -650,8 +650,7 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 
 			# prepare training args
 			args = data['args']
-			args['inputs'] = [{ 'name': v, 'transforms': [] } for v in args['inputs']]
-			args['output'] = { 'name': args['output'], 'transforms': [] }
+			args['inputs'] = [{ 'name': v } for v in args['inputs']]
 			args['hidden_layer_sizes'] = [int(v) for v in args['hidden_layer_sizes'].split(' ')]
 			args['model_name'] = '%s.%s' % (pipeline.replace('/', '__'), data['process_name'])
 
@@ -728,6 +727,7 @@ class ModelPredictHandler(tornado.web.RequestHandler):
 			data = tornado.escape.json_decode(self.request.body)
 			data['pipeline'] = data['pipeline'].lower()
 			data['model_name'] = '%s.%s' % (data['pipeline'].replace('/', '__'), data['process_name'])
+			data['inputs'] = {v['name']: v['value'] for v in data['inputs']}
 
 			# perform model prediction
 			results = Model.predict(data['model_name'], data['inputs'])

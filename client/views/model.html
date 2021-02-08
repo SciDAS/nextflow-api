@@ -46,6 +46,15 @@
 				</div>
 
 				<div class="form-group row" ng-show="train.process_name">
+					<label class="col-sm-3 col-form-label">Input Transform</label>
+					<div class="col-sm-9">
+						<select class="form-control" ng-model="args.input_transform" ng-options="v for v in ['maxabs', 'minmax', 'standard']">
+							<option></option>
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="train.process_name">
 					<label class="col-sm-3 col-form-label">Output</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.output" ng-options="p for p in process_columns[train.process_name]"></select>
@@ -53,18 +62,18 @@
 				</div>
 
 				<div class="form-group row" ng-show="train.process_name">
-					<label class="col-sm-3 col-form-label">Selectors</label>
+					<label class="col-sm-3 col-form-label">Output Transform</label>
 					<div class="col-sm-9">
-						<input class="form-control" ng-model="args.selectors"/>
+						<select class="form-control" ng-model="args.output_transform" ng-options="v for v in ['log2']">
+							<option></option>
+						</select>
 					</div>
 				</div>
 
 				<div class="form-group row" ng-show="train.process_name">
-					<label class="col-sm-3 col-form-label">Scaler</label>
+					<label class="col-sm-3 col-form-label">Selectors</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.scaler" ng-options="v for v in ['maxabs', 'minmax', 'standard']">
-							<option></option>
-						</select>
+						<input class="form-control" ng-model="args.selectors"/>
 					</div>
 				</div>
 
