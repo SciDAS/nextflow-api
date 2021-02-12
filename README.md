@@ -6,6 +6,13 @@ Nextflow-API is a web application and REST API for submitting and monitoring Nex
 
 Refer to the [Dockerfile](docker/Dockerfile) to see how to install Nextflow-API locally for testing.
 
+You can also create an Anaconda environment:
+```bash
+conda create -n nextflow-api python=3.7
+source activate nextflow-api
+pip install -r requirements.txt
+```
+
 ## Deployment
 
 Refer to the [helm](helm/README.md) for instructions on how to deploy Nextflow-API to a Kubernetes cluster.
