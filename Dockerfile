@@ -20,7 +20,7 @@ RUN apt-get update -qq \
 		python3-pip \
 		zip
 
-# upgrade python3
+# change python to refer to python 3.7
 RUN rm /usr/bin/python3 && ln -s python3.7 /usr/bin/python3
 
 # install kubectl
@@ -40,4 +40,5 @@ WORKDIR /opt/nextflow-api
 COPY . .
 
 # install python dependencies
-RUN pip3 install -r requirements.txt
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install -r requirements.txt
