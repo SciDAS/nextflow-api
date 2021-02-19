@@ -438,6 +438,8 @@ app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, ale
 		height: 3,
 		aspect: 1
 	}
+	$scope.columns = []
+	$scope.merge_columns = []
 
 	$scope.query_pipelines = function() {
 		api.Task.query_pipelines()
@@ -469,6 +471,14 @@ app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, ale
 				$scope.querying = false
 				alert.error('Failed to query pipeline tasks.')
 			})
+	}
+
+	$scope.update_columns = function(process_columns, process, merge_process) {
+		let array1 = process ? process_columns[process] : []
+		let array2 = merge_process ? process_columns[merge_process] : []
+
+		$scope.columns = Array.from(new Set(array1.concat(array2)))
+		$scope.merge_columns = array1.filter(value => array2.includes(value));
 	}
 
 	$scope.visualize = function(pipeline, process_name, args) {
@@ -503,6 +513,8 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 		hidden_layer_sizes: '128 128 128',
 		epochs: 200
 	}
+	$scope.columns = []
+	$scope.merge_columns = []
 
 	$scope.train = {}
 	$scope.predict = {}
@@ -537,6 +549,14 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 				$scope.querying = false
 				alert.error('Failed to query pipeline tasks.')
 			})
+	}
+
+	$scope.update_columns = function(process_columns, process, merge_process) {
+		let array1 = process ? process_columns[process] : []
+		let array2 = merge_process ? process_columns[merge_process] : []
+
+		$scope.columns = Array.from(new Set(array1.concat(array2)))
+		$scope.merge_columns = array1.filter(value => array2.includes(value));
 	}
 
 	$scope.train = function(pipeline, process_name, args) {

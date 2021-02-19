@@ -34,7 +34,23 @@
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Process</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="process_name" ng-options="p for p in process_names"></select>
+						<select class="form-control" ng-model="process_name" ng-options="p for p in process_names" ng-change="update_columns(process_columns, process_name, args.merge_process)"></select>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">Join Process</label>
+					<div class="col-sm-9">
+						<select class="form-control" ng-model="args.merge_process" ng-options="p for p in process_names" ng-change="update_columns(process_columns, process_name, args.merge_process)">
+							<option></option>
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group row" ng-show="args.merge_process">
+					<label class="col-sm-3 col-form-label">Join On</label>
+					<div class="col-sm-9">
+						<select class="form-control" ng-model="args.merge_key" ng-options="p for p in merge_columns"></select>
 					</div>
 				</div>
 
@@ -56,14 +72,14 @@
 				<div class="form-group row" ng-show="process_name">
 					<label class="col-sm-3 col-form-label">X Axis</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.xaxis" ng-options="p for p in process_columns[process_name]" required></select>
+						<select class="form-control" ng-model="args.xaxis" ng-options="p for p in columns" required></select>
 					</div>
 				</div>
 
 				<div class="form-group row" ng-show="process_name">
 					<label class="col-sm-3 col-form-label">Y Axis</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.yaxis" ng-options="p for p in process_columns[process_name]">
+						<select class="form-control" ng-model="args.yaxis" ng-options="p for p in columns">
 							<option></option>
 						</select>
 					</div>
@@ -72,7 +88,7 @@
 				<div class="form-group row" ng-show="process_name">
 					<label class="col-sm-3 col-form-label">Row Axis</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.row" ng-options="p for p in process_columns[process_name]">
+						<select class="form-control" ng-model="args.row" ng-options="p for p in columns">
 							<option></option>
 						</select>
 					</div>
@@ -81,7 +97,7 @@
 				<div class="form-group row" ng-show="process_name">
 					<label class="col-sm-3 col-form-label">Col Axis</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.col" ng-options="p for p in process_columns[process_name]">
+						<select class="form-control" ng-model="args.col" ng-options="p for p in columns">
 							<option></option>
 						</select>
 					</div>
@@ -90,7 +106,7 @@
 				<div class="form-group row" ng-show="process_name">
 					<label class="col-sm-3 col-form-label">Hue Axis</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.hue" ng-options="p for p in process_columns[process_name]">
+						<select class="form-control" ng-model="args.hue" ng-options="p for p in columns">
 							<option></option>
 						</select>
 					</div>

@@ -584,9 +584,9 @@ class TaskVisualizeHandler(tornado.web.RequestHandler):
 			pipeline = data['pipeline'].lower()
 			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
-			tasks = [task for task in tasks if task['process'] == data['process_name']]
+			tasks_process = [task for task in tasks if task['process'] == data['process_name']]
 
-			df = pd.DataFrame(tasks)
+			df = pd.DataFrame(tasks_process)
 
 			# prepare visualizer args
 			args = data['args']
@@ -596,6 +596,20 @@ class TaskVisualizeHandler(tornado.web.RequestHandler):
 				args['selectors'] = []
 			else:
 				args['selectors'] = args['selectors'].split(' ')
+
+			# append columns from merge process if specified
+			if args['merge_process'] != None:
+				# load merge data
+				tasks_merge = [task for task in tasks if task['process'] == args['merge_process']]
+				df_merge = pd.DataFrame(tasks_merge)
+
+				# remove duplicate columns
+				dupe_columns = set(df.columns).intersection(df_merge.columns)
+				dupe_columns.remove(args['merge_key'])
+				df_merge.drop(columns=dupe_columns, inplace=True)
+
+				# append merge columns to data
+				df = df.merge(df_merge, on=args['merge_key'], how='left', copy=False)
 
 			# create visualization
 			outfile = Visualizer.visualize(df, args)
@@ -644,9 +658,9 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 			pipeline = data['pipeline'].lower()
 			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
-			tasks = [task for task in tasks if task['process'] == data['process_name']]
+			tasks_process = [task for task in tasks if task['process'] == data['process_name']]
 
-			df = pd.DataFrame(tasks)
+			df = pd.DataFrame(tasks_process)
 
 			# prepare training args
 			args = data['args']
@@ -658,6 +672,20 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 				args['selectors'] = []
 			else:
 				args['selectors'] = args['selectors'].split(' ')
+
+			# append columns from merge process if specified
+			if args['merge_process'] != None:
+				# load merge data
+				tasks_merge = [task for task in tasks if task['process'] == args['merge_process']]
+				df_merge = pd.DataFrame(tasks_merge)
+
+				# remove duplicate columns
+				dupe_columns = set(df.columns).intersection(df_merge.columns)
+				dupe_columns.remove(args['merge_key'])
+				df_merge.drop(columns=dupe_columns, inplace=True)
+
+				# append merge columns to data
+				df = df.merge(df_merge, on=args['merge_key'], how='left', copy=False)
 
 			# train model
 			results = Model.train(df, args)
