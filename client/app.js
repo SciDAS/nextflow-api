@@ -166,35 +166,35 @@ app.service('api', ['$http', '$q', function($http, $q) {
 		return httpRequest('get', `api/tasks/${id}`)
 	}
 
-	this.Task.visualize = function(pipeline, process_name, args) {
+	this.Task.visualize = function(pipeline, process, args) {
 		return httpRequest('post', `api/tasks/visualize`, null, {
 			pipeline,
-			process_name,
+			process,
 			args
 		})
 	}
 
 	this.Model = {}
 
-	this.Model.train = function(pipeline, process_name, args) {
+	this.Model.train = function(pipeline, process, args) {
 		return httpRequest('post', `api/model/train`, null, {
 			pipeline,
-			process_name,
+			process,
 			args
 		})
 	}
 
-	this.Model.get_config = function(pipeline, process_name) {
+	this.Model.get_config = function(pipeline, process) {
 		return httpRequest('get', `api/model/config`, {
 			pipeline,
-			process_name
+			process
 		})
 	}
 
-	this.Model.predict = function(pipeline, process_name, inputs) {
+	this.Model.predict = function(pipeline, process, inputs) {
 		return httpRequest('post', `api/model/predict`, null, {
 			pipeline,
-			process_name,
+			process,
 			inputs
 		})
 	}
@@ -456,10 +456,10 @@ app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, ale
 		api.Task.query_pipeline(pipeline)
 			.then(function(data) {
 				let process_names = Object.keys(data)
-				let process_columns = process_names.reduce((prev, process_name) => {
-					let tasks = data[process_name]
+				let process_columns = process_names.reduce((prev, process) => {
+					let tasks = data[process]
 					let columns = new Set(tasks.reduce((p, t) => p.concat(Object.keys(t)), []))
-					prev[process_name] = Array.from(columns)
+					prev[process] = Array.from(columns)
 					return prev
 				}, {})
 
@@ -481,10 +481,10 @@ app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, ale
 		$scope.merge_columns = array1.filter(value => array2.includes(value));
 	}
 
-	$scope.visualize = function(pipeline, process_name, args) {
+	$scope.visualize = function(pipeline, process, args) {
 		$scope.visualizing = true
 
-		api.Task.visualize(pipeline, process_name, args)
+		api.Task.visualize(pipeline, process, args)
 			.then(function(image_data) {
 				$scope.visualizing = false
 				$scope.visualize_success = true
@@ -534,10 +534,10 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 		api.Task.query_pipeline(pipeline)
 			.then(function(data) {
 				let process_names = Object.keys(data)
-				let process_columns = process_names.reduce((prev, process_name) => {
-					let tasks = data[process_name]
+				let process_columns = process_names.reduce((prev, process) => {
+					let tasks = data[process]
 					let columns = new Set(tasks.reduce((p, t) => p.concat(Object.keys(t)), []))
-					prev[process_name] = Array.from(columns)
+					prev[process] = Array.from(columns)
 					return prev
 				}, {})
 
@@ -559,10 +559,10 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 		$scope.merge_columns = array1.filter(value => array2.includes(value));
 	}
 
-	$scope.train = function(pipeline, process_name, args) {
+	$scope.train = function(pipeline, process, args) {
 		$scope.training = true
 
-		api.Model.train(pipeline, process_name, args)
+		api.Model.train(pipeline, process, args)
 			.then(function(results) {
 				$scope.training = false
 				$scope.train.results = results
@@ -573,8 +573,8 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 			})
 	}
 
-	$scope.get_config = function(pipeline, process_name) {
-		api.Model.get_config(pipeline, process_name)
+	$scope.get_config = function(pipeline, process) {
+		api.Model.get_config(pipeline, process)
 			.then(function(config) {
 				$scope.config = config
 				$scope.predict.inputs = config.inputs
@@ -583,10 +583,10 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 			})
 	}
 
-	$scope.predict = function(pipeline, process_name, inputs) {
+	$scope.predict = function(pipeline, process, inputs) {
 		$scope.predicting = true
 
-		api.Model.predict(pipeline, process_name, inputs)
+		api.Model.predict(pipeline, process, inputs)
 			.then(function(results) {
 				$scope.predicting = false
 				$scope.predict.results = results

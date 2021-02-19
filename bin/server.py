@@ -584,7 +584,7 @@ class TaskVisualizeHandler(tornado.web.RequestHandler):
 			pipeline = data['pipeline'].lower()
 			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
-			tasks_process = [task for task in tasks if task['process'] == data['process_name']]
+			tasks_process = [task for task in tasks if task['process'] == data['process']]
 
 			df = pd.DataFrame(tasks_process)
 
@@ -658,7 +658,7 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 			pipeline = data['pipeline'].lower()
 			tasks = await db.task_query_pipeline(pipeline)
 			tasks = [task['trace'] for task in tasks]
-			tasks_process = [task for task in tasks if task['process'] == data['process_name']]
+			tasks_process = [task for task in tasks if task['process'] == data['process']]
 
 			df = pd.DataFrame(tasks_process)
 
@@ -666,7 +666,7 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 			args = data['args']
 			args['inputs'] = [{ 'name': v } for v in args['inputs']]
 			args['hidden_layer_sizes'] = [int(v) for v in args['hidden_layer_sizes'].split(' ')]
-			args['model_name'] = '%s.%s' % (pipeline.replace('/', '__'), data['process_name'])
+			args['model_name'] = '%s.%s' % (pipeline.replace('/', '__'), data['process'])
 
 			if args['selectors'] == '':
 				args['selectors'] = []
@@ -693,11 +693,11 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 			# visualize training results
 			df = pd.DataFrame()
 			df['y_true'] = results['y_true']
-			df['y_test'] = results['y_test']
+			df['y_pred'] = results['y_pred']
 
 			outfile = Visualizer.visualize(df, {
 				'xaxis': 'y_true',
-				'yaxis': 'y_test',
+				'yaxis': 'y_pred',
 				'plot_name': str(bson.ObjectId())
 			})
 
@@ -707,7 +707,7 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 
 			# remove extra fields from results
 			del results['y_true']
-			del results['y_test']
+			del results['y_pred']
 
 			self.set_status(200)
 			self.set_header('content-type', 'application/json')
@@ -727,10 +727,10 @@ class ModelConfigHandler(tornado.web.RequestHandler):
 		try:
 			# parse request body
 			pipeline = self.get_argument('pipeline', default=None)
-			process_name = self.get_argument('process_name', default=None)
+			process = self.get_argument('process', default=None)
 
 			# get model config file
-			filename = '%s/%s.%s.json' % (env.MODELS_DIR, pipeline.lower().replace('/', '__'), process_name)
+			filename = '%s/%s.%s.json' % (env.MODELS_DIR, pipeline.lower().replace('/', '__'), process)
 
 			with open(filename, 'r') as f:
 				config = json.load(f)
@@ -754,7 +754,7 @@ class ModelPredictHandler(tornado.web.RequestHandler):
 			# parse request body
 			data = tornado.escape.json_decode(self.request.body)
 			data['pipeline'] = data['pipeline'].lower()
-			data['model_name'] = '%s.%s' % (data['pipeline'].replace('/', '__'), data['process_name'])
+			data['model_name'] = '%s.%s' % (data['pipeline'].replace('/', '__'), data['process'])
 			data['inputs'] = {v['name']: v['value'] for v in data['inputs']}
 
 			# perform model prediction

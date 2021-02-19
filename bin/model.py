@@ -182,7 +182,7 @@ def train(df, args):
 	# return results
 	return {
 		'y_true': y,
-		'y_test': model.predict(X),
+		'y_pred': model.predict(X),
 		'mape': scores.mean()
 	}
 

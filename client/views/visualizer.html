@@ -34,14 +34,14 @@
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Process</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="process_name" ng-options="p for p in process_names" ng-change="update_columns(process_columns, process_name, args.merge_process)"></select>
+						<select class="form-control" ng-model="process" ng-options="p for p in process_names" ng-change="update_columns(process_columns, process, args.merge_process)"></select>
 					</div>
 				</div>
 
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Join Process</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.merge_process" ng-options="p for p in process_names" ng-change="update_columns(process_columns, process_name, args.merge_process)">
+						<select class="form-control" ng-model="args.merge_process" ng-options="p for p in process_names" ng-change="update_columns(process_columns, process, args.merge_process)">
 							<option></option>
 						</select>
 					</div>
@@ -54,7 +54,7 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">Plot Type</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.plot_type">
@@ -69,14 +69,14 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">X Axis</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.xaxis" ng-options="p for p in columns" required></select>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">Y Axis</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.yaxis" ng-options="p for p in columns">
@@ -85,7 +85,7 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">Row Axis</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.row" ng-options="p for p in columns">
@@ -94,7 +94,7 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">Col Axis</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.col" ng-options="p for p in columns">
@@ -103,7 +103,7 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">Hue Axis</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.hue" ng-options="p for p in columns">
@@ -112,21 +112,21 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">Selectors</label>
 					<div class="col-sm-9">
 						<input class="form-control" ng-model="args.selectors"/>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">Height</label>
 					<div class="col-sm-9">
 						<input class="form-control" type="number" ng-model="args.height"/>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="process_name">
+				<div class="form-group row" ng-show="process">
 					<label class="col-sm-3 col-form-label">Aspect Ratio</label>
 					<div class="col-sm-9">
 						<input class="form-control" type="number" ng-model="args.aspect"/>
@@ -134,7 +134,7 @@
 				</div>
 
 				<div class="text-center">
-				<button type="button" class="btn btn-outline-dark" ng-disabled="visualizing" ng-click="!visualizing && visualize(pipeline, process_name, args)">
+				<button type="button" class="btn btn-outline-dark" ng-disabled="visualizing" ng-click="!visualizing && visualize(pipeline, process, args)">
 						<span ng-show="visualizing" class="spinner-border spinner-border-sm"></span>
 						<span ng-show="!visualizing">Visualize</span>
 					</button>

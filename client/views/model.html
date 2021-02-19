@@ -34,14 +34,14 @@
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Process</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="train.process_name" ng-options="p for p in process_names" ng-change="update_columns(process_columns, train.process_name, args.merge_process)"></select>
+						<select class="form-control" ng-model="train.process" ng-options="p for p in process_names" ng-change="update_columns(process_columns, train.process, args.merge_process)"></select>
 					</div>
 				</div>
 
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Join Process</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="args.merge_process" ng-options="p for p in process_names" ng-change="update_columns(process_columns, train.process_name, args.merge_process)">
+						<select class="form-control" ng-model="args.merge_process" ng-options="p for p in process_names" ng-change="update_columns(process_columns, train.process, args.merge_process)">
 							<option></option>
 						</select>
 					</div>
@@ -54,14 +54,14 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="train.process_name">
+				<div class="form-group row" ng-show="train.process">
 					<label class="col-sm-3 col-form-label">Inputs</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.inputs" ng-options="p for p in columns" multiple size="10"></select>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="train.process_name">
+				<div class="form-group row" ng-show="train.process">
 					<label class="col-sm-3 col-form-label">Input Transform</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.input_transform" ng-options="v for v in ['maxabs', 'minmax', 'standard']">
@@ -70,14 +70,14 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="train.process_name">
+				<div class="form-group row" ng-show="train.process">
 					<label class="col-sm-3 col-form-label">Output</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.output" ng-options="p for p in columns"></select>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="train.process_name">
+				<div class="form-group row" ng-show="train.process">
 					<label class="col-sm-3 col-form-label">Output Transform</label>
 					<div class="col-sm-9">
 						<select class="form-control" ng-model="args.output_transform" ng-options="v for v in ['log2']">
@@ -86,21 +86,21 @@
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="train.process_name">
+				<div class="form-group row" ng-show="train.process">
 					<label class="col-sm-3 col-form-label">Selectors</label>
 					<div class="col-sm-9">
 						<input class="form-control" ng-model="args.selectors"/>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="train.process_name">
+				<div class="form-group row" ng-show="train.process">
 					<label class="col-sm-3 col-form-label">Hidden Layers</label>
 					<div class="col-sm-9">
 						<input class="form-control" ng-model="args.hidden_layer_sizes" ng-pattern="/[\d\s]*/"/>
 					</div>
 				</div>
 
-				<div class="form-group row" ng-show="train.process_name">
+				<div class="form-group row" ng-show="train.process">
 					<label class="col-sm-3 col-form-label">Epochs</label>
 					<div class="col-sm-9">
 						<input class="form-control" type="number" ng-model="args.epochs"/>
@@ -108,7 +108,7 @@
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-disabled="training" ng-click="!training && train(pipeline, train.process_name, args)">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="training" ng-click="!training && train(pipeline, train.process, args)">
 						<span ng-show="training" class="spinner-border spinner-border-sm"></span>
 						<span ng-show="!training">Train</span>
 					</button>
@@ -140,12 +140,12 @@
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Process</label>
 					<div class="col-sm-9">
-						<select class="form-control" ng-model="predict.process_name" ng-options="p for p in process_names"></select>
+						<select class="form-control" ng-model="predict.process" ng-options="p for p in process_names"></select>
 					</div>
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-click="get_config(pipeline, predict.process_name)">
+					<button type="button" class="btn btn-outline-dark" ng-click="get_config(pipeline, predict.process)">
 						<span>Get Config</span>
 					</button>
 				</div>
@@ -163,7 +163,7 @@
 				</div>
 
 				<div class="text-center">
-					<button type="button" class="btn btn-outline-dark" ng-disabled="predicting" ng-click="!predicting && predict(pipeline, predict.process_name, predict.inputs)">
+					<button type="button" class="btn btn-outline-dark" ng-disabled="predicting" ng-click="!predicting && predict(pipeline, predict.process, predict.inputs)">
 						<span ng-show="predicting" class="spinner-border spinner-border-sm"></span>
 						<span ng-show="!predicting">Predict</span>
 					</button>
