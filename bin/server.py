@@ -112,8 +112,8 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 		await db.workflow_create(workflow)
 
 		# create workflow directory
-		work_dir = os.path.join(env.WORKFLOWS_DIR, workflow['_id'])
-		os.makedirs(work_dir)
+		workflow_dir = os.path.join(env.WORKFLOWS_DIR, workflow['_id'])
+		os.makedirs(workflow_dir)
 
 		self.set_status(200)
 		self.set_header('content-type', 'application/json')
@@ -146,23 +146,23 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 			workflow = await db.workflow_get(id)
 
 			# append list of input files
-			work_dir = os.path.join(env.WORKFLOWS_DIR, id)
-			input_dir = os.path.join(work_dir, workflow['input_dir'])
-			output_dir = os.path.join(work_dir, workflow['output_dir'])
+			workflow_dir = os.path.join(env.WORKFLOWS_DIR, id)
+			input_dir = os.path.join(workflow_dir, workflow['input_dir'])
+			output_dir = os.path.join(workflow_dir, workflow['output_dir'])
 
 			if os.path.exists(input_dir):
-				workflow['input_files'] = list_dir_recursive(input_dir, relpath_start=work_dir)
+				workflow['input_files'] = list_dir_recursive(input_dir, relpath_start=workflow_dir)
 			else:
 				workflow['input_files'] = []
 
 			# append list of output files
 			if os.path.exists(output_dir):
-				workflow['output_files'] = list_dir_recursive(output_dir, relpath_start=work_dir)
+				workflow['output_files'] = list_dir_recursive(output_dir, relpath_start=workflow_dir)
 			else:
 				workflow['output_files'] = []
 
 			# append status of output data
-			workflow['output_data'] = os.path.exists('%s/%s-output.tar.gz' % (work_dir, id))
+			workflow['output_data'] = os.path.exists('%s/%s-output.tar.gz' % (workflow_dir, id))
 
 			self.set_status(200)
 			self.set_header('content-type', 'application/json')
@@ -277,10 +277,10 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 				return
 
 			# copy nextflow.config from input directory if it exists
-			work_dir = os.path.join(env.WORKFLOWS_DIR, id)
-			input_dir = os.path.join(work_dir, workflow['input_dir'])
+			workflow_dir = os.path.join(env.WORKFLOWS_DIR, id)
+			input_dir = os.path.join(workflow_dir, workflow['input_dir'])
 			src = os.path.join(input_dir, 'nextflow.config')
-			dst = os.path.join(work_dir, 'nextflow.config')
+			dst = os.path.join(workflow_dir, 'nextflow.config')
 
 			if os.path.exists(src):
 				shutil.copyfile(src, dst)
@@ -289,8 +289,9 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 
 			# append additional settings to nextflow.config
 			with open(dst, 'a') as f:
-				f.write('weblog { enabled = true\n url = \"http://%s:8080/api/tasks\" }\n' % (socket.gethostbyname(socket.gethostname())))
-				f.write('k8s { launchDir = \"%s\" }\n' % (work_dir))
+				weblog_url = 'http://%s:%d/api/tasks' % (socket.gethostbyname(socket.gethostname()), tornado.options.options.port)
+				f.write('weblog { enabled = true\n url = \"%s\" }\n' % (weblog_url))
+				f.write('k8s { launchDir = \"%s\" }\n' % (workflow_dir))
 
 			# update workflow status
 			workflow['status'] = 'running'
