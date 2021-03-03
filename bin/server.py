@@ -773,9 +773,9 @@ class ModelPredictHandler(tornado.web.RequestHandler):
 
 if __name__ == '__main__':
 	# parse command-line options
-	tornado.options.define('backend', default='mongo', help='Database backend to use (json or mongo)')
-	tornado.options.define('json-filename', default='db.json', help='json file for json backend')
-	tornado.options.define('mongo-hostname', default='localhost', help='mongodb service url for mongo backend')
+	tornado.options.define('backend', default='mongo', help='Database backend to use (file or mongo)')
+	tornado.options.define('url-file', default='db.pkl', help='database file for file backend')
+	tornado.options.define('url-mongo', default='localhost', help='mongodb service url for mongo backend')
 	tornado.options.define('np', default=1, help='number of server processes')
 	tornado.options.define('port', default=8080)
 	tornado.options.parse_command_line()
@@ -816,11 +816,11 @@ if __name__ == '__main__':
 		server.start(tornado.options.options.np)
 
 		# connect to database
-		if tornado.options.options.backend == 'json':
-			app.settings['db'] = backend.JSONBackend(tornado.options.options.json_filename)
+		if tornado.options.options.backend == 'file':
+			app.settings['db'] = backend.FileBackend(tornado.options.options.url_file)
 
 		elif tornado.options.options.backend == 'mongo':
-			app.settings['db'] = backend.MongoBackend(tornado.options.options.mongo_hostname)
+			app.settings['db'] = backend.MongoBackend(tornado.options.options.url_mongo)
 
 		else:
 			raise KeyError('Backend must be either \'json\' or \'mongo\'')

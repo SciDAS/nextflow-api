@@ -1,6 +1,6 @@
-import json
 import motor.motor_tornado
 import multiprocessing as mp
+import pickle
 import pymongo
 
 
@@ -38,18 +38,19 @@ class Backend():
 
 
 
-class JSONBackend(Backend):
+class FileBackend(Backend):
+
 	def __init__(self, url):
 		self._lock = mp.Lock()
 		self._url = url
 		self.initialize()
 
 	def initialize(self, error_not_found=False):
-		# load database from json file
+		# load database from pickle file
 		try:
-			self._db = json.load(open(self._url))
+			self.load()
 
-		# initialize empty database if json file doesn't exist
+		# initialize empty database if pickle file doesn't exist
 		except FileNotFoundError:
 			self._db = {
 				'workflows': [],
@@ -58,10 +59,10 @@ class JSONBackend(Backend):
 			self.save()
 
 	def load(self):
-		self._db = json.load(open(self._url))
+		self._db = pickle.load(open(self._url, 'rb'))
 
 	def save(self):
-		json.dump(self._db, open(self._url, 'w'))
+		pickle.dump(self._db, open(self._url, 'wb'))
 
 	async def workflow_query(self, page, page_size):
 		self._lock.acquire()
