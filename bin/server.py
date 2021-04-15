@@ -599,7 +599,7 @@ class TaskVisualizeHandler(tornado.web.RequestHandler):
 				args['selectors'] = args['selectors'].split(' ')
 
 			# append columns from merge process if specified
-			if args['merge_process'] != None:
+			if 'merge_process' in args:
 				# load merge data
 				tasks_merge = [task for task in tasks if task['process'] == args['merge_process']]
 				df_merge = pd.DataFrame(tasks_merge)

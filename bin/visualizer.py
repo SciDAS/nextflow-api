@@ -158,10 +158,9 @@ def visualize(data, args):
 	# create plot
 	if args['plot_type'] == 'hist':
 		g.map(
-			sns.distplot,
+			sns.histplot,
 			args['xaxis'],
-			color=args['color'],
-			norm_hist=False)
+			color=args['color'])
 
 	elif args['plot_type'] == 'count':
 		g.map(

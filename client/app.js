@@ -397,7 +397,7 @@ app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 	$scope.archive = function(pipeline) {
 		$scope.archiving = true
 
-		api.Task.query_pipeline(pipeline, true)
+		api.Task.archive(pipeline)
 			.then(function() {
 				$scope.archiving = false
 				$scope.archive_success = true

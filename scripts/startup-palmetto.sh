@@ -11,4 +11,4 @@ source activate nextflow-api
 # start web server
 export NXF_EXECUTOR="pbspro"
 
-python bin/server.py --backend=json
+python bin/server.py --backend=file
