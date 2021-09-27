@@ -25,8 +25,8 @@ Remote:
 WebServer:
   # Docker image, change to your nextflow-api image if needed
   Image: bentsherman/nextflow-api
-  # Database Backend - default is MongoDB
-  JSONBackend: false
+  # Database Backend - options are "file" and "mongo"
+  Backend: "mongo"
   # Number of containers
   Replicas: 1
   # Resource requests and limits per container

@@ -39,14 +39,14 @@ spec:
         command:
         - /bin/bash
         - -c
-        {{ if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.JSONBackend false) }}
+        {{ if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.Backend "mongo") }}
         - ./scripts/db-startup.sh && ./scripts/kube-config.sh {{ .Values.Remote.Context }} && python3 bin/server.py --backend=mongo
-        {{ else if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.JSONBackend true) }}
-        - ./scripts/kube-config.sh {{ .Values.Remote.Context }} && python3 bin/server.py --backend=json
-        {{ else if and (eq .Values.Remote.Enabled false) (eq .Values.WebServer.JSONBackend false) }}
+        {{ else if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.Backend "file") }}
+        - ./scripts/kube-config.sh {{ .Values.Remote.Context }} && python3 bin/server.py --backend=file
+        {{ else if and (eq .Values.Remote.Enabled false) (eq .Values.WebServer.Backend "mongo") }}
         - ./scripts/db-startup.sh && python3 bin/server.py --backend=mongo
         {{ else }}
-        - python3 bin/server.py --backend=json
+        - python3 bin/server.py --backend=file
         {{ end }}
         resources:
           requests:
