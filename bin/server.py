@@ -66,6 +66,8 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 
 	DEFAULTS = {
 		'name': '',
+		'params_format': '',
+		'params_data': '',
 		'profiles': 'standard',
 		'revision': 'master',
 		'with_container': False,
@@ -130,6 +132,8 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 
 	DEFAULTS = {
 		'name': '',
+		'params_format': '',
+		'params_data': '',
 		'profiles': 'standard',
 		'revision': 'master',
 		'with_container': False,
@@ -282,10 +286,11 @@ class WorkflowLaunchHandler(tornado.web.RequestHandler):
 			src = os.path.join(input_dir, 'nextflow.config')
 			dst = os.path.join(workflow_dir, 'nextflow.config')
 
+			if os.path.exists(dst):
+				os.remove(dst)
+
 			if os.path.exists(src):
 				shutil.copyfile(src, dst)
-			elif os.path.exists(dst):
-				os.remove(dst)
 
 			# append additional settings to nextflow.config
 			with open(dst, 'a') as f:

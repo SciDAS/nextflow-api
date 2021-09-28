@@ -15,7 +15,7 @@ def run_workflow(workflow, work_dir, resume):
 	# change to workflow directory
 	os.chdir(work_dir)
 
-	# launch workflow, wait for completion
+	# prepare command line arguments
 	if env.NXF_EXECUTOR == 'k8s':
 		args = [
 			'nextflow',
@@ -58,9 +58,20 @@ def run_workflow(workflow, work_dir, resume):
 			'-with-singularity' if workflow['with_container'] else ''
 		]
 
-	if resume:
-		args.append('-resume')
+	# add params file if specified
+	if workflow['params_format'] and workflow['params_data']:
+		params_filename = 'params.%s' % (workflow['params_format'])
+		params_file = open(params_filename, 'w')
+		params_file.write(workflow['params_data'])
+		params_file.close()
 
+		args += ['-params-file', params_filename]
+
+	# add resume option if specified
+	if resume:
+		args += ['-resume']
+
+	# launch workflow asynchronously
 	proc = subprocess.Popen(
 		args,
 		stdout=open('.workflow.log', 'w'),

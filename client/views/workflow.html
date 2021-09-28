@@ -88,7 +88,32 @@
 						</div>
 					</div>
 				</div>
-		
+
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">Params Format</label>
+					<div class="col-sm-9">
+						<select
+							class="form-control"
+							name="params_format"
+							ng-model="workflow.params_format">
+							<option value="json">JSON</option>
+							<option value="yaml">YAML</option>
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">Params</label>
+					<div class="col-sm-9">
+						<textarea
+							class="form-control"
+							rows="8"
+							name="params_data"
+							ng-model="workflow.params_data">
+						</textarea>
+					</div>
+				</div>
+
 				<div class="form-group row">
 					<label class="col-sm-3 col-form-label">Input Directory</label>
 					<div class="col-sm-9">
