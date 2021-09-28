@@ -70,7 +70,6 @@ class WorkflowCreateHandler(tornado.web.RequestHandler):
 		'params_data': '',
 		'profiles': 'standard',
 		'revision': 'master',
-		'with_container': False,
 		'input_dir': 'input',
 		'output_dir': 'output',
 		'attempts': 0
@@ -136,7 +135,6 @@ class WorkflowEditHandler(tornado.web.RequestHandler):
 		'params_data': '',
 		'profiles': 'standard',
 		'revision': 'master',
-		'with_container': False,
 		'input_dir': 'input',
 		'output_dir': 'output',
 		'attempts': 0

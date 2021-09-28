@@ -40,8 +40,7 @@ def run_workflow(workflow, work_dir, resume):
 			'-latest',
 			'-name', 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts']),
 			'-profile', workflow['profiles'],
-			'-revision', workflow['revision'],
-			'-with-docker' if workflow['with_container'] else ''
+			'-revision', workflow['revision']
 		]
 
 	elif env.NXF_EXECUTOR == 'pbspro':
@@ -54,8 +53,7 @@ def run_workflow(workflow, work_dir, resume):
 			'-latest',
 			'-name', 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts']),
 			'-profile', workflow['profiles'],
-			'-revision', workflow['revision'],
-			'-with-singularity' if workflow['with_container'] else ''
+			'-revision', workflow['revision']
 		]
 
 	# add params file if specified
