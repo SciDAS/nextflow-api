@@ -8,9 +8,7 @@ Refer to the [Dockerfile](docker/Dockerfile) to see how to install Nextflow-API 
 
 You can also create an Anaconda environment:
 ```bash
-conda create -n nextflow-api python=3.7
-source activate nextflow-api
-pip install -r requirements.txt
+conda env create -f environment.yml
 ```
 
 ## Deployment
