@@ -431,9 +431,9 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 			# extract input features for task
 			if task['event'] == 'process_completed':
 				# load execution log
-				filenames = ['.command.out', '.command.err']
+				filenames = ['.command.log', '.command.out', '.command.err']
 				filenames = [os.path.join(task['trace']['workdir'], filename) for filename in filenames]
-				files = [open(filename) for filename in filenames]
+				files = [open(filename) for filename in filenames if os.path.exists(filename)]
 				lines = [line.strip() for f in files for line in f]
 
 				# parse input features from trace directives
@@ -668,9 +668,8 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 
 			# prepare training args
 			args = data['args']
-			args['inputs'] = [{ 'name': v } for v in args['inputs']]
 			args['hidden_layer_sizes'] = [int(v) for v in args['hidden_layer_sizes'].split(' ')]
-			args['model_name'] = '%s.%s' % (pipeline.replace('/', '__'), data['process'])
+			args['model_name'] = '%s.%s.%s' % (pipeline.replace('/', '__'), data['process'], args['target'])
 
 			if args['selectors'] == '':
 				args['selectors'] = []
@@ -726,15 +725,14 @@ class ModelTrainHandler(tornado.web.RequestHandler):
 class ModelConfigHandler(tornado.web.RequestHandler):
 
 	async def get(self):
-		db = self.settings['db']
-
 		try:
 			# parse request body
 			pipeline = self.get_argument('pipeline', default=None)
 			process = self.get_argument('process', default=None)
+			target = self.get_argument('target', default=None)
 
 			# get model config file
-			filename = '%s/%s.%s.json' % (env.MODELS_DIR, pipeline.lower().replace('/', '__'), process)
+			filename = '%s/%s.%s.%s.json' % (env.MODELS_DIR, pipeline.lower().replace('/', '__'), process, target)
 
 			with open(filename, 'r') as f:
 				config = json.load(f)
@@ -752,14 +750,11 @@ class ModelConfigHandler(tornado.web.RequestHandler):
 class ModelPredictHandler(tornado.web.RequestHandler):
 
 	async def post(self):
-		db = self.settings['db']
-
 		try:
 			# parse request body
 			data = tornado.escape.json_decode(self.request.body)
 			data['pipeline'] = data['pipeline'].lower()
-			data['model_name'] = '%s.%s' % (data['pipeline'].replace('/', '__'), data['process'])
-			data['inputs'] = {v['name']: v['value'] for v in data['inputs']}
+			data['model_name'] = '%s.%s.%s' % (data['pipeline'].replace('/', '__'), data['process'], data['target'])
 
 			# perform model prediction
 			results = Model.predict(data['model_name'], data['inputs'])
@@ -769,7 +764,7 @@ class ModelPredictHandler(tornado.web.RequestHandler):
 			self.write(tornado.escape.json_encode(results))
 		except Exception as e:
 			self.set_status(404)
-			self.write(message(404, 'Failed to train model'))
+			self.write(message(404, 'Failed to perform model prediction'))
 			raise e
 
 

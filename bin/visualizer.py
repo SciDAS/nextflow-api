@@ -6,7 +6,7 @@ import seaborn as sns
 
 
 def select_rows_by_values(df, column, values):
-	return pd.DataFrame().append([df[df[column].astype(str) == v] for v in values], sort=False)
+	return pd.concat([df[df[column].astype(str) == v] for v in values])
 
 
 
@@ -39,13 +39,6 @@ def contingency_table(x, y, data, **kwargs):
 
 	# plot contingency table
 	sns.heatmap(ct, annot=True, fmt='d', cbar=False, square=True, **kwargs)
-
-
-
-def rotate_ticklabels(ticklabels, angle=45):
-	for tick in ticklabels:
-		tick.set_horizontalalignment('right')
-		tick.set_rotation(angle)
 
 
 
@@ -225,19 +218,19 @@ def visualize(data, args):
 
 	# set x-axis scale if specified
 	if args['xscale'] != None:
-		plt.gca().set_xscale(args['xscale'])
+		g.set(xscale=args['xscale'])
 
 	# set y-axis scale if specified
 	if args['yscale'] != None:
-		plt.gca().set_yscale(args['yscale'])
+		g.set(yscale=args['yscale'])
 
 	# rotate x-axis tick labels if specified
 	if args['rotate_xticklabels']:
-		rotate_ticklabels(plt.gca().get_xticklabels())
+		plt.xticks(rotation=45)
 
 	# rotate y-axis tick labels if specified
 	if args['rotate_yticklabels']:
-		rotate_ticklabels(plt.gca().get_yticklabels())
+		plt.yticks(rotation=45)
 
 	# disable x-axis ticks if there are too many categories
 	if is_discrete(data, args['xaxis']) and len(set(data[args['xaxis']])) >= 100:

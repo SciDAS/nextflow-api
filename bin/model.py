@@ -1,8 +1,15 @@
+import copy
+import dill as pickle
+import forestci
+import h5py
+import io
 import json
 import numpy as np
-import os
 import pandas as pd
-import pickle
+import scipy.stats
+import sklearn.base
+import sklearn.dummy
+import sklearn.ensemble
 import sklearn.metrics
 import sklearn.model_selection
 import sklearn.pipeline
@@ -10,12 +17,111 @@ import sklearn.preprocessing
 from tensorflow import keras
 
 import env
-import utils
+
+
+
+def check_std(y_pred):
+	if isinstance(y_pred, tuple):
+		return y_pred
+	else:
+		return y_pred, np.zeros_like(y_pred)
+
+
+
+def predict_intervals(y_bar, y_std, ci=0.95):
+	# compute z score
+	_, n_stds = scipy.stats.norm.interval(ci)
+
+	# compute intervals
+	y_lower = y_bar - n_stds * y_std
+	y_upper = y_bar + n_stds * y_std
+
+	return y_lower, y_upper
+
+
+
+class KerasRegressor(keras.wrappers.scikit_learn.KerasRegressor):
+
+	def __getstate__(self):
+		state = self.__dict__
+		if 'model' in state:
+			model = state['model']
+			model_hdf5_bio = io.BytesIO()
+			with h5py.File(model_hdf5_bio, mode='w') as file:
+				model.save(file)
+			state['model'] = model_hdf5_bio
+			state_copy = copy.deepcopy(state)
+			state['model'] = model
+			return state_copy
+		else:
+			return state
+
+	def __setstate__(self, state):
+		if 'model' in state:
+			model_hdf5_bio = state['model']
+			with h5py.File(model_hdf5_bio, mode='r') as file:
+				state['model'] = keras.models.load_model(file)
+		self.__dict__ = state
+
+	def predict(self, x):
+		return np.squeeze(self.model(x))
+
+
+
+class KerasRegressorWithIntervals(KerasRegressor):
+
+	def inverse_tau(self, N, lmbda=1e-5, p_dropout=0.1, ls_2=0.005):
+		return (2 * N * lmbda) / (1 - p_dropout) / ls_2
+
+	def fit(self, X, y):
+		# fit neural network
+		history = super(KerasRegressorWithIntervals, self).fit(X, y)
+
+		# save training set size for tau adjustment
+		self.n_train_samples = X.shape[0]
+
+		return history
+
+	def predict(self, X, n_preds=10):
+		# compute several predictions for each sample
+		y_preds = np.array([super(KerasRegressorWithIntervals, self).predict(X) for _ in range(n_preds)])
+
+		# compute tau adjustment
+		tau_inv = self.inverse_tau(self.n_train_samples)
+
+		# compute mean and variance
+		y_bar = np.mean(y_preds, axis=0)
+		y_std = np.std(y_preds, axis=0) + tau_inv
+
+		return y_bar, y_std
+
+
+
+class RandomForestRegressorWithIntervals(sklearn.ensemble.RandomForestRegressor):
+
+	def fit(self, X, y):
+		# fit random forest
+		super(RandomForestRegressorWithIntervals, self).fit(X, y)
+
+		# save training set for variance estimate
+		self.X_train = X
+
+		return self
+
+	def predict(self, X):
+		# compute predictions
+		y_bar = super(RandomForestRegressorWithIntervals, self).predict(X)
+
+		# compute variance estimate
+		y_var = forestci.random_forest_error(self, self.X_train, X)
+		y_std = np.sqrt(y_var)
+
+		return y_bar, y_std
 
 
 
 def select_rows_by_values(df, column, values):
-	return pd.DataFrame().append([df[df[column].astype(str) == v] for v in values], sort=False)
+	return pd.concat([df[df[column].astype(str) == v] for v in values])
 
 
 
@@ -24,31 +130,100 @@ def is_categorical(df, column):
 
 
 
-def create_mlp(input_shape, hidden_layer_sizes=[], activation='relu', batch_size=32, epochs=200):
+def create_dataset(df, inputs, target=None):
+	# extract input/target data from trace data
+	X = df[inputs]
+	y = df[target].values if target != None else None
+
+	# one-hot encode categorical inputs, save categories
+	options = {column: None for column in inputs}
+
+	for column in inputs:
+		if is_categorical(X, column):
+			options[column] = X[column].unique().tolist()
+			X = pd.get_dummies(X, columns=[column], drop_first=False)
+
+	# save column order
+	columns = list(X.columns)
+
+	return X.values, y, columns, options
+
+
+
+def create_dummy():
+	return sklearn.dummy.DummyRegressor(strategy='quantile', quantile=1.0)
+
+
+
+def create_mlp(
+	input_shape,
+	hidden_layer_sizes=[],
+	activation='relu',
+	activation_target=None,
+	l1=0,
+	l2=1e-5,
+	p_dropout=0.1,
+	intervals=False,
+	optimizer='adam', # lr=0.001
+	loss='mean_absolute_error',
+	epochs=200):
+
 	def build_fn():
 		# create a 3-layer neural network
 		x_input = keras.Input(shape=input_shape)
 
 		x = x_input
 		for units in hidden_layer_sizes:
-			x = keras.layers.Dense(units=units, activation=activation)(x)
+			x = keras.layers.Dense(
+				units=units,
+				activation=activation,
+				kernel_regularizer=keras.regularizers.l1_l2(l1, l2),
+				bias_regularizer=keras.regularizers.l1_l2(l1, l2)
+			)(x)
 
-		y_output = keras.layers.Dense(units=1)(x)
+			if p_dropout != None:
+				training = True if intervals else None
+				x = keras.layers.Dropout(p_dropout)(x, training=training)
+
+		y_output = keras.layers.Dense(units=1, activation=activation_target)(x)
 
 		mlp = keras.models.Model(x_input, y_output)
 
 		# compile the model
-		mlp.compile(optimizer='adam', loss='mean_absolute_percentage_error')
+		mlp.compile(optimizer=optimizer, loss=loss)
 
 		return mlp
 
-	return utils.KerasRegressor(
+	if intervals:
+		Regressor = KerasRegressorWithIntervals
+	else:
+		Regressor = KerasRegressor
+
+	return Regressor(
 		build_fn=build_fn,
-		batch_size=batch_size,
+		batch_size=32,
 		epochs=epochs,
-		validation_split=0.1,
-		verbose=False
+		verbose=False,
+		validation_split=0.1
 	)
+
+
+
+def create_rf(criterion='mae', intervals=False):
+	if intervals:
+		Regressor = RandomForestRegressorWithIntervals
+	else:
+		Regressor = sklearn.ensemble.RandomForestRegressor
+
+	return Regressor(n_estimators=100, criterion=criterion)
+
+
+
+def create_pipeline(reg, scaler_fn=sklearn.preprocessing.MaxAbsScaler):
+	return sklearn.pipeline.Pipeline([
+		('scaler', scaler_fn()),
+		('reg', reg)
+	])
 
 
 
@@ -59,41 +234,59 @@ def mean_absolute_percentage_error(y_true, y_pred):
 
 
 
-def evaluate_once(model, X, y, train_size=0.8):
-	# create train/test split
-	X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, test_size=1 - train_size)
-
-	# train model
-	model.fit(X_train, y_train)
-
-	# evaluate model
-	y_pred = model.predict(X_test)
-	score = mean_absolute_percentage_error(y_test, y_pred)
-
-	return score
+def prediction_interval_coverage(y_true, y_lower, y_upper):
+	return 100 * np.mean((y_lower <= y_true) & (y_true <= y_upper))
 
 
 
-def evaluate_trials(model, X, y, train_size=0.8, n_trials=5):
-	return [evaluate_once(model, X, y, train_size=train_size) for i in range(n_trials)]
+def evaluate_cv(model, X, y, cv=5, ci=0.95):
+	# initialize prediction arrays
+	y_bar = np.empty_like(y)
+	y_std = np.empty_like(y)
 
+	# perform k-fold cross validation
+	kfold = sklearn.model_selection.KFold(n_splits=cv, shuffle=True)
 
+	for train_index, test_index in kfold.split(X):
+		# reset session (for keras models)
+		keras.backend.clear_session()
 
-def evaluate_cv(model, X, y, cv=5):
-	scorer = sklearn.metrics.make_scorer(mean_absolute_percentage_error)
-	scores = sklearn.model_selection.cross_val_score(model, X, y, scoring=scorer, cv=cv, n_jobs=-1)
+		# extract train/test split
+		X_train, X_test = X[train_index], X[test_index]
+		y_train, y_test = y[train_index], y[test_index]
 
-	return scores
+		# train model
+		model_ = sklearn.base.clone(model)
+		model_.fit(X_train, y_train)
+
+		# get model predictions
+		y_bar_i, y_std_i = check_std(model_.predict(X_test))
+
+		y_bar[test_index] = y_bar_i
+		y_std[test_index] = y_std_i
+
+	# compute prediction intervals
+	y_lower, y_upper = predict_intervals(y_bar, y_std, ci=ci)
+
+	# evaluate predictions
+	scores = {
+		'mpe': mean_absolute_percentage_error(y, y_bar),
+		'cov': prediction_interval_coverage(y, y_lower, y_upper)
+	}
+
+	return scores, y_bar, y_std
 
 
 
 def train(df, args):
 	defaults = {
 		'selectors': [],
-		'input_transform': 'maxabs',
-		'cv': 5,
+		'min_std': 0.1,
+		'scaler': 'maxabs',
+		'model_type': 'mlp',
 		'hidden_layer_sizes': [128, 128, 128],
-		'epochs': 200
+		'epochs': 200,
+		'intervals': True
 	}
 
 	args = {**defaults, **args}
@@ -110,57 +303,51 @@ def train(df, args):
 
 	# extract input/output data from trace data
 	try:
-		X = df[[c['name'] for c in args['inputs']]]
-		y = df[args['output']]
+		X, y, columns, options = create_dataset(df, args['inputs'], args['target'])
 	except:
 		raise RuntimeError('error: one or more input/output variables are not in the dataset')
 
-	# one-hot encode categorical inputs
-	onehot_columns = []
+	# select scaler
+	try:
+		scalers = {
+			'maxabs': sklearn.preprocessing.MaxAbsScaler,
+			'minmax': sklearn.preprocessing.MinMaxScaler,
+			'standard': sklearn.preprocessing.StandardScaler
+		}
+		Scaler = scalers[args['scaler']]
+	except:
+		raise RuntimeError('error: scaler %s not recognized' % (args['scaler']))
 
-	for c in args['inputs']:
-		if is_categorical(X, c['name']):
-			c['categories'] = X[c['name']].unique().tolist()
-			onehot_columns.append(c['name'])
-
-	X = pd.get_dummies(X, columns=onehot_columns, drop_first=False)
-
-	# select input transform
-	if args['input_transform'] != None:
-		try:
-			scalers = {
-				'maxabs': sklearn.preprocessing.MaxAbsScaler,
-				'minmax': sklearn.preprocessing.MinMaxScaler,
-				'standard': sklearn.preprocessing.StandardScaler
-			}
-			Scaler = scalers[args['input_transform']]
-		except:
-			raise RuntimeError('error input transform %s not recognized' % (args['input_transform']))
-
-	# apply output transforms
-	if args['output_transform'] != None:
-		try:
-			t = utils.transforms[args['output_transform']]
-			y = y.to_numpy().reshape(-1, 1)
-			y = t.transform(y)
-			y = y.reshape(-1)
-		except:
-			raise RuntimeError('error: output transform %s not recognized' % (args['output_transform']))
+	# use dummy regressor if target data has low variance
+	if y.std() < args['min_std']:
+		print('target value has low variance, using max value rounded up')
+		model_type = 'dummy'
+	else:
+		model_type = args['model_type']
 
 	# create regressor
-	regressor = create_mlp(X.shape[1], hidden_layer_sizes=args['hidden_layer_sizes'], epochs=args['epochs'])
+	if model_type == 'dummy':
+		reg = create_dummy()
+
+	elif model_type == 'mlp':
+		reg = create_mlp(
+			X.shape[1],
+			hidden_layer_sizes=args['hidden_layer_sizes'],
+			epochs=args['epochs'],
+			intervals=args['intervals'])
+
+	elif model_type == 'rf':
+		reg = create_rf(intervals=args['intervals'])
 
 	# create model
-	model = sklearn.pipeline.Pipeline([
-		('scaler', Scaler()),
-		('regressor', regressor)
-	])
+	model = create_pipeline(reg, scaler_fn=Scaler)
 
 	# save order of input columns
-	args['columns'] = list(X.columns)
+	args['inputs'] = options
+	args['columns'] = columns
 
 	# train and evaluate model
-	scores = evaluate_cv(model, X, y, cv=args['cv'])
+	scores, _, _ = evaluate_cv(model, X, y)
 
 	# train model on full dataset
 	model.fit(X, y)
@@ -180,15 +367,18 @@ def train(df, args):
 	json.dump(args, f)
 
 	# return results
+	y_bar, y_std = check_std(model.predict(X))
+
 	return {
 		'y_true': y,
-		'y_pred': model.predict(X),
-		'mape': scores.mean()
+		'y_pred': y_bar,
+		'mpe': scores['mpe'],
+		'cov': scores['cov']
 	}
 
 
 
-def predict(model_name, inputs):
+def predict(model_name, inputs, ci=0.95):
 	# load model
 	f = open('%s/%s.pkl' % (env.MODELS_DIR, model_name), 'rb')
 	model = pickle.load(f)
@@ -197,37 +387,27 @@ def predict(model_name, inputs):
 	f = open('%s/%s.json' % (env.MODELS_DIR, model_name), 'r')
 	args = json.load(f)
 
-	# copy input values into input args
-	for c in args['inputs']:
-		c['value'] = inputs[c['name']]
-
-	# copy input values into ordered array
+	# convert inputs into an ordered vector
 	x_input = {}
 
-	for c in args['inputs']:
-		if 'categories' in c:
-			for v in c['categories']:
-				x_input['%s_%s' % (c['name'], v)] = (v == c['value'])
+	for column, options in args['inputs'].items():
+		# one-hot encode categorical inputs
+		if options != None:
+			for v in options:
+				x_input['%s_%s' % (column, v)] = (inputs[column] == v)
+
+		# copy numerical inputs directly
 		else:
-			x_input[c['name']] = c['value']
+			x_input[column] = inputs[column]
 
 	x_input = [float(x_input[c]) for c in args['columns']]
 
 	# perform inference
 	X = np.array([x_input])
-	y = model.predict(X)
-
-	# apply output transform if specified
-	if args['output_transform'] != None:
-		try:
-			t = utils.transforms[args['output_transform']]
-			y = y.reshape(-1, 1)
-			y = t.inverse_transform(y)
-			y = y.reshape(-1)
-		except:
-			raise RuntimeError('error: output transform %s not recognized' % (args['output_transform']))
+	y_bar, y_std = check_std(model.predict(X))
+	y_lower, y_upper = predict_intervals(y_bar, y_std, ci=ci)
 
 	# return results
 	return {
-		args['output']: float(y)
+		args['target']: [float(y_lower), float(y_bar), float(y_upper)]
 	}

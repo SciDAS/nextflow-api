@@ -184,17 +184,19 @@ app.service('api', ['$http', '$q', function($http, $q) {
 		})
 	}
 
-	this.Model.get_config = function(pipeline, process) {
+	this.Model.get_config = function(pipeline, process, target) {
 		return httpRequest('get', `api/model/config`, {
 			pipeline,
-			process
+			process,
+			target
 		})
 	}
 
-	this.Model.predict = function(pipeline, process, inputs) {
+	this.Model.predict = function(pipeline, process, target, inputs) {
 		return httpRequest('post', `api/model/predict`, null, {
 			pipeline,
 			process,
+			target,
 			inputs
 		})
 	}
@@ -505,10 +507,10 @@ app.controller('VisualizerCtrl', ['$scope', 'alert', 'api', function($scope, ale
 
 app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, api) {
 	$scope.args = {
+		merge_process: null,
 		inputs: [],
-		output: null,
-		input_transform: 'maxabs',
-		output_transform: null,
+		target: null,
+		scaler: 'maxabs',
 		selectors: 'exit=0',
 		hidden_layer_sizes: '128 128 128',
 		epochs: 200
@@ -573,20 +575,26 @@ app.controller('ModelCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 			})
 	}
 
-	$scope.get_config = function(pipeline, process) {
-		api.Model.get_config(pipeline, process)
+	$scope.get_config = function(pipeline, process, target) {
+		api.Model.get_config(pipeline, process, target)
 			.then(function(config) {
 				$scope.config = config
-				$scope.predict.inputs = config.inputs
+				$scope.predict.options = config.inputs
+				$scope.predict.inputs = Object.keys(config.inputs).reduce((prev, input) => {
+					prev[input] = null
+					return prev
+				}, {})
+
+				console.log($scope.predict)
 			}, function() {
 				alert.error('Failed to get model config.')
 			})
 	}
 
-	$scope.predict = function(pipeline, process, inputs) {
+	$scope.predict = function(pipeline, process, target, inputs) {
 		$scope.predicting = true
 
-		api.Model.predict(pipeline, process, inputs)
+		api.Model.predict(pipeline, process, target, inputs)
 			.then(function(results) {
 				$scope.predicting = false
 				$scope.predict.results = results
