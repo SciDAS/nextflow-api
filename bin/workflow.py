@@ -2,9 +2,15 @@
 
 import asyncio
 import os
+import signal
 import subprocess
 
 import env
+
+
+
+def get_run_name(workflow):
+	return 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts'])
 
 
 
@@ -16,6 +22,8 @@ def run_workflow(workflow, work_dir, resume):
 	os.chdir(work_dir)
 
 	# prepare command line arguments
+	run_name = get_run_name(workflow)
+
 	if env.NXF_EXECUTOR == 'k8s':
 		args = [
 			'nextflow',
@@ -24,7 +32,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
-			'-name', 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts']),
+			'-name', run_name,
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision'],
 			'-volume-mount', env.PVC_NAME
@@ -38,7 +46,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
-			'-name', 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts']),
+			'-name', run_name,
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision']
 		]
@@ -51,7 +59,7 @@ def run_workflow(workflow, work_dir, resume):
 			workflow['pipeline'],
 			'-ansi-log', 'false',
 			'-latest',
-			'-name', 'workflow-%s-%04d' % (workflow['_id'], workflow['attempts']),
+			'-name', run_name,
 			'-profile', workflow['profiles'],
 			'-revision', workflow['revision']
 		]
@@ -141,3 +149,23 @@ async def launch_async(db, workflow, resume):
 
 def launch(db, workflow, resume):
 	asyncio.run(launch_async(db, workflow, resume))
+
+
+
+def cancel(workflow):
+	# terminate child process
+	if workflow['pid'] != -1:
+		try:
+			os.kill(workflow['pid'], signal.SIGINT)
+		except ProcessLookupError:
+			pass
+
+	# delete pods if relevant
+	if env.NXF_EXECUTOR == 'k8s':
+		proc = subprocess.Popen(
+			['./scripts/kube-cancel.sh', get_run_name(workflow)],
+			stdout=subprocess.PIPE,
+			stderr=subprocess.STDOUT
+		)
+		proc_out, _ = proc.communiate()
+		print(proc_out.decode('utf-8'))

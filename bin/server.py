@@ -7,7 +7,6 @@ import multiprocessing as mp
 import os
 import pandas as pd
 import shutil
-import signal
 import socket
 import subprocess
 import time
@@ -331,12 +330,8 @@ class WorkflowCancelHandler(tornado.web.RequestHandler):
 			workflow = await db.workflow_get(id)
 			workflow = {**{ 'pid': -1 }, **workflow}
 
-			# terminate child process
-			if workflow['pid'] != -1:
-				try:
-					os.kill(workflow['pid'], signal.SIGINT)
-				except ProcessLookupError:
-					pass
+			# cancel workflow
+			Workflow.cancel(workflow)
 
 			# update workflow status
 			workflow['status'] = 'failed'
