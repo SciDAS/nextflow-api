@@ -39,14 +39,10 @@ spec:
         command:
         - /bin/bash
         - -c
-        {{ if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.Backend "mongo") }}
-        - ./scripts/db-startup.sh && ./scripts/kube-config.sh {{ .Values.Remote.Context }} && python3 bin/server.py --backend=mongo
-        {{ else if and (eq .Values.Remote.Enabled true) (eq .Values.WebServer.Backend "file") }}
-        - ./scripts/kube-config.sh {{ .Values.Remote.Context }} && python3 bin/server.py --backend=file
-        {{ else if and (eq .Values.Remote.Enabled false) (eq .Values.WebServer.Backend "mongo") }}
-        - ./scripts/db-startup.sh && python3 bin/server.py --backend=mongo
+        {{ if eq .Values.Remote.Enabled true }}
+        - scripts/startup-nautilus.sh {{ .Values.WebServer.Backend }} {{ .Values.Remote.Context }}
         {{ else }}
-        - python3 bin/server.py --backend=file
+        - scripts/startup-nautilus.sh {{ .Values.WebServer.Backend }}
         {{ end }}
         resources:
           requests:
@@ -64,6 +60,13 @@ spec:
         {{ end }}
         ports:
         - containerPort: 8080
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - scripts/db-backup.sh prestop; mongod --shutdown
       volumes:
       {{ if .Values.Remote.Enabled }}
       - name: conf

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Startup script for Palmetto environment.
 
 # load modules
 module purge
@@ -19,5 +20,6 @@ mongod \
 
 # start web server
 export NXF_EXECUTOR="pbspro"
+export TF_CPP_MIN_LOG_LEVEL="3"
 
-python bin/server.py --backend=mongo
+bin/server.py --backend=mongo
