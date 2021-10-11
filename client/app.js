@@ -166,6 +166,10 @@ app.service('api', ['$http', '$q', function($http, $q) {
 		return httpRequest('get', `api/tasks/${id}`)
 	}
 
+	this.Task.log = function(id) {
+		return httpRequest('get', `api/tasks/${id}/log`)
+	}
+
 	this.Task.visualize = function(pipeline, process, args) {
 		return httpRequest('post', `api/tasks/visualize`, null, {
 			pipeline,
@@ -422,6 +426,18 @@ app.controller('TasksCtrl', ['$scope', 'alert', 'api', function($scope, alert, a
 
 app.controller('TaskCtrl', ['$scope', '$route', 'alert', 'api', function($scope, $route, alert, api) {
 	$scope.task = {}
+	$scope.task_out = ''
+	$scope.task_err = ''
+
+	$scope.fetchLog = function() {
+		api.Task.log($route.current.params.id)
+			.then(function(res) {
+				$scope.task_out = res.out
+				$scope.task_err = res.err
+			}, function() {
+				alert.error('Failed to fetch task logs.')
+			})
+	}
 
 	// initialize
 	api.Task.get($route.current.params.id)

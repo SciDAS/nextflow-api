@@ -467,6 +467,44 @@ class TaskQueryHandler(tornado.web.RequestHandler):
 
 
 
+class TaskLogHandler(tornado.web.RequestHandler):
+
+	async def get(self, id):
+		db = self.settings['db']
+
+		try:
+			# get workflow
+			task = await db.task_get(id)
+			workdir = task['trace']['workdir']
+
+			# construct response data
+			data = {
+				'_id': id,
+				'out': '',
+				'err': ''
+			}
+
+			# append log files if they exist
+			out_file = os.path.join(workdir, '.command.out')
+			err_file = os.path.join(workdir, '.command.err')
+
+			if os.path.exists(out_file):
+				f = open(out_file)
+				data['out'] = ''.join(f.readlines())
+
+			if os.path.exists(err_file):
+				f = open(err_file)
+				data['err'] = ''.join(f.readlines())
+
+			self.set_status(200)
+			self.set_header('content-type', 'application/json')
+			self.write(tornado.escape.json_encode(data))
+		except:
+			self.set_status(404)
+			self.write(message(404, 'Failed to fetch log for workflow \"%s\"' % id))
+
+
+
 class TaskQueryPipelinesHandler(tornado.web.RequestHandler):
 
 	async def get(self):
@@ -790,6 +828,7 @@ if __name__ == '__main__':
 		(r'/api/workflows/([a-zA-Z0-9-]+)/log', WorkflowLogHandler),
 		(r'/api/workflows/([a-zA-Z0-9-]+)/download', WorkflowDownloadHandler, dict(path=env.WORKFLOWS_DIR)),
 		(r'/api/tasks', TaskQueryHandler),
+		(r'/api/tasks/([a-zA-Z0-9-]+)/log', TaskLogHandler),
 		(r'/api/tasks/pipelines', TaskQueryPipelinesHandler),
 		(r'/api/tasks/pipelines/(.+)', TaskQueryPipelineHandler),
 		(r'/api/tasks/archive/(.+)/download', TaskArchiveDownloadHandler, dict(path=env.TRACE_DIR)),

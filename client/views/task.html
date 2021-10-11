@@ -7,5 +7,25 @@
 				<pre class="border rounded p-2">{{task | json}}</pre>
 			</div>
 		</div>
+
+		<div class="card mb-4" ng-show="task.event === 'process_completed'">
+			<h6 class="card-header">Logs</h6>
+
+			<div class="card-body">
+				<div class="text-center">
+					<button type="button" class="btn btn-outline-dark" ng-click="fetchLog()">Show Logs</button>
+				</div>
+
+				<hr>
+
+				<p>Output Log:</p>
+				<pre class="border rounded p-2">{{task_out}}</pre>
+
+				<hr>
+
+				<p>Error Log:</p>
+				<pre class="border rounded p-2">{{task_err}}</pre>
+			</div>
+		</div>
 	</div>
 </div>
