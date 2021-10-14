@@ -215,7 +215,7 @@ app.controller('MainCtrl', ['$scope', 'alert', function($scope, alert) {
 
 
 const STATUS_COLORS = {
-	'nascent': 'success',
+	'nascent': 'primary',
 	'running': 'warning',
 	'completed': 'success',
 	'failed': 'danger'

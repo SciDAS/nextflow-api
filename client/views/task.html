@@ -8,7 +8,7 @@
 			</div>
 		</div>
 
-		<div class="card mb-4" ng-show="task.event === 'process_completed'">
+		<div class="card mb-4" ng-show="(task.event === 'process_started') || (task.event === 'process_completed')">
 			<h6 class="card-header">Logs</h6>
 
 			<div class="card-body">
