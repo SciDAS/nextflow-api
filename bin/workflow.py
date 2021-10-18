@@ -93,7 +93,7 @@ def run_workflow(workflow, work_dir, resume):
 
 def save_output(workflow, output_dir):
 	return subprocess.Popen(
-		['./scripts/kube-save.sh', workflow['_id'], output_dir],
+		['scripts/kube-save.sh', workflow['_id'], output_dir],
 		stdout=subprocess.PIPE,
 		stderr=subprocess.STDOUT
 	)
@@ -163,9 +163,9 @@ def cancel(workflow):
 	# delete pods if relevant
 	if env.NXF_EXECUTOR == 'k8s':
 		proc = subprocess.Popen(
-			['./scripts/kube-cancel.sh', get_run_name(workflow)],
+			['scripts/kube-cancel.sh', get_run_name(workflow)],
 			stdout=subprocess.PIPE,
 			stderr=subprocess.STDOUT
 		)
-		proc_out, _ = proc.communiate()
+		proc_out, _ = proc.communicate()
 		print(proc_out.decode('utf-8'))
