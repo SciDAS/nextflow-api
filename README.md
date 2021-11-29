@@ -1,25 +1,35 @@
 # Nextflow-API
 
-Nextflow-API is a web application and REST API for submitting and monitoring Nextflow pipelines on a variety of execution environments. The REST API is implemented in Python using the ([Tornado](https://www.tornadoweb.org/en/stable/)) framework, and the client-side application is implemented using [AngularJS](https://angularjs.org/). Nextflow-API can be deployed locally or to any Kubernetes cluster that supports Persistent Volume Claims (PVCs). Additionally, there is experimental support for deploying Nextflow-API to a PBS cluster.
+Nextflow-API is a web application and REST API for submitting and monitoring Nextflow pipelines on a variety of execution environments. The REST API is implemented in Python using the ([Tornado](https://www.tornadoweb.org/en/stable/)) framework, and the client-side application is implemented using [AngularJS](https://angularjs.org/). Nextflow-API can be deployed locally or to a Kubernetes cluster. There is also experimental support for PBS, and Nextflow-API can be extended to other Nextflow-supported executors upon request.
 
-## Quickstart
+## Deployment
 
-Refer to the [Dockerfile](docker/Dockerfile) to see how to install Nextflow-API locally for testing.
+### Local
 
-You can also create an Anaconda environment:
+Install the dependencies as shown in the [Dockerfile](docker/Dockerfile). Depending on your setup, you may not need to install `mongodb` or `kubectl`. You may also prefer to install the Python dependencies in an Anaconda environment:
 ```bash
 conda create -n nextflow-api python=3.7
-source activate nextflow-api
+conda activate nextflow-api
 pip install -r requirements.txt
 ```
 
-## Deployment
+Use `scripts/startup-local.sh` to deploy Nextflow-API locally, although you may need to modify the script to fit your environment.
+
+### Palmetto
+
+To use Nexflow-API on the Palmetto cluster, you will need to provision a Login VM, install the Python dependencies in an Anaconda environment, and either request a MongoDB allocation or use the `file` backend. Use `scripts/startup-palmetto.sh` to deploy Nextflow-API, although you may need to modify the script to fit your environment. You will only be able to access the web interface from the campus network or the Clemson VPN. For long-running deployments, run the script within a screen on your Login VM.
+
+### Kubernetes
 
 Refer to the [helm](helm/README.md) for instructions on how to deploy Nextflow-API to a Kubernetes cluster.
 
 ## Usage
 
 The core of Nextflow-API is a REST API which provides an interface to run Nextflow pipelines and can be integrated with third-party services. Nextflow-API provides a collection of [CLI scripts](cli) to demonstrate how to use the API, as well as a web interface for end users.
+
+### Backends
+
+Nextflow-API stores workflow runs and tasks in one of several "backend" formats. The `file` backend stores the data in a single `pkl` file, which is ideal for local testing. The `mongo` backend stores the data in a Mongo database, which is ideal for production.
 
 ### API Endpoints
 
