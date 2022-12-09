@@ -3,7 +3,7 @@ astor==0.8.1
 astunparse==1.6.3
 cached-property==1.5.2
 cachetools==4.2.4
-certifi==2021.5.30
+certifi==2022.12.7
 charset-normalizer==2.0.6
 clang==5.0
 cycler==0.10.0
